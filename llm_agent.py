@@ -136,3 +136,27 @@ def generate_copy(product, segment, angle, exemplars=None):
         "vip":    "Quietly, just for you.",
     }.get(segment.get("lifecycle", "loyal"), "Made for the moment.")
     return head, sub, "generated:rule-based(from data)"
+
+
+# ── Audience Strategist: fuse a trait-mixture into ONE persona ───────────────
+def generate_persona(persona_struct):
+    """LLM-write a named persona + narrative + creative angle from a trait mixture.
+
+    Returns (name, summary, creative_angle, source) when an LLM is available,
+    else None so the caller falls back to its deterministic blend.
+    """
+    llm = get_llm()
+    if not llm:
+        return None
+    system = ("You are an audience strategist. You are given a STRUCTURED TRAIT MIXTURE for a "
+              "customer cohort — proportions across interest, lifecycle, value, behavior, and "
+              "demographics. Fuse the WHOLE mixture into ONE believable, named persona; do not "
+              "just restate the largest trait. Return JSON with: name (2-4 words, e.g. 'The "
+              "Morning Ritualist'), summary (2-3 sentences describing this blended individual and "
+              "what they want), creative_angle (one line for how ads should speak to them — "
+              "minimal and understated).")
+    try:
+        j = json.loads(llm.complete(system, json.dumps(persona_struct)))
+        return j["name"], j["summary"], j["creative_angle"], f"generated:{llm.name}"
+    except Exception:
+        return None

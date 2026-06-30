@@ -151,24 +151,31 @@ def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
 # AGENTS
 # ============================================================================
 class Strategist:
-    """[LLM] Segment -> creative brief & angle."""
+    """[LLM] Segment (+ blended persona) -> creative brief & angle."""
     def run(self, segment, spec):
         life, interest = segment["lifecycle"], segment["dominant_interest"]
-        angle = {
+        # Prefer the synthesized persona's angle (from a mixture of traits); fall back
+        # to the per-lifecycle angle for segments without a persona (e.g. the demo).
+        persona = segment.get("persona") or {}
+        angle = persona.get("angle") or {
             "loyal":  "quiet, understated, ritual-anchored; familiar, never a hard sell",
             "new":    "minimal brand-essence; a calm, confident invitation",
             "lapsed": "understated, warm return; their familiar favorite, no pressure",
             "vip":    "restrained, premium, exclusive; minimal and refined",
-        }[life]
+        }.get(life, "minimal, understated; calm and personal")
         pillar = "seasonal" if ("fall" in interest or "season" in interest) else "ritual"
         spec["concept"].update({
-            "rationale": f"{life} segment centered on '{interest}'.",
+            "rationale": persona.get("summary") or f"{life} segment centered on '{interest}'.",
             "copy_angle": angle,
             "messaging_pillar": pillar,
         })
+        if persona.get("name"):
+            spec["concept"]["persona"] = {"name": persona.get("name"),
+                                          "summary": persona.get("summary")}
         seg = dict(segment); seg["pillar"] = pillar               # enrich for downstream agents
         spec["_segment"] = seg
-        log(spec, "Strategist", f"angle for {life}/{interest}")
+        log(spec, "Strategist",
+            f"persona '{persona['name']}'" if persona.get("name") else f"angle for {life}/{interest}")
         return spec
 
 class ProductMatcher:
