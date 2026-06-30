@@ -107,8 +107,10 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag, ex
 def generate_copy(product, segment, angle, exemplars=None):
     llm = get_llm()
     if llm:
-        system = ("You are a brand Copywriter. Write a short ad HEADLINE (<=6 words) and a "
-                  "one-line SUBHEAD in a warm, premium voice. Return JSON {\"headline\":..,\"subhead\":..}.")
+        system = ("You are a brand Copywriter. Write a short ad HEADLINE (<=5 words) and a brief "
+                  "one-line SUBHEAD in a minimal, understated voice — restrained and confident, "
+                  "never hype or hard-sell. Adapt the tone to the brand and audience. Favor clarity "
+                  "and white space over cleverness. Return JSON {\"headline\":..,\"subhead\":..}.")
         payload = {"product": product, "audience_segment": segment, "angle": angle}
         if exemplars:
             system += _EXEMPLAR_GUIDANCE
@@ -121,17 +123,16 @@ def generate_copy(product, segment, angle, exemplars=None):
             pass
     # ---- data-driven fallback: pick a frame by the segment's pillar/lifecycle
     name = product["name"]
-    daypart = segment.get("daypart", "day")
     pillar = segment.get("pillar", "ritual")
     head = {
-        "seasonal": f"Your {daypart}, now in {product['flavor']}.",
-        "belonging": f"Your {name} is waiting.",
-        "ritual": f"{name}. Made for your {daypart}.",
-    }.get(pillar, f"{name}, made for you.")
+        "seasonal":  f"{product['flavor'].title()}, in season.",
+        "belonging": f"{name}, yours.",
+        "ritual":    f"{name}, daily.",
+    }.get(pillar, f"{name}.")
     sub = {
-        "loyal":  "Order ahead and skip the wait.",
-        "lapsed": "Here's your favorite, on us.",
-        "new":    "Handcrafted, every single cup.",
-        "vip":    "A little something, just for you.",
-    }.get(segment.get("lifecycle", "loyal"), "Made for your moment.")
+        "loyal":  "Ready when you are.",
+        "lapsed": "Good to have you back.",
+        "new":    "Made fresh, every cup.",
+        "vip":    "Quietly, just for you.",
+    }.get(segment.get("lifecycle", "loyal"), "Made for the moment.")
     return head, sub, "generated:rule-based(from data)"

@@ -155,10 +155,10 @@ class Strategist:
     def run(self, segment, spec):
         life, interest = segment["lifecycle"], segment["dominant_interest"]
         angle = {
-            "loyal":  "warm, expressive, ritual-anchored; reward familiarity, no hard sell",
-            "new":    "brand-essence first; invite, soft offer",
-            "lapsed": "warm win-back; their familiar favorite",
-            "vip":    "exclusivity & premium; minimal offer",
+            "loyal":  "quiet, understated, ritual-anchored; familiar, never a hard sell",
+            "new":    "minimal brand-essence; a calm, confident invitation",
+            "lapsed": "understated, warm return; their familiar favorite, no pressure",
+            "vip":    "restrained, premium, exclusive; minimal and refined",
         }[life]
         pillar = "seasonal" if ("fall" in interest or "season" in interest) else "ritual"
         spec["concept"].update({
