@@ -128,7 +128,13 @@ def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
         text_w = W - 2 * margin
         head_y = int(H * (0.70 if square else 0.74))
         sub_y = int(H * (0.88 if square else 0.90))
+    # Product cutout sits in the clean negative space, adapting to the layout:
+    # right side for landscape (copy is lower-left), upper-center otherwise.
+    prod_box = ({"x": round(W*0.52), "y": round(H*0.12), "w": round(W*0.42), "h": round(H*0.66)}
+                if landscape else
+                {"x": round(W*0.24), "y": round(H*0.11), "w": round(W*0.52), "h": round(H*0.34)})
     elements = [
+        {"id": "product", "type": "product", "src": "product.png", "z": 6, "box": prod_box},
         {"id": "scrim", "type": "shape", "shape": "rect", "z": 5,
          "gradient": {"type": "linear", "angle": 180, "stops": [
              {"color": "brand:colors.primary", "opacity": 0.0, "at": 0.0},
@@ -292,6 +298,14 @@ class Compositor:
                 for ln in lines:
                     draw.text((b["x"], y), ln, font=font, fill=col)
                     y += int(el["size_px"] * 1.12)
+            elif el["type"] == "product":                  # transparent product cutout (product.png)
+                src = el.get("src", "product.png")
+                if os.path.exists(src):
+                    prod = Image.open(src).convert("RGBA")
+                    scale = min(b["w"]/prod.width, b["h"]/prod.height)   # contain, keep aspect
+                    nw, nh = max(1, int(prod.width*scale)), max(1, int(prod.height*scale))
+                    prod = prod.resize((nw, nh))
+                    canvas.paste(prod, (b["x"] + (b["w"]-nw)//2, b["y"] + (b["h"]-nh)//2), prod)
             elif el["type"] == "logo":                     # placeholder for Siren component
                 cx, cy, r = b["x"]+b["w"]//2, b["y"]+b["h"]//2, b["w"]//2
                 draw.ellipse([cx-r, cy-r, cx+r, cy+r], fill=(*BRAND["colors"]["primary"], 255))
