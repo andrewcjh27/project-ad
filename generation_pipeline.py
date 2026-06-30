@@ -11,7 +11,7 @@ The Image Generator is a procedural stand-in for a hosted image model `# [IMG]`.
 The Compositor and Brand Guardian are real deterministic code (production-shaped).
 """
 
-import json, os, copy
+import json, os, copy, random
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from image_agent import get_image_provider   # real image-model adapter (falls back to procedural)
 import ad_brief                              # brand image style + optional manual overrides
@@ -82,6 +82,10 @@ def blank_spec(segment):
 def log(spec, agent, note):
     spec["provenance"]["agents"].append({"agent": agent, "note": note})
 
+def _hex(rgb):
+    """RGB tuple -> #RRGGBB, so the image prompt can name exact brand colors."""
+    return "#%02X%02X%02X" % (int(rgb[0]), int(rgb[1]), int(rgb[2]))
+
 # ----------------------------------------------------------------------------
 # Campaign formats — one concept renders into each (Phase 2: campaign coherence).
 # The concept/copy/palette are format-INDEPENDENT; only the layout below changes.
@@ -95,7 +99,7 @@ FORMATS = {
 # One hero seed shared across a campaign so every format reads as the same shoot.
 _HERO_SEED = 771204
 
-def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
+def layout_elements(W, H, palette, prompt, psrc, headline, subhead, seed=_HERO_SEED):
     """Deterministic, proportional layout for one format.
 
     The ONLY format-dependent layer. Portrait/square stack the copy in the lower
@@ -109,7 +113,7 @@ def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
             "id": "img_hero", "role": "hero",
             "prompt": prompt, "prompt_source": psrc,          # AI-generated from data
             "negative_prompt": ad_brief.NEGATIVE_PROMPT,
-            "palette": palette, "seed": _HERO_SEED,
+            "palette": palette, "seed": seed,
             "placement": {"x": 0, "y": 0, "w": W, "h": H},
         }],
     }
@@ -117,29 +121,29 @@ def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
     if landscape:
         margin = round(0.05 * W)
         head_size, sub_size = round(0.075 * H), round(0.034 * H)
-        scrim_top = int(H * 0.45)
         text_w = round(0.55 * W)                              # copy in the left half
         head_y, sub_y = int(H * 0.62), int(H * 0.86)
     else:
         square = abs(W - H) < 1
         margin = round(0.074 * W)
         head_size, sub_size = round(0.068 * W), round(0.031 * W)
-        scrim_top = int(H * (0.50 if square else 0.52))
         text_w = W - 2 * margin
         head_y = int(H * (0.70 if square else 0.74))
         sub_y = int(H * (0.88 if square else 0.90))
+    # Product cutout sits in the clean negative space, adapting to the layout:
+    # right side for landscape (copy is lower-left), upper-center otherwise.
+    prod_box = ({"x": round(W*0.52), "y": round(H*0.12), "w": round(W*0.42), "h": round(H*0.66)}
+                if landscape else
+                {"x": round(W*0.24), "y": round(H*0.11), "w": round(W*0.52), "h": round(H*0.34)})
+    # Minimal treatment: dark text directly on the light background, no scrim.
     elements = [
-        {"id": "scrim", "type": "shape", "shape": "rect", "z": 5,
-         "gradient": {"type": "linear", "angle": 180, "stops": [
-             {"color": "brand:colors.primary", "opacity": 0.0, "at": 0.0},
-             {"color": "brand:colors.primary", "opacity": 0.92, "at": 1.0}]},
-         "box": {"x": 0, "y": scrim_top, "w": W, "h": H - scrim_top}},
+        {"id": "product", "type": "product", "src": "product.png", "z": 6, "box": prod_box},
         {"id": "headline", "type": "text", "role": "headline", "z": 10,
-         "font": "brand:typography.fonts.expressive", "size_px": head_size, "color": "brand:colors.cream",
-         "auto_scrim": True, "box": {"x": margin, "y": head_y, "w": text_w, "h": round(0.20*H)},
+         "font": "brand:typography.fonts.expressive", "size_px": head_size, "color": "brand:colors.ink",
+         "box": {"x": margin, "y": head_y, "w": text_w, "h": round(0.20*H)},
          "content": headline, "copy": {"source": "generated", "locked": False}},
         {"id": "subhead", "type": "text", "role": "subhead", "z": 10,
-         "font": "brand:typography.fonts.body", "size_px": sub_size, "color": "brand:colors.cream",
+         "font": "brand:typography.fonts.body", "size_px": sub_size, "color": "brand:colors.ink",
          "box": {"x": margin + 2, "y": sub_y, "w": text_w, "h": round(0.06*H)},
          "content": subhead, "copy": {"source": "generated", "locked": False}},
         {"id": "logo", "type": "logo", "variant": "siren-white", "z": 20,
@@ -164,10 +168,20 @@ class Strategist:
             "vip":    "restrained, premium, exclusive; minimal and refined",
         }.get(life, "minimal, understated; calm and personal")
         pillar = "seasonal" if ("fall" in interest or "season" in interest) else "ritual"
+        # Spell out the ad's PURPOSE for this group so the prompt engineer can aim the mood.
+        who = persona.get("name") or f"the {life} '{interest}' audience"
+        pillar_goal = {"seasonal": "make the seasonal moment feel fresh and worth returning for",
+                       "ritual": "reinforce the everyday ritual and quiet loyalty"}.get(pillar, "build brand affinity")
+        life_goal = {"loyal": "reward a familiar regular", "new": "make a warm first impression",
+                     "lapsed": "gently win back a lapsed customer",
+                     "vip": "offer a refined, premium gesture"}.get(life, "connect with the audience")
+        ad_goal = (f"A premium, minimal {pillar} poster speaking to {who}: {pillar_goal}; {life_goal}. "
+                   f"Calm, understated, unmistakably on-brand.")
         spec["concept"].update({
             "rationale": persona.get("summary") or f"{life} segment centered on '{interest}'.",
             "copy_angle": angle,
             "messaging_pillar": pillar,
+            "ad_goal": ad_goal,
         })
         if persona.get("name"):
             spec["concept"]["persona"] = {"name": persona.get("name"),
@@ -209,12 +223,22 @@ class ArtDirector:
         if ad_brief.MANUAL_IMAGE_PROMPT:
             prompt, psrc = ad_brief.MANUAL_IMAGE_PROMPT + f". {ad_brief.PHOTO_TAG}.", "manual"
         else:
+            # Exact brand + product colors so the prompt names a real limited palette (not invented).
+            brand_colors = {
+                "brand_green": _hex(BRAND["colors"]["primary"]),
+                "brand_cream": _hex(BRAND["colors"]["cream"]),
+                "product_accent": _hex(p["palette"][0]),
+                "product_deep": _hex(p["palette"][1]),
+            }
             prompt, psrc = llm_agent.generate_image_prompt(
                 p, seg, ad_brief.BRAND_IMAGE_STYLE, ad_brief.NEGATIVE_PROMPT, ad_brief.PHOTO_TAG,
-                exemplars=exemplars)
+                exemplars=exemplars, brand_colors=brand_colors, goal=spec["concept"].get("ad_goal"))
         spec["concept"]["image_prompt"] = prompt                  # AI-generated from data
         spec["concept"]["image_prompt_source"] = psrc
         spec["concept"]["palette"] = p["palette"]
+        # Random hero seed per concept -> diverse design each run; recorded so the
+        # ad stays reproducible from its spec (shared across a campaign's formats).
+        spec["concept"]["hero_seed"] = random.randint(1, 2**31 - 1)
         spec["concept"]["big_idea"] = ""                          # written by Copywriter next
         log(spec, "ArtDirector", f"image prompt {psrc}; concept decided (format-independent)")
         return spec
@@ -292,6 +316,14 @@ class Compositor:
                 for ln in lines:
                     draw.text((b["x"], y), ln, font=font, fill=col)
                     y += int(el["size_px"] * 1.12)
+            elif el["type"] == "product":                  # transparent product cutout (product.png)
+                src = el.get("src", "product.png")
+                if os.path.exists(src):
+                    prod = Image.open(src).convert("RGBA")
+                    scale = min(b["w"]/prod.width, b["h"]/prod.height)   # contain, keep aspect
+                    nw, nh = max(1, int(prod.width*scale)), max(1, int(prod.height*scale))
+                    prod = prod.resize((nw, nh))
+                    canvas.paste(prod, (b["x"] + (b["w"]-nw)//2, b["y"] + (b["h"]-nh)//2), prod)
             elif el["type"] == "logo":                     # placeholder for Siren component
                 cx, cy, r = b["x"]+b["w"]//2, b["y"]+b["h"]//2, b["w"]//2
                 draw.ellipse([cx-r, cy-r, cx+r, cy+r], fill=(*BRAND["colors"]["primary"], 255))
@@ -382,7 +414,7 @@ class Orchestrator:
         c = spec["concept"]
         spec["canvas"], spec["elements"] = layout_elements(
             W, H, c["palette"], c["image_prompt"], c["image_prompt_source"],
-            c["big_idea"], c.get("subhead", ""))
+            c["big_idea"], c.get("subhead", ""), seed=c.get("hero_seed", _HERO_SEED))
         hero = self.img.run(spec)
         canvas = self.comp.run(spec, hero)
         ok, gates = self.guard.run(spec, canvas)
@@ -464,9 +496,5 @@ if __name__ == "__main__":
     print("Image prompt:", spec["canvas"]["imagery"][0]["prompt"][:90], "...")
     print("Agents:", " -> ".join(a["agent"] for a in spec["provenance"]["agents"]))
     print("Headline:", next(e["content"] for e in spec["elements"] if e["id"] == "headline"))
-    # Campaign coherence: one concept -> multiple formats that share copy/palette/product.
-    manifest = orch.run_campaign(segment, "campaign_sbux_psl")
-    print("\nCampaign:", manifest["campaign_id"], "->", "campaign_sbux_psl/  (shared headline:",
-          repr(manifest["shared_concept"]["headline"]) + ")")
-    for it in manifest["formats"]:
-        print(f"  {it['format']:16s} {it['size'][0]}x{it['size'][1]:<5} {it['aspect_ratio']:6s} critic: {it['critic']}")
+    # Focused on the 4:5 poster for now. The other formats (square, landscape) are
+    # still available via Orchestrator.run_campaign(segment, out_dir) when wanted.

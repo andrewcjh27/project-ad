@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block body %}
+  <a href="{{ url_for('index') }}" class="muted">&larr; All projects</a>
+  <h1>{{ p['name'] }}</h1>
+  <div class="detail">
+    <div class="poster">
+      <img src="{{ url_for('generated', pid=p['id']) }}" alt="{{ p['name'] }} poster">
+      <form method="post" action="{{ url_for('regenerate', pid=p['id']) }}">
+        <button class="btn ghost" type="submit">Regenerate (new design)</button>
+      </form>
+    </div>
+    <dl class="meta">
+      <dt>Target interest</dt><dd>{{ p['target_interest'] or '—' }}</dd>
+      <dt>Identity</dt><dd>{{ p['identity'] or '—' }}</dd>
+      <dt>Agenda</dt><dd>{{ p['agenda'] or '—' }}</dd>
+      <dt>Products</dt><dd>{{ p['products'] or '—' }}</dd>
+      <dt>Colors</dt>
+      <dd>
+        <span class="swatch" style="background: {{ p['brand_primary'] }}"></span>{{ p['brand_primary'] }}
+        {% if p['brand_secondary'] %}<span class="swatch" style="background: {{ p['brand_secondary'] }}"></span>{{ p['brand_secondary'] }}{% endif %}
+      </dd>
+      <dt>Seed</dt><dd class="muted">{{ p['hero_seed'] }}</dd>
+    </dl>
+  </div>
+  {% if ref_ads %}
+    <h2>Reference ads</h2>
+    <div class="refs">
+      {% for r in ref_ads %}<img src="{{ url_for('file') }}?p={{ r | urlencode }}" alt="reference ad">{% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}

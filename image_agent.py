@@ -133,23 +133,51 @@ class ReplicateFluxProvider(ImageProvider):
         return img.resize((width, height))
 
 
-class ProceduralProvider(ImageProvider):
-    """Offline fallback — a clean minimal gradient: white at top -> brand color at bottom (no API).
+# Offline background styles (no API). Change the default here or set AD_BG_STYLE.
+#   diverse  pick a different minimal form + parameters from the seed (varies each run)
+#   gradient | flat | circle | vignette | block  pin one specific style
+PROCEDURAL_STYLE = "diverse"
 
-    White at the top keeps it light and minimal; the product's brand color rises
-    from the bottom. Fine grain adds texture. No scene, no objects — a
-    deterministic stand-in for the abstract background plate the prompts describe.
+class ProceduralProvider(ImageProvider):
+    """Offline fallback — minimal procedural backgrounds in the brand color (no API).
+
+    Style from AD_BG_STYLE env, else PROCEDURAL_STYLE. In "diverse" mode the seed
+    chooses one minimal form (gradient / flat / vignette / circle) AND varies its
+    parameters (direction, glow position, circle placement, tone), so successive
+    runs produce genuinely different — but still minimal and on-palette — designs.
+    The seed is recorded in the spec, so any specific ad stays reproducible.
     """
     name = "procedural(fallback)"
     def generate(self, prompt, negative, width, height, seed=None, palette=None):
-        accent = (palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18)))[0]   # brand/product color
-        top = np.array((255, 255, 255), float)                 # white -> minimal
-        bottom = np.array(accent, float)                       # brand color at the bottom
-        yy = np.linspace(0, 1, height)[:, None, None]
-        base = top * (1 - yy) + bottom * yy                    # vertical white -> brand color
-        grain = np.random.default_rng(seed or 0).normal(0, 3, (height, width, 1))
-        base = np.clip(base + grain, 0, 255).astype("uint8")   # broadcasts to full width
-        return Image.fromarray(base, "RGB")
+        style = os.getenv("AD_BG_STYLE", PROCEDURAL_STYLE)
+        rng = np.random.default_rng(seed if seed is not None else 0)
+        pal = palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18))
+        accent, deep = np.array(pal[0], float), np.array(pal[1], float)
+        white = np.array((250, 250, 248), float)
+        H, W = height, width
+        yy = np.linspace(0, 1, H)[:, None, None]
+        xx = np.linspace(0, 1, W)[None, :, None]
+        if style == "diverse":
+            style = str(rng.choice(["gradient", "flat", "vignette", "circle"]))
+        tone = accent if rng.random() < 0.7 else (0.6 * accent + 0.4 * deep)   # vary the brand tone
+        if style == "flat":
+            base = (rng.uniform(0.35, 0.55) * tone + rng.uniform(0.45, 0.65) * white).reshape(1, 1, 3)
+        elif style == "block":
+            base = np.where(yy < rng.uniform(0.55, 0.70), white, tone)          # split varies
+        elif style == "circle":
+            cy, cx, r = rng.uniform(0.26, 0.40), rng.uniform(0.42, 0.58), rng.uniform(0.22, 0.30)
+            ar = W / H
+            base = np.where(((yy - cy) ** 2 + ((xx - cx) * ar) ** 2) < r ** 2, tone, white)
+        elif style == "vignette":
+            oy, ox, rad = rng.uniform(0.85, 1.05), rng.uniform(0.35, 0.65), rng.uniform(0.70, 0.95)
+            g = np.clip(1 - np.sqrt((yy - oy) ** 2 + (xx - ox) ** 2) / rad, 0, 1)
+            base = white * (1 - g) + tone * g                                   # glow position varies
+        else:                                                                   # gradient, direction varies
+            d = rng.uniform(0.0, 0.4)
+            t = (1 - d) * yy + d * xx
+            base = white * (1 - t) + tone * t
+        grain = rng.normal(0, 3, (H, W, 1))
+        return Image.fromarray(np.clip(base + grain, 0, 255).astype("uint8"), "RGB")
 
 
 # ============================================================================

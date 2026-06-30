@@ -9,6 +9,7 @@ venv/
 
 # Generated outputs (re-created by the scripts)
 hero_test.png
+sbux_psl_ad.png
 *.spec.json
 
 # Brand memory — commit the hand-authored seed, ignore runtime-learned rows
@@ -17,6 +18,11 @@ brand_memory/*.jsonl
 
 # Generated campaign output (re-created by run_campaign)
 campaign_*/
+
+# Web console runtime data (re-created at runtime)
+webapp/projects.db
+webapp/uploads/
+webapp/generated/
 
 # OS
 .DS_Store
