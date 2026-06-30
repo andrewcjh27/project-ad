@@ -134,24 +134,21 @@ class ReplicateFluxProvider(ImageProvider):
 
 
 class ProceduralProvider(ImageProvider):
-    """Offline fallback — a clean minimal-abstract gradient in the product palette (no API).
+    """Offline fallback — a clean minimal gradient: white at top -> brand color at bottom (no API).
 
-    A gentle diagonal two-tone blend between the palette's accent and base, a
-    subtle off-center glow for depth, and fine grain. No scene, no objects — a
+    White at the top keeps it light and minimal; the product's brand color rises
+    from the bottom. Fine grain adds texture. No scene, no objects — a
     deterministic stand-in for the abstract background plate the prompts describe.
     """
     name = "procedural(fallback)"
     def generate(self, prompt, negative, width, height, seed=None, palette=None):
-        c0, c1 = palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18))
-        c0, c1 = np.array(c0, float), np.array(c1, float)
+        accent = (palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18)))[0]   # brand/product color
+        top = np.array((255, 255, 255), float)                 # white -> minimal
+        bottom = np.array(accent, float)                       # brand color at the bottom
         yy = np.linspace(0, 1, height)[:, None, None]
-        xx = np.linspace(0, 1, width)[None, :, None]
-        t = 0.65 * yy + 0.35 * xx                              # gentle diagonal two-tone blend
-        base = c0 * (1 - t) + c1 * t
-        r = np.sqrt((yy - 0.32) ** 2 + (xx - 0.62) ** 2)
-        base += np.clip(1 - r / 0.9, 0, 1) * (0.12 * 255)      # subtle off-center glow for depth
-        grain = np.random.default_rng(seed or 0).normal(0, 4, (height, width, 1))
-        base = np.clip(base + grain, 0, 255).astype("uint8")
+        base = top * (1 - yy) + bottom * yy                    # vertical white -> brand color
+        grain = np.random.default_rng(seed or 0).normal(0, 3, (height, width, 1))
+        base = np.clip(base + grain, 0, 255).astype("uint8")   # broadcasts to full width
         return Image.fromarray(base, "RGB")
 
 
