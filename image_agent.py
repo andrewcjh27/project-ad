@@ -55,7 +55,7 @@ def _compose_prompt(prompt, negative):
         from ad_brief import PHOTO_TAG          # single source for the style tag
         tag = PHOTO_TAG
     except Exception:
-        tag = "High-end advertising photography, no text, no logos"
+        tag = "minimal abstract graphic design, clean and uncluttered, no text, no logos"
     neg = f" Avoid: {negative}." if negative else ""
     return f"{prompt}.{neg} {tag}."
 

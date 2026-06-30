@@ -14,14 +14,15 @@ This file holds two things:
 """
 
 # ── Brand-level imagery style (constant look the AI applies) ────────────────
-BRAND_IMAGE_STYLE = ("editorial advertising backdrop, warm directional natural light, shallow "
-                     "depth of field, soft bokeh, gentle steam and light leaks, tactile seasonal "
-                     "atmosphere, large clean negative space for layout, rich on-brand color grade — "
-                     "an atmospheric background plate, NOT a product shot, inviting and premium")
-NEGATIVE_PROMPT   = ("text, words, letters, logos, watermark, harsh flash, plastic artificial look, "
-                     "prominent product in foreground, single centered focal object, cluttered busy "
-                     "scene, extra fingers, deformed shapes")
-PHOTO_TAG         = "high-end advertising photography, no text, no logos, ultra detailed"
+BRAND_IMAGE_STYLE = ("minimal abstract background, limited palette of two or three brand colors, "
+                     "soft gradients and gentle light, fine grain or subtle paper texture, generous "
+                     "clean negative space for layout, calm and modern — an abstract color field, "
+                     "not a scene or product")
+NEGATIVE_PROMPT   = ("text, words, letters, logos, watermark, busy or cluttered composition, many "
+                     "colors, rainbow, complex patterns, recognizable scene, objects, people, "
+                     "product, photographic realism, harsh contrast, visual noise, harsh flash, "
+                     "plastic artificial look")
+PHOTO_TAG         = "minimal abstract graphic design, clean and uncluttered, high quality, no text, no logos"
 
 # ── Optional human overrides (empty = let the AI generate from data) ────────
 MANUAL_IMAGE_PROMPT = ""     # e.g. "a single PSL on a rainy windowsill, moody"

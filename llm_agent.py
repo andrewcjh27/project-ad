@@ -80,27 +80,26 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag, ex
     """
     llm = get_llm()
     if llm:
-        system = ("You are an award-winning advertising Art Director designing the BACKGROUND "
-                  "PLATE for a poster — an atmospheric backdrop that sits BEHIND the ad's text and "
-                  "logo, NOT a product shot. Write ONE image-generation prompt (2-3 sentences) for "
-                  "that backdrop: describe the setting, color field, lighting, depth, texture, and "
-                  "any effects (soft bokeh, gradients, light leaks, drifting steam, particles, film "
-                  "grain, gentle blur). Compose with LARGE areas of clean, uncluttered negative "
-                  "space (especially the lower third and one side) so the headline, subhead, and "
-                  "logo can be placed on top. Do NOT make any single object the focal subject — keep "
-                  "it a supporting environment/mood. Describe ONLY the image; never include any "
-                  "text, words, logos, or UI.")
+        system = ("You are a minimalist Art Director designing a PURE ABSTRACT BACKGROUND for a "
+                  "poster — a clean, minimal backdrop that sits behind the ad's text and logo. "
+                  "Write ONE image-generation prompt (1-2 sentences) for an abstract field of color "
+                  "built from a LIMITED palette of just two or three brand colors (never a busy "
+                  "rainbow of many colors): soft gradients, gentle light, fine grain or subtle "
+                  "paper/canvas texture, an optional faint bokeh or light leak. Keep it minimal and "
+                  "uncluttered, with generous clean negative space (especially the lower third and "
+                  "one side) for the headline, subhead, and logo. No recognizable scene, no objects, "
+                  "no product, no people. Describe ONLY the abstract image; never include any text, "
+                  "words, logos, or UI.")
         payload = {"product": product, "audience_segment": segment, "brand_style": brand_style}
         if exemplars:
             system += _EXEMPLAR_GUIDANCE
             payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
         subject = llm.complete(system, json.dumps(payload))
         return f"{subject} {photo_tag}.", f"generated:{llm.name}"
-    # ---- data-driven deterministic fallback (a BACKGROUND plate, not a product shot) ----
-    setting = _setting_from_segment(segment)
-    subject = (f"an atmospheric out-of-focus {product['flavor']} backdrop in {setting} — "
-               f"soft bokeh, warm directional light, gentle steam and film grain, with large "
-               f"clean negative space and no product as the subject")
+    # ---- data-driven deterministic fallback (a minimal abstract color field) ----
+    subject = (f"a minimal abstract {product['flavor']} color field — two or three soft brand "
+               f"tones, a gentle gradient and fine grain, generous clean negative space, no "
+               f"objects, no scene, no product")
     return f"{subject}, {brand_style}. {photo_tag}.", "generated:rule-based(from data)"
 
 
@@ -136,10 +135,3 @@ def generate_copy(product, segment, angle, exemplars=None):
         "vip":    "A little something, just for you.",
     }.get(segment.get("lifecycle", "loyal"), "Made for your moment.")
     return head, sub, "generated:rule-based(from data)"
-
-
-def _setting_from_segment(segment):
-    season = segment.get("season", "")
-    daypart = segment.get("daypart", "")
-    bits = [b for b in [f"{season} {daypart}".strip(), "a cozy cafe table"] if b]
-    return ", ".join(bits) if bits else "a warm cafe setting"
