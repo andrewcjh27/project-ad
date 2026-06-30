@@ -80,22 +80,27 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag, ex
     """
     llm = get_llm()
     if llm:
-        system = ("You are an award-winning advertising Art Director shooting the hero image "
-                  "for a premium brand campaign. Write ONE image-generation prompt (2-3 sentences) "
-                  "for a single, strikingly art-directed hero photograph. Specify the subject, the "
-                  "setting, the lighting, the lens and composition, the color mood, and the "
-                  "atmosphere — cinematic, tactile, editorial, magazine-quality. The product is the "
-                  "hero, with clean negative space for later layout. Describe ONLY the photograph; "
-                  "never include any text, words, logos, or UI in the image.")
+        system = ("You are an award-winning advertising Art Director designing the BACKGROUND "
+                  "PLATE for a poster — an atmospheric backdrop that sits BEHIND the ad's text and "
+                  "logo, NOT a product shot. Write ONE image-generation prompt (2-3 sentences) for "
+                  "that backdrop: describe the setting, color field, lighting, depth, texture, and "
+                  "any effects (soft bokeh, gradients, light leaks, drifting steam, particles, film "
+                  "grain, gentle blur). Compose with LARGE areas of clean, uncluttered negative "
+                  "space (especially the lower third and one side) so the headline, subhead, and "
+                  "logo can be placed on top. Do NOT make any single object the focal subject — keep "
+                  "it a supporting environment/mood. Describe ONLY the image; never include any "
+                  "text, words, logos, or UI.")
         payload = {"product": product, "audience_segment": segment, "brand_style": brand_style}
         if exemplars:
             system += _EXEMPLAR_GUIDANCE
             payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
         subject = llm.complete(system, json.dumps(payload))
         return f"{subject} {photo_tag}.", f"generated:{llm.name}"
-    # ---- data-driven deterministic fallback (composed from the inputs) ------
+    # ---- data-driven deterministic fallback (a BACKGROUND plate, not a product shot) ----
     setting = _setting_from_segment(segment)
-    subject = f"{product['name']} — {product['descriptors']} — in {setting}"
+    subject = (f"an atmospheric out-of-focus {product['flavor']} backdrop in {setting} — "
+               f"soft bokeh, warm directional light, gentle steam and film grain, with large "
+               f"clean negative space and no product as the subject")
     return f"{subject}, {brand_style}. {photo_tag}.", "generated:rule-based(from data)"
 
 
