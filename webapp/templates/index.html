@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 {% block body %}
   <h1>Projects</h1>
+  <p class="lead">On-brand, personalized ad posters — one per project.</p>
   {% if not projects %}
-    <p class="muted">No projects yet. <a href="{{ url_for('new') }}">Add your first project</a>.</p>
+    <div class="empty">
+      <p>No projects yet.</p>
+      <a class="btn" href="{{ url_for('new') }}">+ Add your first project</a>
+    </div>
   {% endif %}
   <div class="grid">
     {% for p in projects %}

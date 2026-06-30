@@ -33,6 +33,7 @@ os.makedirs(UPLOADS, exist_ok=True)
 os.makedirs(GENERATED, exist_ok=True)
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024   # 16 MB upload cap
 
 FIELDS = ["name", "brand_primary", "brand_secondary", "identity", "agenda",
           "products", "target_interest", "headline", "subhead"]
@@ -156,4 +157,4 @@ def file():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
