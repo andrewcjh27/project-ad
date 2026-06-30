@@ -133,23 +133,43 @@ class ReplicateFluxProvider(ImageProvider):
         return img.resize((width, height))
 
 
-class ProceduralProvider(ImageProvider):
-    """Offline fallback — a clean minimal gradient: white at top -> brand color at bottom (no API).
+# Offline background styles (no API). Change the default here or set AD_BG_STYLE.
+PROCEDURAL_STYLE = "vignette"   # gradient | flat | block | circle | vignette
 
-    White at the top keeps it light and minimal; the product's brand color rises
-    from the bottom. Fine grain adds texture. No scene, no objects — a
-    deterministic stand-in for the abstract background plate the prompts describe.
+class ProceduralProvider(ImageProvider):
+    """Offline fallback — minimal procedural backgrounds in the brand color (no API).
+
+    Style picked by the AD_BG_STYLE env var, else PROCEDURAL_STYLE:
+      gradient  off-white at top -> brand color at the bottom
+      flat      a single muted tint of the brand color (matte)
+      block     a crisp two-tone color block (off-white over brand color)
+      circle    a large flat brand-color circle on off-white (geometric)
+      vignette  a soft brand-color glow rising from the bottom on off-white
+    All add fine grain — deterministic stand-ins for the abstract plate.
     """
     name = "procedural(fallback)"
     def generate(self, prompt, negative, width, height, seed=None, palette=None):
-        accent = (palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18)))[0]   # brand/product color
-        top = np.array((255, 255, 255), float)                 # white -> minimal
-        bottom = np.array(accent, float)                       # brand color at the bottom
-        yy = np.linspace(0, 1, height)[:, None, None]
-        base = top * (1 - yy) + bottom * yy                    # vertical white -> brand color
-        grain = np.random.default_rng(seed or 0).normal(0, 3, (height, width, 1))
-        base = np.clip(base + grain, 0, 255).astype("uint8")   # broadcasts to full width
-        return Image.fromarray(base, "RGB")
+        style = os.getenv("AD_BG_STYLE", PROCEDURAL_STYLE)
+        accent = np.array((palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18)))[0], float)
+        white = np.array((250, 250, 248), float)
+        H, W = height, width
+        yy = np.linspace(0, 1, H)[:, None, None]
+        xx = np.linspace(0, 1, W)[None, :, None]
+        if style == "flat":
+            base = (0.45 * accent + 0.55 * white).reshape(1, 1, 3)
+        elif style == "block":
+            base = np.where(yy < 0.62, white, accent)                       # crisp split
+        elif style == "circle":
+            ar = W / H                                                      # keep it a true circle
+            mask = ((yy - 0.32) ** 2 + ((xx - 0.5) * ar) ** 2) < 0.26 ** 2
+            base = np.where(mask, accent, white)
+        elif style == "vignette":
+            g = np.clip(1 - np.sqrt((yy - 1.0) ** 2 + (xx - 0.5) ** 2) / 0.8, 0, 1)
+            base = white * (1 - g) + accent * g                            # soft glow from bottom
+        else:                                                              # gradient
+            base = white * (1 - yy) + accent * yy
+        grain = np.random.default_rng(seed or 0).normal(0, 3, (H, W, 1))
+        return Image.fromarray(np.clip(base + grain, 0, 255).astype("uint8"), "RGB")
 
 
 # ============================================================================
