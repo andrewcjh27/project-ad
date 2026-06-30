@@ -14,8 +14,12 @@ This file holds two things:
 """
 
 # ── Brand-level imagery style (constant look the AI applies) ────────────────
-BRAND_IMAGE_STYLE = "warm natural light, shallow depth of field, the product as hero, inviting and human, rich on-brand tones"
-NEGATIVE_PROMPT   = "text, words, logos, watermark, extra fingers, misshapen cup, deformed lid"
+BRAND_IMAGE_STYLE = ("editorial advertising photography, warm directional natural light, shallow "
+                     "depth of field, gentle steam and soft condensation, tactile seasonal props, "
+                     "clean negative space for layout, rich on-brand color grade, the product as "
+                     "hero — inviting, human, premium")
+NEGATIVE_PROMPT   = ("text, words, letters, logos, watermark, extra fingers, misshapen cup, "
+                     "deformed lid, cluttered busy background, harsh flash, plastic artificial look")
 PHOTO_TAG         = "high-end advertising photography, no text, no logos, ultra detailed"
 
 # ── Optional human overrides (empty = let the AI generate from data) ────────

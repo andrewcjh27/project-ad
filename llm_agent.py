@@ -7,6 +7,7 @@ STILL-DATA-DRIVEN fallback when offline (composes from the structured inputs
 rather than returning a frozen string).
 
 Wire a real model by exporting ONE of:
+    export GEMINI_API_KEY=...         (pip install google-genai)   # same key as nano banana
     export OPENAI_API_KEY=sk-...      (pip install openai)
     export ANTHROPIC_API_KEY=...      (pip install anthropic)
 """
@@ -34,7 +35,21 @@ class _Anthropic:
             messages=[{"role": "user", "content": user}])
         return r.content[0].text.strip()
 
+class _Gemini:
+    name = "gemini:gemini-2.5-flash"
+    def complete(self, system, user):
+        from google import genai
+        from google.genai import types
+        r = genai.Client().models.generate_content(    # reads GEMINI_API_KEY / GOOGLE_API_KEY
+            model="gemini-2.5-flash", contents=user,
+            config=types.GenerateContentConfig(system_instruction=system, temperature=0.8))
+        return r.text.strip()
+
 def get_llm():
+    # Prefer Gemini so one GEMINI_API_KEY powers both the art-director text and nano-banana images.
+    if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
+        try: from google import genai; return _Gemini()  # noqa
+        except ImportError: pass
     if os.getenv("OPENAI_API_KEY"):
         try: import openai; return _OpenAI()      # noqa
         except ImportError: pass
@@ -65,9 +80,13 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag, ex
     """
     llm = get_llm()
     if llm:
-        system = ("You are an advertising Art Director. Write ONE vivid image-generation "
-                  "prompt for the hero photo of an ad. Describe only the scene/subject — "
-                  "never include text or logos in the image. 1-2 sentences.")
+        system = ("You are an award-winning advertising Art Director shooting the hero image "
+                  "for a premium brand campaign. Write ONE image-generation prompt (2-3 sentences) "
+                  "for a single, strikingly art-directed hero photograph. Specify the subject, the "
+                  "setting, the lighting, the lens and composition, the color mood, and the "
+                  "atmosphere — cinematic, tactile, editorial, magazine-quality. The product is the "
+                  "hero, with clean negative space for later layout. Describe ONLY the photograph; "
+                  "never include any text, words, logos, or UI in the image.")
         payload = {"product": product, "audience_segment": segment, "brand_style": brand_style}
         if exemplars:
             system += _EXEMPLAR_GUIDANCE
