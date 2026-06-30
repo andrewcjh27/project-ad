@@ -39,8 +39,28 @@ BRAND = {
     "min_contrast_ratio": 4.5,
 }
 
+# Cross-platform fallbacks for when the configured (Linux) font path isn't present
+# — e.g. on macOS. Real brand fonts in fonts/ still take precedence via BRAND["fonts"].
+_FONT_FALLBACKS = {
+    "heading":    ["/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+                   "/System/Library/Fonts/Helvetica.ttc",
+                   "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf"],
+    "expressive": ["/System/Library/Fonts/Supplemental/Georgia.ttf",
+                   "/System/Library/Fonts/Supplemental/Times New Roman.ttf",
+                   "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"],
+    "body":       ["/System/Library/Fonts/Supplemental/Arial.ttf",
+                   "/System/Library/Fonts/Helvetica.ttc",
+                   "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"],
+}
+
 def f(role, size):
-    return ImageFont.truetype(BRAND["fonts"][role], size)
+    candidates = [BRAND["fonts"][role], *_FONT_FALLBACKS.get(role, [])]
+    for path in candidates:
+        try:
+            return ImageFont.truetype(path, size)
+        except OSError:
+            continue
+    return ImageFont.load_default(size)  # last resort: never crash the render
 
 # ----------------------------------------------------------------------------
 # Shared ad-spec (the handoff contract). Agents fill their own fields.

@@ -1,0 +1,117 @@
+{
+  "_note": "Product-description table for the embedding matcher (product_discovery.py). Per-brand for tenant isolation. `palette` is [light_accent_rgb, dark_base_rgb]; `centrality` is how core the product is to the brand (tie-breaker). Descriptions are paraphrased from public fall/seasonal + core menus. Replace this file with a query against the real product DB; the matcher interface is unchanged.",
+  "Starbucks": [
+    {
+      "product_id": "psl", "name": "Pumpkin Spice Latte", "flavor": "pumpkin spice",
+      "category": "seasonal_bev", "season": "fall", "temp": "hot", "centrality": 1.0,
+      "tags": ["fall", "seasonal", "pumpkin", "hot", "ritual", "morning", "espresso", "cozy", "autumn"],
+      "descriptors": "espresso and steamed milk with real pumpkin, cinnamon, nutmeg and clove, topped with whipped cream and pumpkin pie spice, a cozy nostalgic autumn ritual in a takeaway cup",
+      "palette": [[201, 138, 94], [58, 36, 24]],
+      "source_url": "https://about.starbucks.com/stories/2025/starbucks-reserve-unveils-fall-menu-with-pumpkin-spice-favorites-and-new-tiramisu-latte/"
+    },
+    {
+      "product_id": "pumpkin_ccb", "name": "Pumpkin Cream Cold Brew", "flavor": "pumpkin cream",
+      "category": "seasonal_bev", "season": "fall", "temp": "cold", "centrality": 0.85,
+      "tags": ["fall", "seasonal", "pumpkin", "cold", "afternoon", "coldbrew", "refreshing"],
+      "descriptors": "smooth cold brew topped with pumpkin cream cold foam and a dusting of pumpkin spice, refreshing fall pick-me-up served over ice",
+      "palette": [[216, 168, 112], [44, 26, 16]],
+      "source_url": "https://www.today.com/food/drinks/starbucks-apple-crisp-2025-rcna232129"
+    },
+    {
+      "product_id": "apple_crisp", "name": "Iced Apple Crisp Oatmilk Shaken Espresso", "flavor": "apple crisp",
+      "category": "seasonal_bev", "season": "fall", "temp": "cold", "centrality": 0.7,
+      "tags": ["fall", "seasonal", "apple", "cinnamon", "cold", "oatmilk", "shaken"],
+      "descriptors": "blonde espresso with notes of apple, cinnamon and brown sugar, shaken and topped with oatmilk over ice, crisp autumn orchard flavor",
+      "palette": [[201, 154, 82], [51, 34, 18]],
+      "source_url": "https://www.today.com/food/drinks/starbucks-apple-crisp-2025-rcna232129"
+    },
+    {
+      "product_id": "pecan_latte", "name": "Pecan Crunch Oatmilk Latte", "flavor": "pecan crunch",
+      "category": "seasonal_bev", "season": "fall", "temp": "hot", "centrality": 0.6,
+      "tags": ["fall", "seasonal", "pecan", "hot", "oatmilk", "morning", "cozy"],
+      "descriptors": "blonde espresso with oatmilk, notes of pecan, brown butter and baking spices, topped with pecan crunch, warm cozy autumn morning latte",
+      "palette": [[194, 150, 96], [46, 29, 18]],
+      "source_url": "https://www.axios.com/2025/08/25/starbucks-pumpkin-spice-latte-2025-fall-menu-release"
+    },
+    {
+      "product_id": "peppermint_mocha", "name": "Peppermint Mocha", "flavor": "peppermint mocha",
+      "category": "seasonal_bev", "season": "holiday", "temp": "hot", "centrality": 0.9,
+      "tags": ["holiday", "seasonal", "peppermint", "chocolate", "festive", "winter", "hot", "cozy"],
+      "descriptors": "espresso with bittersweet chocolate mocha and cool peppermint, topped with whipped cream and dark chocolate curls, festive winter holiday classic",
+      "palette": [[196, 30, 58], [20, 40, 28]],
+      "source_url": "https://www.starbucks.com/menu/product/473/hot"
+    },
+    {
+      "product_id": "caramel_brulee", "name": "Caramel Brulee Latte", "flavor": "caramel brulee",
+      "category": "seasonal_bev", "season": "holiday", "temp": "hot", "centrality": 0.7,
+      "tags": ["holiday", "seasonal", "caramel", "festive", "winter", "rich", "sweet", "hot"],
+      "descriptors": "espresso and steamed milk with rich caramel brulee sauce, topped with whipped cream and caramel brulee bits, indulgent festive winter treat",
+      "palette": [[210, 160, 80], [40, 24, 16]],
+      "source_url": "https://www.starbucks.com/menu/product/475/hot"
+    },
+    {
+      "product_id": "latte", "name": "Caffe Latte", "flavor": "classic espresso milk",
+      "category": "core_bev", "season": "all", "temp": "hot", "centrality": 0.8,
+      "tags": ["core", "classic", "everyday", "smooth", "morning", "ritual", "hot", "espresso"],
+      "descriptors": "rich full-bodied espresso with smooth steamed milk and a light layer of foam, the timeless everyday morning ritual",
+      "palette": [[198, 166, 128], [60, 40, 28]],
+      "source_url": "https://www.starbucks.com/menu/product/406/hot"
+    },
+    {
+      "product_id": "caramel_macch", "name": "Caramel Macchiato", "flavor": "vanilla caramel",
+      "category": "core_bev", "season": "all", "temp": "hot", "centrality": 0.75,
+      "tags": ["core", "caramel", "vanilla", "sweet", "everyday", "morning", "smooth", "hot"],
+      "descriptors": "freshly steamed milk with vanilla syrup, marked with espresso and finished with a caramel drizzle, sweet smooth everyday favorite",
+      "palette": [[200, 150, 96], [54, 34, 22]],
+      "source_url": "https://www.starbucks.com/menu/product/413/hot"
+    },
+    {
+      "product_id": "cold_brew", "name": "Cold Brew Coffee", "flavor": "smooth cold brew",
+      "category": "cold_coffee", "season": "all", "temp": "cold", "centrality": 0.7,
+      "tags": ["cold", "coldbrew", "smooth", "bold", "refreshing", "afternoon", "iced", "everyday"],
+      "descriptors": "slow-steeped for 20 hours for a super-smooth, bold and naturally sweet flavor, served black over ice, refreshing afternoon coffee",
+      "palette": [[150, 110, 80], [30, 22, 18]],
+      "source_url": "https://www.starbucks.com/menu/product/2122287/iced"
+    },
+    {
+      "product_id": "nitro", "name": "Nitro Cold Brew", "flavor": "nitro cold brew",
+      "category": "cold_coffee", "season": "all", "temp": "cold", "centrality": 0.6,
+      "tags": ["cold", "coldbrew", "nitro", "creamy", "bold", "refreshing", "afternoon", "iced"],
+      "descriptors": "cold brew infused with nitrogen for a cascading velvety body and naturally sweet finish, served unsweetened and iced, smooth bold afternoon refresher",
+      "palette": [[170, 140, 110], [24, 18, 14]],
+      "source_url": "https://www.starbucks.com/menu/product/2122296/iced"
+    },
+    {
+      "product_id": "bss_espresso", "name": "Iced Brown Sugar Oatmilk Shaken Espresso", "flavor": "brown sugar oatmilk",
+      "category": "cold_coffee", "season": "all", "temp": "cold", "centrality": 0.65,
+      "tags": ["cold", "oatmilk", "brown sugar", "shaken", "iced", "trendy", "refreshing", "afternoon"],
+      "descriptors": "blonde espresso shaken with brown sugar and cinnamon, topped with oatmilk over ice, trendy lightly sweet refreshing iced espresso",
+      "palette": [[200, 160, 110], [46, 30, 18]],
+      "source_url": "https://www.starbucks.com/menu/product/2123770006/iced"
+    },
+    {
+      "product_id": "matcha_latte", "name": "Matcha Green Tea Latte", "flavor": "matcha green tea",
+      "category": "tea", "season": "all", "temp": "hot", "centrality": 0.55,
+      "tags": ["tea", "matcha", "green", "wellness", "healthy", "calm", "earthy", "smooth"],
+      "descriptors": "smooth and creamy matcha green tea sweetened and combined with steamed milk, earthy calming wellness drink",
+      "palette": [[138, 176, 96], [28, 46, 28]],
+      "source_url": "https://www.starbucks.com/menu/product/450/hot"
+    },
+    {
+      "product_id": "chai_latte", "name": "Chai Tea Latte", "flavor": "spiced chai",
+      "category": "tea", "season": "all", "temp": "hot", "centrality": 0.5,
+      "tags": ["tea", "chai", "spiced", "cinnamon", "cozy", "warm", "comforting", "hot"],
+      "descriptors": "black tea infused with cinnamon, clove and other warming spices combined with steamed milk, cozy comforting spiced tea latte",
+      "palette": [[190, 130, 70], [50, 30, 18]],
+      "source_url": "https://www.starbucks.com/menu/product/435/hot"
+    },
+    {
+      "product_id": "refresher", "name": "Strawberry Acai Refresher", "flavor": "strawberry acai",
+      "category": "refresher", "season": "summer", "temp": "cold", "centrality": 0.5,
+      "tags": ["summer", "refresher", "strawberry", "fruity", "bright", "light", "energizing", "iced"],
+      "descriptors": "sweet strawberry flavors with real strawberry pieces and a splash of acai, shaken with ice for a bright light energizing summer refresher",
+      "palette": [[230, 90, 110], [120, 20, 40]],
+      "source_url": "https://www.starbucks.com/menu/product/2123776/iced"
+    }
+  ]
+}
