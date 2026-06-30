@@ -9,6 +9,7 @@ venv/
 
 # Generated outputs (re-created by the scripts)
 hero_test.png
+sbux_psl_ad.png
 *.spec.json
 
 # Brand memory — commit the hand-authored seed, ignore runtime-learned rows

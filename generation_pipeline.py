@@ -11,7 +11,7 @@ The Image Generator is a procedural stand-in for a hosted image model `# [IMG]`.
 The Compositor and Brand Guardian are real deterministic code (production-shaped).
 """
 
-import json, os, copy
+import json, os, copy, random
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from image_agent import get_image_provider   # real image-model adapter (falls back to procedural)
 import ad_brief                              # brand image style + optional manual overrides
@@ -99,7 +99,7 @@ FORMATS = {
 # One hero seed shared across a campaign so every format reads as the same shoot.
 _HERO_SEED = 771204
 
-def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
+def layout_elements(W, H, palette, prompt, psrc, headline, subhead, seed=_HERO_SEED):
     """Deterministic, proportional layout for one format.
 
     The ONLY format-dependent layer. Portrait/square stack the copy in the lower
@@ -113,7 +113,7 @@ def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
             "id": "img_hero", "role": "hero",
             "prompt": prompt, "prompt_source": psrc,          # AI-generated from data
             "negative_prompt": ad_brief.NEGATIVE_PROMPT,
-            "palette": palette, "seed": _HERO_SEED,
+            "palette": palette, "seed": seed,
             "placement": {"x": 0, "y": 0, "w": W, "h": H},
         }],
     }
@@ -236,6 +236,9 @@ class ArtDirector:
         spec["concept"]["image_prompt"] = prompt                  # AI-generated from data
         spec["concept"]["image_prompt_source"] = psrc
         spec["concept"]["palette"] = p["palette"]
+        # Random hero seed per concept -> diverse design each run; recorded so the
+        # ad stays reproducible from its spec (shared across a campaign's formats).
+        spec["concept"]["hero_seed"] = random.randint(1, 2**31 - 1)
         spec["concept"]["big_idea"] = ""                          # written by Copywriter next
         log(spec, "ArtDirector", f"image prompt {psrc}; concept decided (format-independent)")
         return spec
@@ -411,7 +414,7 @@ class Orchestrator:
         c = spec["concept"]
         spec["canvas"], spec["elements"] = layout_elements(
             W, H, c["palette"], c["image_prompt"], c["image_prompt_source"],
-            c["big_idea"], c.get("subhead", ""))
+            c["big_idea"], c.get("subhead", ""), seed=c.get("hero_seed", _HERO_SEED))
         hero = self.img.run(spec)
         canvas = self.comp.run(spec, hero)
         ok, gates = self.guard.run(spec, canvas)

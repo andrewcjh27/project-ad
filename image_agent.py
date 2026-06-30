@@ -134,41 +134,49 @@ class ReplicateFluxProvider(ImageProvider):
 
 
 # Offline background styles (no API). Change the default here or set AD_BG_STYLE.
-PROCEDURAL_STYLE = "vignette"   # gradient | flat | block | circle | vignette
+#   diverse  pick a different minimal form + parameters from the seed (varies each run)
+#   gradient | flat | circle | vignette | block  pin one specific style
+PROCEDURAL_STYLE = "diverse"
 
 class ProceduralProvider(ImageProvider):
     """Offline fallback — minimal procedural backgrounds in the brand color (no API).
 
-    Style picked by the AD_BG_STYLE env var, else PROCEDURAL_STYLE:
-      gradient  off-white at top -> brand color at the bottom
-      flat      a single muted tint of the brand color (matte)
-      block     a crisp two-tone color block (off-white over brand color)
-      circle    a large flat brand-color circle on off-white (geometric)
-      vignette  a soft brand-color glow rising from the bottom on off-white
-    All add fine grain — deterministic stand-ins for the abstract plate.
+    Style from AD_BG_STYLE env, else PROCEDURAL_STYLE. In "diverse" mode the seed
+    chooses one minimal form (gradient / flat / vignette / circle) AND varies its
+    parameters (direction, glow position, circle placement, tone), so successive
+    runs produce genuinely different — but still minimal and on-palette — designs.
+    The seed is recorded in the spec, so any specific ad stays reproducible.
     """
     name = "procedural(fallback)"
     def generate(self, prompt, negative, width, height, seed=None, palette=None):
         style = os.getenv("AD_BG_STYLE", PROCEDURAL_STYLE)
-        accent = np.array((palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18)))[0], float)
+        rng = np.random.default_rng(seed if seed is not None else 0)
+        pal = palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18))
+        accent, deep = np.array(pal[0], float), np.array(pal[1], float)
         white = np.array((250, 250, 248), float)
         H, W = height, width
         yy = np.linspace(0, 1, H)[:, None, None]
         xx = np.linspace(0, 1, W)[None, :, None]
+        if style == "diverse":
+            style = str(rng.choice(["gradient", "flat", "vignette", "circle"]))
+        tone = accent if rng.random() < 0.7 else (0.6 * accent + 0.4 * deep)   # vary the brand tone
         if style == "flat":
-            base = (0.45 * accent + 0.55 * white).reshape(1, 1, 3)
+            base = (rng.uniform(0.35, 0.55) * tone + rng.uniform(0.45, 0.65) * white).reshape(1, 1, 3)
         elif style == "block":
-            base = np.where(yy < 0.62, white, accent)                       # crisp split
+            base = np.where(yy < rng.uniform(0.55, 0.70), white, tone)          # split varies
         elif style == "circle":
-            ar = W / H                                                      # keep it a true circle
-            mask = ((yy - 0.32) ** 2 + ((xx - 0.5) * ar) ** 2) < 0.26 ** 2
-            base = np.where(mask, accent, white)
+            cy, cx, r = rng.uniform(0.26, 0.40), rng.uniform(0.42, 0.58), rng.uniform(0.22, 0.30)
+            ar = W / H
+            base = np.where(((yy - cy) ** 2 + ((xx - cx) * ar) ** 2) < r ** 2, tone, white)
         elif style == "vignette":
-            g = np.clip(1 - np.sqrt((yy - 1.0) ** 2 + (xx - 0.5) ** 2) / 0.8, 0, 1)
-            base = white * (1 - g) + accent * g                            # soft glow from bottom
-        else:                                                              # gradient
-            base = white * (1 - yy) + accent * yy
-        grain = np.random.default_rng(seed or 0).normal(0, 3, (H, W, 1))
+            oy, ox, rad = rng.uniform(0.85, 1.05), rng.uniform(0.35, 0.65), rng.uniform(0.70, 0.95)
+            g = np.clip(1 - np.sqrt((yy - oy) ** 2 + (xx - ox) ** 2) / rad, 0, 1)
+            base = white * (1 - g) + tone * g                                   # glow position varies
+        else:                                                                   # gradient, direction varies
+            d = rng.uniform(0.0, 0.4)
+            t = (1 - d) * yy + d * xx
+            base = white * (1 - t) + tone * t
+        grain = rng.normal(0, 3, (H, W, 1))
         return Image.fromarray(np.clip(base + grain, 0, 255).astype("uint8"), "RGB")
 
 
