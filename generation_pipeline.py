@@ -478,9 +478,5 @@ if __name__ == "__main__":
     print("Image prompt:", spec["canvas"]["imagery"][0]["prompt"][:90], "...")
     print("Agents:", " -> ".join(a["agent"] for a in spec["provenance"]["agents"]))
     print("Headline:", next(e["content"] for e in spec["elements"] if e["id"] == "headline"))
-    # Campaign coherence: one concept -> multiple formats that share copy/palette/product.
-    manifest = orch.run_campaign(segment, "campaign_sbux_psl")
-    print("\nCampaign:", manifest["campaign_id"], "->", "campaign_sbux_psl/  (shared headline:",
-          repr(manifest["shared_concept"]["headline"]) + ")")
-    for it in manifest["formats"]:
-        print(f"  {it['format']:16s} {it['size'][0]}x{it['size'][1]:<5} {it['aspect_ratio']:6s} critic: {it['critic']}")
+    # Focused on the 4:5 poster for now. The other formats (square, landscape) are
+    # still available via Orchestrator.run_campaign(segment, out_dir) when wanted.
