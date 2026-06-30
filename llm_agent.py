@@ -92,9 +92,11 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
             "(2) PALETTE — choose just TWO or THREE colors from the provided `brand_colors` that best "
             "fit the mood (you do NOT need to use all of them); name the exact hex values you pick and "
             "use no colors outside that chosen set; "
-            "(3) COMPOSITION — minimal and abstract (soft color fields, gentle gradients, fine grain), "
-            "with deliberate clean NEGATIVE SPACE in the upper-center (for the product) and the lower "
-            "third (for the headline), and no recognizable scene or objects; "
+            "(3) COMPOSITION & PLACEMENT — minimal and abstract (soft color fields, gentle gradients, "
+            "fine grain). Reserve clean space for the layout: keep the TOP-LEFT clear for a small "
+            "logo, the UPPER-CENTER calm and empty for a product cutout, and the LOWER THIRD "
+            "(especially lower-left) LIGHT and low-contrast so DARK headline and subhead text stays "
+            "legible on top. No recognizable scene or objects; "
             "(4) CRAFT — specify lighting, mood, and texture, and state it is a vertical 4:5 "
             "composition; "
             "(5) CREATIVITY — be genuinely creative and original with the abstract form, the gradient "
@@ -117,9 +119,10 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
     subject = (f"an extremely minimal, clean abstract background plate for a vertical 4:5 poster, built "
                f"from a limited palette of two or three colors chosen from the brand colors ({colors}); "
                f"a soft {product['flavor']} color field with "
-               f"a gentle gradient and fine grain; mostly empty, with generous clean negative space in "
-               f"the upper-center for a product cutout and the lower third for a headline; calm, "
-               f"understated, premium; no recognizable scene, no objects, no product, no people.{goal_txt}")
+               f"a gentle gradient and fine grain; mostly empty — keep the top-left clear for a logo, "
+               f"the upper-center clean for a product cutout, and the lower third light and "
+               f"low-contrast so dark headline text stays legible; calm, understated, premium; no "
+               f"recognizable scene, no objects, no product, no people.{goal_txt}")
     return f"{subject}, {brand_style}. {photo_tag}.", "generated:rule-based(from data)"
 
 
