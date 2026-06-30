@@ -82,6 +82,10 @@ def blank_spec(segment):
 def log(spec, agent, note):
     spec["provenance"]["agents"].append({"agent": agent, "note": note})
 
+def _hex(rgb):
+    """RGB tuple -> #RRGGBB, so the image prompt can name exact brand colors."""
+    return "#%02X%02X%02X" % (int(rgb[0]), int(rgb[1]), int(rgb[2]))
+
 # ----------------------------------------------------------------------------
 # Campaign formats — one concept renders into each (Phase 2: campaign coherence).
 # The concept/copy/palette are format-INDEPENDENT; only the layout below changes.
@@ -164,10 +168,20 @@ class Strategist:
             "vip":    "restrained, premium, exclusive; minimal and refined",
         }.get(life, "minimal, understated; calm and personal")
         pillar = "seasonal" if ("fall" in interest or "season" in interest) else "ritual"
+        # Spell out the ad's PURPOSE for this group so the prompt engineer can aim the mood.
+        who = persona.get("name") or f"the {life} '{interest}' audience"
+        pillar_goal = {"seasonal": "make the seasonal moment feel fresh and worth returning for",
+                       "ritual": "reinforce the everyday ritual and quiet loyalty"}.get(pillar, "build brand affinity")
+        life_goal = {"loyal": "reward a familiar regular", "new": "make a warm first impression",
+                     "lapsed": "gently win back a lapsed customer",
+                     "vip": "offer a refined, premium gesture"}.get(life, "connect with the audience")
+        ad_goal = (f"A premium, minimal {pillar} poster speaking to {who}: {pillar_goal}; {life_goal}. "
+                   f"Calm, understated, unmistakably on-brand.")
         spec["concept"].update({
             "rationale": persona.get("summary") or f"{life} segment centered on '{interest}'.",
             "copy_angle": angle,
             "messaging_pillar": pillar,
+            "ad_goal": ad_goal,
         })
         if persona.get("name"):
             spec["concept"]["persona"] = {"name": persona.get("name"),
@@ -209,9 +223,16 @@ class ArtDirector:
         if ad_brief.MANUAL_IMAGE_PROMPT:
             prompt, psrc = ad_brief.MANUAL_IMAGE_PROMPT + f". {ad_brief.PHOTO_TAG}.", "manual"
         else:
+            # Exact brand + product colors so the prompt names a real limited palette (not invented).
+            brand_colors = {
+                "brand_green": _hex(BRAND["colors"]["primary"]),
+                "brand_cream": _hex(BRAND["colors"]["cream"]),
+                "product_accent": _hex(p["palette"][0]),
+                "product_deep": _hex(p["palette"][1]),
+            }
             prompt, psrc = llm_agent.generate_image_prompt(
                 p, seg, ad_brief.BRAND_IMAGE_STYLE, ad_brief.NEGATIVE_PROMPT, ad_brief.PHOTO_TAG,
-                exemplars=exemplars)
+                exemplars=exemplars, brand_colors=brand_colors, goal=spec["concept"].get("ad_goal"))
         spec["concept"]["image_prompt"] = prompt                  # AI-generated from data
         spec["concept"]["image_prompt_source"] = psrc
         spec["concept"]["palette"] = p["palette"]

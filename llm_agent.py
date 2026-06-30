@@ -72,34 +72,46 @@ def _exemplars_for_prompt(exemplars):
 
 
 # ── Art Director: generate the IMAGE PROMPT from data ───────────────────────
-def generate_image_prompt(product, segment, brand_style, negative, photo_tag, exemplars=None):
-    """LLM-write the hero image prompt from product + segment + brand style.
+def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
+                          exemplars=None, brand_colors=None, goal=None):
+    """LLM-write a DETAILED background-plate prompt from the brief.
 
-    `exemplars` (optional) are retrieved past on-brand ads used as few-shot
-    guidance for the LLM path; the offline fallback ignores them.
+    Engineers a rich prompt that names the exact brand colors, states the ad's
+    goal/purpose, and specifies composition + craft. `brand_colors` is a dict of
+    named hex values; `goal` is the per-group purpose. Falls back to a detailed
+    data-driven prompt offline.
     """
     llm = get_llm()
     if llm:
-        system = ("You are a minimalist Art Director designing a PURE ABSTRACT BACKGROUND for a "
-                  "poster — a clean, minimal backdrop that sits behind the ad's text and logo. "
-                  "Write ONE image-generation prompt (1-2 sentences) for an abstract field of color "
-                  "built from a LIMITED palette of just two or three brand colors (never a busy "
-                  "rainbow of many colors): soft gradients, gentle light, fine grain or subtle "
-                  "paper/canvas texture, an optional faint bokeh or light leak. Keep it minimal and "
-                  "uncluttered, with generous clean negative space (especially the lower third and "
-                  "one side) for the headline, subhead, and logo. No recognizable scene, no objects, "
-                  "no product, no people. Describe ONLY the abstract image; never include any text, "
-                  "words, logos, or UI.")
-        payload = {"product": product, "audience_segment": segment, "brand_style": brand_style}
+        system = (
+            "You are an expert advertising Art Director and image prompt engineer. Using the JSON "
+            "brief, write ONE detailed, production-ready image-generation prompt (3-5 sentences) for "
+            "the BACKGROUND PLATE of a premium vertical 4:5 poster — an abstract backdrop that sits "
+            "behind a product cutout and a short headline. Weave in, as flowing prose: "
+            "(1) PURPOSE — let the brief's `goal` and audience persona drive the mood and intent; "
+            "(2) PALETTE — use ONLY a limited palette drawn from the provided `brand_colors`, naming "
+            "the exact colors, and no others; "
+            "(3) COMPOSITION — minimal and abstract (soft color fields, gentle gradients, fine grain), "
+            "with deliberate clean NEGATIVE SPACE in the upper-center (for the product) and the lower "
+            "third (for the headline), and no recognizable scene or objects; "
+            "(4) CRAFT — specify lighting, mood, and texture, and state it is a vertical 4:5 "
+            "composition. HARD RULE: describe ONLY the abstract image; never include any text, words, "
+            "letters, logos, UI, people, or the product itself.")
+        payload = {"goal": goal, "audience_segment": segment, "product": product,
+                   "brand_colors": brand_colors, "brand_style": brand_style}
         if exemplars:
             system += _EXEMPLAR_GUIDANCE
             payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
         subject = llm.complete(system, json.dumps(payload))
         return f"{subject} {photo_tag}.", f"generated:{llm.name}"
-    # ---- data-driven deterministic fallback (a minimal abstract color field) ----
-    subject = (f"a minimal abstract {product['flavor']} color field — two or three soft brand "
-               f"tones, a gentle gradient and fine grain, generous clean negative space, no "
-               f"objects, no scene, no product")
+    # ---- data-driven deterministic fallback (a detailed minimal abstract plate) ----
+    colors = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in (brand_colors or {}).items()) or "the brand palette"
+    goal_txt = f" Purpose: {goal}" if goal else ""
+    subject = (f"a minimal abstract background plate for a vertical 4:5 poster, built from a limited "
+               f"palette drawn from {colors}; a soft {product['flavor']} color field with a gentle "
+               f"gradient and fine grain; generous clean negative space in the upper-center for a "
+               f"product cutout and the lower third for a headline; calm, understated, premium; no "
+               f"recognizable scene, no objects, no product, no people.{goal_txt}")
     return f"{subject}, {brand_style}. {photo_tag}.", "generated:rule-based(from data)"
 
 
