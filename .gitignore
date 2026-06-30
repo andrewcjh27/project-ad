@@ -11,5 +11,9 @@ venv/
 hero_test.png
 *.spec.json
 
+# Brand memory — commit the hand-authored seed, ignore runtime-learned rows
+brand_memory/*.jsonl
+!brand_memory/*.seed.jsonl
+
 # OS
 .DS_Store

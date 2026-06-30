@@ -44,17 +44,35 @@ def get_llm():
     return None                                    # -> caller uses data-driven fallback
 
 
+# ── Brand-memory exemplars (soft guidance only) ─────────────────────────────
+_EXEMPLAR_GUIDANCE = (
+    " You are also shown PAST ON-BRAND ADS as `past_on_brand_examples`. Match their "
+    "voice, concept logic, and tone — but do NOT copy them verbatim, and NEVER invent "
+    "colors, fonts, or logos (those are enforced separately).")
+
+def _exemplars_for_prompt(exemplars):
+    """Concept/copy fields only — never brand hard-rules."""
+    return [{"headline": e.get("headline", ""), "subhead": e.get("subhead", ""),
+             "image_prompt": e.get("image_prompt", "")} for e in (exemplars or [])]
+
+
 # ── Art Director: generate the IMAGE PROMPT from data ───────────────────────
-def generate_image_prompt(product, segment, brand_style, negative, photo_tag):
-    """LLM-write the hero image prompt from product + segment + brand style."""
+def generate_image_prompt(product, segment, brand_style, negative, photo_tag, exemplars=None):
+    """LLM-write the hero image prompt from product + segment + brand style.
+
+    `exemplars` (optional) are retrieved past on-brand ads used as few-shot
+    guidance for the LLM path; the offline fallback ignores them.
+    """
     llm = get_llm()
     if llm:
         system = ("You are an advertising Art Director. Write ONE vivid image-generation "
                   "prompt for the hero photo of an ad. Describe only the scene/subject — "
                   "never include text or logos in the image. 1-2 sentences.")
-        user = json.dumps({"product": product, "audience_segment": segment,
-                           "brand_style": brand_style})
-        subject = llm.complete(system, user)
+        payload = {"product": product, "audience_segment": segment, "brand_style": brand_style}
+        if exemplars:
+            system += _EXEMPLAR_GUIDANCE
+            payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
+        subject = llm.complete(system, json.dumps(payload))
         return f"{subject} {photo_tag}.", f"generated:{llm.name}"
     # ---- data-driven deterministic fallback (composed from the inputs) ------
     setting = _setting_from_segment(segment)
@@ -63,12 +81,16 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag):
 
 
 # ── Copywriter: generate HEADLINE + SUBHEAD from data ───────────────────────
-def generate_copy(product, segment, angle):
+def generate_copy(product, segment, angle, exemplars=None):
     llm = get_llm()
     if llm:
         system = ("You are a brand Copywriter. Write a short ad HEADLINE (<=6 words) and a "
                   "one-line SUBHEAD in a warm, premium voice. Return JSON {\"headline\":..,\"subhead\":..}.")
-        user = json.dumps({"product": product, "audience_segment": segment, "angle": angle})
+        payload = {"product": product, "audience_segment": segment, "angle": angle}
+        if exemplars:
+            system += _EXEMPLAR_GUIDANCE
+            payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
+        user = json.dumps(payload)
         try:
             j = json.loads(llm.complete(system, user))
             return j["headline"], j["subhead"], f"generated:{llm.name}"
