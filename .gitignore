@@ -19,5 +19,10 @@ brand_memory/*.jsonl
 # Generated campaign output (re-created by run_campaign)
 campaign_*/
 
+# Web console runtime data (re-created at runtime)
+webapp/projects.db
+webapp/uploads/
+webapp/generated/
+
 # OS
 .DS_Store

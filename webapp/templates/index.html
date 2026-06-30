@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+  <h1>Projects</h1>
+  {% if not projects %}
+    <p class="muted">No projects yet. <a href="{{ url_for('new') }}">Add your first project</a>.</p>
+  {% endif %}
+  <div class="grid">
+    {% for p in projects %}
+      <a class="card" href="{{ url_for('project', pid=p['id']) }}">
+        <img src="{{ url_for('generated', pid=p['id']) }}" alt="{{ p['name'] }} poster">
+        <div class="card-meta">
+          <strong>{{ p['name'] }}</strong>
+          <span class="muted">{{ p['target_interest'] or '—' }}</span>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% endblock %}

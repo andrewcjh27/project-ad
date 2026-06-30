@@ -1,0 +1,39 @@
+* { box-sizing: border-box; }
+body { font-family: Georgia, "Times New Roman", serif; margin: 0; color: #1c1c1c; background: #faf9f7; }
+header { display: flex; justify-content: space-between; align-items: center;
+         padding: 18px 28px; border-bottom: 1px solid #ececec; background: #fff; }
+.brand { font-weight: bold; text-decoration: none; color: #1c1c1c; font-size: 18px; letter-spacing: .02em; }
+main { max-width: 980px; margin: 0 auto; padding: 28px; }
+h1 { font-weight: normal; letter-spacing: .01em; }
+h2 { font-weight: normal; margin-top: 32px; }
+.muted { color: #8a8a8a; }
+a { color: #00704A; }
+
+.btn { display: inline-block; background: #1c1c1c; color: #fff; border: none; border-radius: 6px;
+       padding: 9px 16px; text-decoration: none; cursor: pointer; font: inherit; }
+.btn.ghost { background: transparent; color: #1c1c1c; border: 1px solid #cfcfcf; margin-top: 12px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; margin-top: 18px; }
+.card { display: block; text-decoration: none; color: inherit; border: 1px solid #ececec;
+        border-radius: 10px; overflow: hidden; background: #fff; transition: box-shadow .15s; }
+.card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.07); }
+.card img { width: 100%; display: block; aspect-ratio: 4/5; object-fit: cover; background: #f0efec; }
+.card-meta { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+
+.form { display: flex; flex-direction: column; gap: 14px; max-width: 640px; margin-top: 12px; }
+.form label { display: flex; flex-direction: column; gap: 5px; font-size: 14px; color: #444; }
+.form input, .form textarea { font: inherit; padding: 9px; border: 1px solid #d4d4d4; border-radius: 6px; background: #fff; }
+.form input[type=color] { padding: 2px; height: 40px; }
+.row { display: flex; gap: 14px; }
+.row label { flex: 1; }
+
+.detail { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 18px; align-items: start; }
+.poster img { width: 100%; border: 1px solid #ececec; border-radius: 10px; }
+.meta dt { font-weight: bold; margin-top: 12px; font-size: 13px; }
+.meta dd { margin: 2px 0 0; color: #444; }
+.swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px;
+          vertical-align: middle; margin: 0 6px; border: 1px solid #ddd; }
+.refs { display: flex; gap: 10px; flex-wrap: wrap; }
+.refs img { height: 130px; border-radius: 6px; border: 1px solid #ececec; }
+
+@media (max-width: 700px) { .detail { grid-template-columns: 1fr; } .row { flex-direction: column; } }

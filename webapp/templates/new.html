@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block body %}
+  <a href="{{ url_for('index') }}" class="muted">&larr; All projects</a>
+  <h1>Add project</h1>
+  <form method="post" action="{{ url_for('create') }}" enctype="multipart/form-data" class="form">
+    <label>Project / brand name
+      <input name="name" required placeholder="e.g. Acme Coffee">
+    </label>
+    <div class="row">
+      <label>Brand primary color
+        <input type="color" name="brand_primary" value="#00704A">
+      </label>
+      <label>Secondary (optional)
+        <input type="color" name="brand_secondary" value="#1c1c1c">
+      </label>
+    </div>
+    <label>Brand identity / voice
+      <textarea name="identity" rows="2" placeholder="warm, minimal, premium"></textarea>
+    </label>
+    <label>Agenda / goals
+      <textarea name="agenda" rows="2" placeholder="launch the fall blend; reward loyal regulars"></textarea>
+    </label>
+    <label>Products / details
+      <textarea name="products" rows="2" placeholder="seasonal latte, cold brew, ..."></textarea>
+    </label>
+    <label>Target audience interest
+      <input name="target_interest" placeholder="e.g. cozy autumn ritual">
+    </label>
+    <div class="row">
+      <label>Headline (optional)
+        <input name="headline" placeholder="Fall, quietly.">
+      </label>
+      <label>Subhead (optional)
+        <input name="subhead" placeholder="The autumn blend is back.">
+      </label>
+    </div>
+    <div class="row">
+      <label>Logo (PNG)
+        <input type="file" name="logo" accept="image/*">
+      </label>
+      <label>Product cutout (transparent PNG)
+        <input type="file" name="product" accept="image/*">
+      </label>
+    </div>
+    <label>Reference / past ads (optional, multiple)
+      <input type="file" name="ref_ads" accept="image/*" multiple>
+    </label>
+    <button class="btn" type="submit">Create &amp; generate</button>
+  </form>
+{% endblock %}
