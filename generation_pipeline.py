@@ -11,13 +11,14 @@ The Image Generator is a procedural stand-in for a hosted image model `# [IMG]`.
 The Compositor and Brand Guardian are real deterministic code (production-shaped).
 """
 
-import json, math, os, copy
+import json, os, copy
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from image_agent import get_image_provider   # real image-model adapter (falls back to procedural)
 import ad_brief                              # brand image style + optional manual overrides
 import llm_agent                             # Art Director / Copywriter brains (LLM or data-driven)
 import product_discovery                     # retrieves the product by interest (web-sourced for now)
 import brand_memory                          # retrieves past on-brand ads as few-shot exemplars
+import brand_fit                             # shared brand-color primitive (+ any-image scorer)
 
 # ----------------------------------------------------------------------------
 # Brand package (subset of Starbucks-Brand-Package.md, machine form)
@@ -321,8 +322,8 @@ class BrandGuardian:
         cx = lg["box"]["x"] + lg["box"]["w"]//2
         cy = lg["box"]["y"] + lg["box"]["h"]//2 + int(lg["box"]["w"]*0.30)
         sample = img.getpixel((cx, cy))
-        dist = math.dist(sample[:3], BRAND["colors"]["primary"])
-        gates["brand_color_present"] = "pass" if dist < 40 else "fail"
+        gates["brand_color_present"] = "pass" if brand_fit.is_brand_color(
+            sample, [BRAND["colors"]["primary"]], tol=40) else "fail"
         # logo present
         gates["logo_present"] = "pass" if any(e["type"] == "logo" for e in spec["elements"]) else "fail"
         spec["qc"]["gates"] = gates
