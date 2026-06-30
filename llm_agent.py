@@ -7,6 +7,7 @@ STILL-DATA-DRIVEN fallback when offline (composes from the structured inputs
 rather than returning a frozen string).
 
 Wire a real model by exporting ONE of:
+    export GEMINI_API_KEY=...         (pip install google-genai)   # same key as nano banana
     export OPENAI_API_KEY=sk-...      (pip install openai)
     export ANTHROPIC_API_KEY=...      (pip install anthropic)
 """
@@ -34,7 +35,21 @@ class _Anthropic:
             messages=[{"role": "user", "content": user}])
         return r.content[0].text.strip()
 
+class _Gemini:
+    name = "gemini:gemini-2.5-flash"
+    def complete(self, system, user):
+        from google import genai
+        from google.genai import types
+        r = genai.Client().models.generate_content(    # reads GEMINI_API_KEY / GOOGLE_API_KEY
+            model="gemini-2.5-flash", contents=user,
+            config=types.GenerateContentConfig(system_instruction=system, temperature=0.8))
+        return r.text.strip()
+
 def get_llm():
+    # Prefer Gemini so one GEMINI_API_KEY powers both the art-director text and nano-banana images.
+    if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
+        try: from google import genai; return _Gemini()  # noqa
+        except ImportError: pass
     if os.getenv("OPENAI_API_KEY"):
         try: import openai; return _OpenAI()      # noqa
         except ImportError: pass
@@ -65,18 +80,26 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag, ex
     """
     llm = get_llm()
     if llm:
-        system = ("You are an advertising Art Director. Write ONE vivid image-generation "
-                  "prompt for the hero photo of an ad. Describe only the scene/subject — "
-                  "never include text or logos in the image. 1-2 sentences.")
+        system = ("You are a minimalist Art Director designing a PURE ABSTRACT BACKGROUND for a "
+                  "poster — a clean, minimal backdrop that sits behind the ad's text and logo. "
+                  "Write ONE image-generation prompt (1-2 sentences) for an abstract field of color "
+                  "built from a LIMITED palette of just two or three brand colors (never a busy "
+                  "rainbow of many colors): soft gradients, gentle light, fine grain or subtle "
+                  "paper/canvas texture, an optional faint bokeh or light leak. Keep it minimal and "
+                  "uncluttered, with generous clean negative space (especially the lower third and "
+                  "one side) for the headline, subhead, and logo. No recognizable scene, no objects, "
+                  "no product, no people. Describe ONLY the abstract image; never include any text, "
+                  "words, logos, or UI.")
         payload = {"product": product, "audience_segment": segment, "brand_style": brand_style}
         if exemplars:
             system += _EXEMPLAR_GUIDANCE
             payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
         subject = llm.complete(system, json.dumps(payload))
         return f"{subject} {photo_tag}.", f"generated:{llm.name}"
-    # ---- data-driven deterministic fallback (composed from the inputs) ------
-    setting = _setting_from_segment(segment)
-    subject = f"{product['name']} — {product['descriptors']} — in {setting}"
+    # ---- data-driven deterministic fallback (a minimal abstract color field) ----
+    subject = (f"a minimal abstract {product['flavor']} color field — two or three soft brand "
+               f"tones, a gentle gradient and fine grain, generous clean negative space, no "
+               f"objects, no scene, no product")
     return f"{subject}, {brand_style}. {photo_tag}.", "generated:rule-based(from data)"
 
 
@@ -84,8 +107,10 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag, ex
 def generate_copy(product, segment, angle, exemplars=None):
     llm = get_llm()
     if llm:
-        system = ("You are a brand Copywriter. Write a short ad HEADLINE (<=6 words) and a "
-                  "one-line SUBHEAD in a warm, premium voice. Return JSON {\"headline\":..,\"subhead\":..}.")
+        system = ("You are a brand Copywriter. Write a short ad HEADLINE (<=5 words) and a brief "
+                  "one-line SUBHEAD in a minimal, understated voice — restrained and confident, "
+                  "never hype or hard-sell. Adapt the tone to the brand and audience. Favor clarity "
+                  "and white space over cleverness. Return JSON {\"headline\":..,\"subhead\":..}.")
         payload = {"product": product, "audience_segment": segment, "angle": angle}
         if exemplars:
             system += _EXEMPLAR_GUIDANCE
@@ -98,24 +123,40 @@ def generate_copy(product, segment, angle, exemplars=None):
             pass
     # ---- data-driven fallback: pick a frame by the segment's pillar/lifecycle
     name = product["name"]
-    daypart = segment.get("daypart", "day")
     pillar = segment.get("pillar", "ritual")
     head = {
-        "seasonal": f"Your {daypart}, now in {product['flavor']}.",
-        "belonging": f"Your {name} is waiting.",
-        "ritual": f"{name}. Made for your {daypart}.",
-    }.get(pillar, f"{name}, made for you.")
+        "seasonal":  f"{product['flavor'].title()}, in season.",
+        "belonging": f"{name}, yours.",
+        "ritual":    f"{name}, daily.",
+    }.get(pillar, f"{name}.")
     sub = {
-        "loyal":  "Order ahead and skip the wait.",
-        "lapsed": "Here's your favorite, on us.",
-        "new":    "Handcrafted, every single cup.",
-        "vip":    "A little something, just for you.",
-    }.get(segment.get("lifecycle", "loyal"), "Made for your moment.")
+        "loyal":  "Ready when you are.",
+        "lapsed": "Good to have you back.",
+        "new":    "Made fresh, every cup.",
+        "vip":    "Quietly, just for you.",
+    }.get(segment.get("lifecycle", "loyal"), "Made for the moment.")
     return head, sub, "generated:rule-based(from data)"
 
 
-def _setting_from_segment(segment):
-    season = segment.get("season", "")
-    daypart = segment.get("daypart", "")
-    bits = [b for b in [f"{season} {daypart}".strip(), "a cozy cafe table"] if b]
-    return ", ".join(bits) if bits else "a warm cafe setting"
+# ── Audience Strategist: fuse a trait-mixture into ONE persona ───────────────
+def generate_persona(persona_struct):
+    """LLM-write a named persona + narrative + creative angle from a trait mixture.
+
+    Returns (name, summary, creative_angle, source) when an LLM is available,
+    else None so the caller falls back to its deterministic blend.
+    """
+    llm = get_llm()
+    if not llm:
+        return None
+    system = ("You are an audience strategist. You are given a STRUCTURED TRAIT MIXTURE for a "
+              "customer cohort — proportions across interest, lifecycle, value, behavior, and "
+              "demographics. Fuse the WHOLE mixture into ONE believable, named persona; do not "
+              "just restate the largest trait. Return JSON with: name (2-4 words, e.g. 'The "
+              "Morning Ritualist'), summary (2-3 sentences describing this blended individual and "
+              "what they want), creative_angle (one line for how ads should speak to them — "
+              "minimal and understated).")
+    try:
+        j = json.loads(llm.complete(system, json.dumps(persona_struct)))
+        return j["name"], j["summary"], j["creative_angle"], f"generated:{llm.name}"
+    except Exception:
+        return None

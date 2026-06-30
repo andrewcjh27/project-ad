@@ -15,5 +15,8 @@ hero_test.png
 brand_memory/*.jsonl
 !brand_memory/*.seed.jsonl
 
+# Generated campaign output (re-created by run_campaign)
+campaign_*/
+
 # OS
 .DS_Store

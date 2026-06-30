@@ -7,10 +7,12 @@ is chosen from whichever API key is present in the environment. If none is set,
 it falls back to the offline procedural hero so the demo always runs.
 
 Wire it up by exporting ONE of:
+    export GEMINI_API_KEY=...             # uses Gemini 2.5 Flash Image ("nano banana")
     export OPENAI_API_KEY=sk-...          # uses OpenAI gpt-image-1
     export REPLICATE_API_TOKEN=r8_...     # uses Flux 1.1 Pro on Replicate
 
 Install whichever you use:
+    pip install google-genai  # for Gemini / nano banana
     pip install openai        # for OpenAI
     pip install replicate     # for Replicate/Flux
     pip install pillow requests
@@ -20,6 +22,7 @@ on-brand regardless of provider (see Starbucks-Brand-Package.md imagery block).
 """
 
 import os, io, math
+import numpy as np
 
 try:
     from PIL import Image, ImageDraw, ImageFilter
@@ -37,13 +40,23 @@ def _portrait_size(w, h):
     return (1024, 1024)                    # square
 
 
+def _aspect_ratio(w, h):
+    """Map a target size to the nearest aspect ratio string (Gemini image_config)."""
+    ar = w / h
+    if ar < 0.65:   return "9:16"
+    if ar < 0.95:   return "4:5"
+    if ar > 1.5:    return "16:9"
+    if ar > 1.05:   return "4:3"
+    return "1:1"
+
+
 def _compose_prompt(prompt, negative):
     """Fold a negative prompt into the text for models that lack a negative field."""
     try:
         from ad_brief import PHOTO_TAG          # single source for the style tag
         tag = PHOTO_TAG
     except Exception:
-        tag = "High-end advertising photography, no text, no logos"
+        tag = "minimal abstract graphic design, clean and uncluttered, no text, no logos"
     neg = f" Avoid: {negative}." if negative else ""
     return f"{prompt}.{neg} {tag}."
 
@@ -55,6 +68,29 @@ class ImageProvider:
     name = "base"
     def generate(self, prompt, negative, width, height, seed=None, palette=None):
         raise NotImplementedError
+
+
+class GeminiImageProvider(ImageProvider):
+    """Gemini 2.5 Flash Image — aka "nano banana" (Google google-genai SDK)."""
+    name = "gemini:gemini-2.5-flash-image"
+    def generate(self, prompt, negative, width, height, seed=None, palette=None):
+        from google import genai
+        from google.genai import types
+        client = genai.Client()                        # reads GEMINI_API_KEY / GOOGLE_API_KEY
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash-image",            # "nano banana"
+            contents=_compose_prompt(prompt, negative),
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE"],
+                image_config=types.ImageConfig(aspect_ratio=_aspect_ratio(width, height)),
+            ),
+        )
+        data = next((p.inline_data.data for p in resp.candidates[0].content.parts
+                     if getattr(p, "inline_data", None) and p.inline_data.data), None)
+        if data is None:
+            raise RuntimeError("Gemini returned no image data")
+        img = Image.open(io.BytesIO(data)).convert("RGB")
+        return img.resize((width, height))
 
 
 class OpenAIImageProvider(ImageProvider):
@@ -98,21 +134,22 @@ class ReplicateFluxProvider(ImageProvider):
 
 
 class ProceduralProvider(ImageProvider):
-    """Offline fallback — warm gradient hero in the product palette (no API)."""
+    """Offline fallback — a clean minimal gradient: white at top -> brand color at bottom (no API).
+
+    White at the top keeps it light and minimal; the product's brand color rises
+    from the bottom. Fine grain adds texture. No scene, no objects — a
+    deterministic stand-in for the abstract background plate the prompts describe.
+    """
     name = "procedural(fallback)"
     def generate(self, prompt, negative, width, height, seed=None, palette=None):
-        top, bot = palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18))
-        img = Image.new("RGB", (width, height), top)
-        px = img.load()
-        for y in range(height):
-            t = y / height
-            row = (int(top[0]*(1-t)+bot[0]*t), int(top[1]*(1-t)+bot[1]*t), int(top[2]*(1-t)+bot[2]*t))
-            for x in range(width):
-                px[x, y] = row
-        hi = Image.new("L", (width, height), 0)
-        ImageDraw.Draw(hi).ellipse([width*0.18, height*0.10, width*0.82, height*0.55], fill=120)
-        hi = hi.filter(ImageFilter.GaussianBlur(160))
-        return Image.composite(Image.new("RGB", (width, height), (255, 240, 210)), img, hi)
+        accent = (palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18)))[0]   # brand/product color
+        top = np.array((255, 255, 255), float)                 # white -> minimal
+        bottom = np.array(accent, float)                       # brand color at the bottom
+        yy = np.linspace(0, 1, height)[:, None, None]
+        base = top * (1 - yy) + bottom * yy                    # vertical white -> brand color
+        grain = np.random.default_rng(seed or 0).normal(0, 3, (height, width, 1))
+        base = np.clip(base + grain, 0, 255).astype("uint8")   # broadcasts to full width
+        return Image.fromarray(base, "RGB")
 
 
 # ============================================================================
@@ -120,6 +157,12 @@ class ProceduralProvider(ImageProvider):
 # ============================================================================
 def get_image_provider(prefer=None):
     """Pick a provider by env keys (or `prefer` name). Always returns something."""
+    if prefer == "gemini" or (prefer is None and (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))):
+        try:
+            from google import genai  # noqa
+            return GeminiImageProvider()
+        except ImportError:
+            pass
     if prefer == "openai" or (prefer is None and os.getenv("OPENAI_API_KEY")):
         try:
             import openai  # noqa

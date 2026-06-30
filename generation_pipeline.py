@@ -11,13 +11,14 @@ The Image Generator is a procedural stand-in for a hosted image model `# [IMG]`.
 The Compositor and Brand Guardian are real deterministic code (production-shaped).
 """
 
-import json, math
+import json, os, copy
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from image_agent import get_image_provider   # real image-model adapter (falls back to procedural)
 import ad_brief                              # brand image style + optional manual overrides
 import llm_agent                             # Art Director / Copywriter brains (LLM or data-driven)
 import product_discovery                     # retrieves the product by interest (web-sourced for now)
 import brand_memory                          # retrieves past on-brand ads as few-shot exemplars
+import brand_fit                             # shared brand-color primitive (+ any-image scorer)
 
 # ----------------------------------------------------------------------------
 # Brand package (subset of Starbucks-Brand-Package.md, machine form)
@@ -81,28 +82,100 @@ def blank_spec(segment):
 def log(spec, agent, note):
     spec["provenance"]["agents"].append({"agent": agent, "note": note})
 
+# ----------------------------------------------------------------------------
+# Campaign formats — one concept renders into each (Phase 2: campaign coherence).
+# The concept/copy/palette are format-INDEPENDENT; only the layout below changes.
+# ----------------------------------------------------------------------------
+FORMATS = {
+    "poster_4x5":    {"w": 1080, "h": 1350, "aspect": "4:5"},   # the original baseline
+    "square_1x1":    {"w": 1080, "h": 1080, "aspect": "1:1"},
+    "landscape_16x9": {"w": 1920, "h": 1080, "aspect": "16:9"},
+}
+
+# One hero seed shared across a campaign so every format reads as the same shoot.
+_HERO_SEED = 771204
+
+def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
+    """Deterministic, proportional layout for one format.
+
+    The ONLY format-dependent layer. Portrait/square stack the copy in the lower
+    third; landscape anchors it lower-left with room for the wide hero. Typography
+    and margins scale with the format so a concept stays legible at every aspect.
+    """
+    landscape = W > H
+    canvas = {
+        "background": {"type": "color", "value": "brand:colors.cream"},
+        "imagery": [{
+            "id": "img_hero", "role": "hero",
+            "prompt": prompt, "prompt_source": psrc,          # AI-generated from data
+            "negative_prompt": ad_brief.NEGATIVE_PROMPT,
+            "palette": palette, "seed": _HERO_SEED,
+            "placement": {"x": 0, "y": 0, "w": W, "h": H},
+        }],
+    }
+    logo_sz = round(0.082 * H)                                # logo scales with height
+    if landscape:
+        margin = round(0.05 * W)
+        head_size, sub_size = round(0.075 * H), round(0.034 * H)
+        scrim_top = int(H * 0.45)
+        text_w = round(0.55 * W)                              # copy in the left half
+        head_y, sub_y = int(H * 0.62), int(H * 0.86)
+    else:
+        square = abs(W - H) < 1
+        margin = round(0.074 * W)
+        head_size, sub_size = round(0.068 * W), round(0.031 * W)
+        scrim_top = int(H * (0.50 if square else 0.52))
+        text_w = W - 2 * margin
+        head_y = int(H * (0.70 if square else 0.74))
+        sub_y = int(H * (0.88 if square else 0.90))
+    elements = [
+        {"id": "scrim", "type": "shape", "shape": "rect", "z": 5,
+         "gradient": {"type": "linear", "angle": 180, "stops": [
+             {"color": "brand:colors.primary", "opacity": 0.0, "at": 0.0},
+             {"color": "brand:colors.primary", "opacity": 0.92, "at": 1.0}]},
+         "box": {"x": 0, "y": scrim_top, "w": W, "h": H - scrim_top}},
+        {"id": "headline", "type": "text", "role": "headline", "z": 10,
+         "font": "brand:typography.fonts.expressive", "size_px": head_size, "color": "brand:colors.cream",
+         "auto_scrim": True, "box": {"x": margin, "y": head_y, "w": text_w, "h": round(0.20*H)},
+         "content": headline, "copy": {"source": "generated", "locked": False}},
+        {"id": "subhead", "type": "text", "role": "subhead", "z": 10,
+         "font": "brand:typography.fonts.body", "size_px": sub_size, "color": "brand:colors.cream",
+         "box": {"x": margin + 2, "y": sub_y, "w": text_w, "h": round(0.06*H)},
+         "content": subhead, "copy": {"source": "generated", "locked": False}},
+        {"id": "logo", "type": "logo", "variant": "siren-white", "z": 20,
+         "box": {"x": margin, "y": round(0.052*H), "w": logo_sz, "h": logo_sz}},
+    ]
+    return canvas, elements
+
 # ============================================================================
 # AGENTS
 # ============================================================================
 class Strategist:
-    """[LLM] Segment -> creative brief & angle."""
+    """[LLM] Segment (+ blended persona) -> creative brief & angle."""
     def run(self, segment, spec):
         life, interest = segment["lifecycle"], segment["dominant_interest"]
-        angle = {
-            "loyal":  "warm, expressive, ritual-anchored; reward familiarity, no hard sell",
-            "new":    "brand-essence first; invite, soft offer",
-            "lapsed": "warm win-back; their familiar favorite",
-            "vip":    "exclusivity & premium; minimal offer",
-        }[life]
+        # Prefer the synthesized persona's angle (from a mixture of traits); fall back
+        # to the per-lifecycle angle for segments without a persona (e.g. the demo).
+        persona = segment.get("persona") or {}
+        angle = persona.get("angle") or {
+            "loyal":  "quiet, understated, ritual-anchored; familiar, never a hard sell",
+            "new":    "minimal brand-essence; a calm, confident invitation",
+            "lapsed": "understated, warm return; their familiar favorite, no pressure",
+            "vip":    "restrained, premium, exclusive; minimal and refined",
+        }.get(life, "minimal, understated; calm and personal")
         pillar = "seasonal" if ("fall" in interest or "season" in interest) else "ritual"
         spec["concept"].update({
-            "rationale": f"{life} segment centered on '{interest}'.",
+            "rationale": persona.get("summary") or f"{life} segment centered on '{interest}'.",
             "copy_angle": angle,
             "messaging_pillar": pillar,
         })
+        if persona.get("name"):
+            spec["concept"]["persona"] = {"name": persona.get("name"),
+                                          "summary": persona.get("summary")}
         seg = dict(segment); seg["pillar"] = pillar               # enrich for downstream agents
         spec["_segment"] = seg
-        log(spec, "Strategist", f"angle for {life}/{interest}")
+        log(spec, "Strategist",
+            f"persona '{persona['name']}'" if persona.get("name") else f"angle for {life}/{interest}")
         return spec
 
 class ProductMatcher:
@@ -118,7 +191,11 @@ class ProductMatcher:
         return spec
 
 class ArtDirector:
-    """[LLM] Concept, layout, color choices, imagery prompt."""
+    """[LLM] Concept, color choices, imagery prompt — all format-INDEPENDENT.
+
+    Layout is decided per-format later by `layout_elements`, so one concept can
+    render into every campaign format.
+    """
     def run(self, spec):
         p = spec["_product"]
         seg = spec["_segment"]
@@ -135,40 +212,15 @@ class ArtDirector:
             prompt, psrc = llm_agent.generate_image_prompt(
                 p, seg, ad_brief.BRAND_IMAGE_STYLE, ad_brief.NEGATIVE_PROMPT, ad_brief.PHOTO_TAG,
                 exemplars=exemplars)
+        spec["concept"]["image_prompt"] = prompt                  # AI-generated from data
+        spec["concept"]["image_prompt_source"] = psrc
+        spec["concept"]["palette"] = p["palette"]
         spec["concept"]["big_idea"] = ""                          # written by Copywriter next
-        W, H = spec["output"]["width"], spec["output"]["height"]
-        spec["canvas"] = {
-            "background": {"type": "color", "value": "brand:colors.cream"},
-            "imagery": [{
-                "id": "img_hero", "role": "hero",
-                "prompt": prompt, "prompt_source": psrc,          # <-- AI-generated from data
-                "negative_prompt": ad_brief.NEGATIVE_PROMPT,
-                "palette": p["palette"], "seed": 771204,
-                "placement": {"x": 0, "y": 0, "w": W, "h": H},
-            }],
-        }
-        spec["elements"] = [
-            {"id": "scrim", "type": "shape", "shape": "rect", "z": 5,
-             "gradient": {"type": "linear", "angle": 180, "stops": [
-                 {"color": "brand:colors.primary", "opacity": 0.0, "at": 0.0},
-                 {"color": "brand:colors.primary", "opacity": 0.92, "at": 1.0}]},
-             "box": {"x": 0, "y": int(H*0.52), "w": W, "h": int(H*0.48)}},
-            {"id": "headline", "type": "text", "role": "headline", "z": 10,
-             "font": "brand:typography.fonts.expressive", "size_px": 74, "color": "brand:colors.cream",
-             "auto_scrim": True, "box": {"x": 80, "y": int(H*0.74), "w": W-160, "h": 220},
-             "copy": {"source": "generated", "locked": False}},
-            {"id": "subhead", "type": "text", "role": "subhead", "z": 10,
-             "font": "brand:typography.fonts.body", "size_px": 34, "color": "brand:colors.cream",
-             "box": {"x": 82, "y": int(H*0.90), "w": W-160, "h": 60},
-             "copy": {"source": "generated", "locked": False}},
-            {"id": "logo", "type": "logo", "variant": "siren-white", "z": 20,
-             "box": {"x": 80, "y": 70, "w": 110, "h": 110}},
-        ]
-        log(spec, "ArtDirector", f"image prompt {psrc}; layout + scrim + logo")
+        log(spec, "ArtDirector", f"image prompt {psrc}; concept decided (format-independent)")
         return spec
 
 class Copywriter:
-    """[LLM] GENERATES copy from data (or honors manual override); never touches locked copy."""
+    """[LLM] GENERATES copy from data (or honors manual override). Format-independent."""
     def run(self, spec):
         if ad_brief.MANUAL_HEADLINE or ad_brief.MANUAL_SUBHEAD:
             head, sub, csrc = ad_brief.MANUAL_HEADLINE, ad_brief.MANUAL_SUBHEAD, "manual"
@@ -177,12 +229,8 @@ class Copywriter:
                 spec["_product"], spec["_segment"], spec["concept"]["copy_angle"],
                 exemplars=spec.get("_exemplars"))
         spec["concept"]["big_idea"] = head
+        spec["concept"]["subhead"] = sub
         spec["concept"]["copy_source"] = csrc
-        for el in spec["elements"]:
-            if el.get("copy", {}).get("source") == "manual" and el["copy"].get("locked"):
-                continue  # respect human-authored copy
-            if el["id"] == "headline": el["content"] = head
-            if el["id"] == "subhead":  el["content"] = sub
         log(spec, "Copywriter", "headline + subhead in brand voice")
         return spec
 
@@ -281,8 +329,8 @@ class BrandGuardian:
         cx = lg["box"]["x"] + lg["box"]["w"]//2
         cy = lg["box"]["y"] + lg["box"]["h"]//2 + int(lg["box"]["w"]*0.30)
         sample = img.getpixel((cx, cy))
-        dist = math.dist(sample[:3], BRAND["colors"]["primary"])
-        gates["brand_color_present"] = "pass" if dist < 40 else "fail"
+        gates["brand_color_present"] = "pass" if brand_fit.is_brand_color(
+            sample, [BRAND["colors"]["primary"]], tol=40) else "fail"
         # logo present
         gates["logo_present"] = "pass" if any(e["type"] == "logo" for e in spec["elements"]) else "fail"
         spec["qc"]["gates"] = gates
@@ -312,7 +360,8 @@ class Orchestrator:
         self.strategist, self.matcher, self.ad, self.copy = Strategist(), ProductMatcher(), ArtDirector(), Copywriter()
         self.img, self.comp, self.guard, self.crit = ImageGenerator(), Compositor(), BrandGuardian(), Critic()
 
-    def run(self, segment, out_path):
+    def _decide(self, segment):
+        """Run the format-INDEPENDENT agents once: strategy, product, concept, copy."""
         spec = blank_spec(segment)
         self.strategist.run(segment, spec)
         # PRODUCT IS RETRIEVED by similarity to the segment interest (not hardcoded).
@@ -320,21 +369,84 @@ class Orchestrator:
         self.matcher.run(candidates, segment, spec)
         self.ad.run(spec)
         self.copy.run(spec)
+        return spec
+
+    def _render_format(self, base, fmt_key):
+        """Materialize one format from a decided concept: layout -> hero -> composite -> QC."""
+        fmt = FORMATS[fmt_key]
+        W, H = fmt["w"], fmt["h"]
+        spec = copy.deepcopy(base)
+        spec["ad_id"] = f"{base['ad_id']}-{fmt_key}"
+        spec["output"] = {"type": "image", "width": W, "height": H,
+                          "aspect_ratio": fmt["aspect"], "format": "png", "format_key": fmt_key}
+        c = spec["concept"]
+        spec["canvas"], spec["elements"] = layout_elements(
+            W, H, c["palette"], c["image_prompt"], c["image_prompt_source"],
+            c["big_idea"], c.get("subhead", ""))
         hero = self.img.run(spec)
         canvas = self.comp.run(spec, hero)
         ok, gates = self.guard.run(spec, canvas)
         if not ok:
             # targeted regeneration would route back to the responsible agent; demo asserts pass
-            raise RuntimeError(f"Brand Guardian veto: {gates}")
+            raise RuntimeError(f"Brand Guardian veto ({fmt_key}): {gates}")
         verdict = self.crit.run(spec, canvas)
+        return spec, canvas, verdict
+
+    @staticmethod
+    def _clean_and_save_spec(spec, path):
+        for k in ("_product", "_segment", "_exemplars"):
+            spec.pop(k, None)
+        with open(path, "w") as fp:
+            json.dump(spec, fp, indent=2)
+
+    def run(self, segment, out_path):
+        """Single-format (poster) generation — back-compatible entry point."""
+        base = self._decide(segment)
+        spec, canvas, verdict = self._render_format(base, "poster_4x5")
         # Quality-filtered brand memory: only remember Critic-approved ads.
         if verdict == "approve":
             brand_memory.remember(spec, spec["brand_id"])
         canvas.save(out_path)
-        spec.pop("_product", None); spec.pop("_segment", None); spec.pop("_exemplars", None)
-        with open(out_path.replace(".png", ".spec.json"), "w") as fp:
-            json.dump(spec, fp, indent=2)
+        self._clean_and_save_spec(spec, out_path.replace(".png", ".spec.json"))
         return spec, verdict, out_path
+
+    def run_campaign(self, segment, out_dir, formats=None):
+        """Render ONE concept into multiple formats that share copy/palette/product.
+
+        The concept, copy, palette, and hero seed are decided once; only the layout
+        differs per format, so the set reads as one campaign. Writes per-format PNG +
+        spec into `out_dir` plus a `campaign.json` manifest of the shared concept.
+        """
+        formats = formats or list(FORMATS)
+        os.makedirs(out_dir, exist_ok=True)
+        base = self._decide(segment)
+        remembered, items = False, []
+        for fmt_key in formats:
+            spec, canvas, verdict = self._render_format(base, fmt_key)
+            if verdict == "approve" and not remembered:
+                brand_memory.remember(spec, spec["brand_id"]); remembered = True
+            png = os.path.join(out_dir, f"{fmt_key}.png")
+            canvas.save(png)
+            self._clean_and_save_spec(spec, os.path.join(out_dir, f"{fmt_key}.spec.json"))
+            items.append({"format": fmt_key, "size": [FORMATS[fmt_key]["w"], FORMATS[fmt_key]["h"]],
+                          "aspect_ratio": FORMATS[fmt_key]["aspect"],
+                          "png": os.path.basename(png), "critic": verdict})
+        manifest = {
+            "campaign_id": base["ad_id"], "brand_id": base["brand_id"],
+            "segment_id": segment["segment_id"],
+            "shared_concept": {
+                "product": base["personalization"]["selected_product"],
+                "headline": base["concept"]["big_idea"],
+                "subhead": base["concept"].get("subhead", ""),
+                "messaging_pillar": base["concept"]["messaging_pillar"],
+                "image_prompt": base["concept"]["image_prompt"],
+                "exemplars_used": base["concept"].get("exemplars_used", []),
+            },
+            "formats": items,
+        }
+        with open(os.path.join(out_dir, "campaign.json"), "w") as fp:
+            json.dump(manifest, fp, indent=2)
+        return manifest
 
 
 if __name__ == "__main__":
@@ -344,10 +456,17 @@ if __name__ == "__main__":
                "dominant_interest": "fall seasonal ritual morning autumn",
                "daypart": "morning", "season": "autumn",
                "signals": ["interest:fall_seasonal", "behavioral:morning", "lifecycle:loyal"]}
-    spec, verdict, path = Orchestrator().run(segment, "sbux_psl_ad.png")
+    orch = Orchestrator()
+    spec, verdict, path = orch.run(segment, "sbux_psl_ad.png")
     sel = spec["personalization"]
     print("Rendered:", path, "| critic:", verdict)
     print("Product retrieved:", sel["selected_product"], "—", sel["selection_reason"])
     print("Image prompt:", spec["canvas"]["imagery"][0]["prompt"][:90], "...")
     print("Agents:", " -> ".join(a["agent"] for a in spec["provenance"]["agents"]))
     print("Headline:", next(e["content"] for e in spec["elements"] if e["id"] == "headline"))
+    # Campaign coherence: one concept -> multiple formats that share copy/palette/product.
+    manifest = orch.run_campaign(segment, "campaign_sbux_psl")
+    print("\nCampaign:", manifest["campaign_id"], "->", "campaign_sbux_psl/  (shared headline:",
+          repr(manifest["shared_concept"]["headline"]) + ")")
+    for it in manifest["formats"]:
+        print(f"  {it['format']:16s} {it['size'][0]}x{it['size'][1]:<5} {it['aspect_ratio']:6s} critic: {it['critic']}")
