@@ -22,6 +22,7 @@ on-brand regardless of provider (see Starbucks-Brand-Package.md imagery block).
 """
 
 import os, io, math
+import numpy as np
 
 try:
     from PIL import Image, ImageDraw, ImageFilter
@@ -133,21 +134,25 @@ class ReplicateFluxProvider(ImageProvider):
 
 
 class ProceduralProvider(ImageProvider):
-    """Offline fallback — warm gradient hero in the product palette (no API)."""
+    """Offline fallback — a clean minimal-abstract gradient in the product palette (no API).
+
+    A gentle diagonal two-tone blend between the palette's accent and base, a
+    subtle off-center glow for depth, and fine grain. No scene, no objects — a
+    deterministic stand-in for the abstract background plate the prompts describe.
+    """
     name = "procedural(fallback)"
     def generate(self, prompt, negative, width, height, seed=None, palette=None):
-        top, bot = palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18))
-        img = Image.new("RGB", (width, height), top)
-        px = img.load()
-        for y in range(height):
-            t = y / height
-            row = (int(top[0]*(1-t)+bot[0]*t), int(top[1]*(1-t)+bot[1]*t), int(top[2]*(1-t)+bot[2]*t))
-            for x in range(width):
-                px[x, y] = row
-        hi = Image.new("L", (width, height), 0)
-        ImageDraw.Draw(hi).ellipse([width*0.18, height*0.10, width*0.82, height*0.55], fill=120)
-        hi = hi.filter(ImageFilter.GaussianBlur(160))
-        return Image.composite(Image.new("RGB", (width, height), (255, 240, 210)), img, hi)
+        c0, c1 = palette or ((0xC9, 0x8A, 0x5E), (0x3A, 0x24, 0x18))
+        c0, c1 = np.array(c0, float), np.array(c1, float)
+        yy = np.linspace(0, 1, height)[:, None, None]
+        xx = np.linspace(0, 1, width)[None, :, None]
+        t = 0.65 * yy + 0.35 * xx                              # gentle diagonal two-tone blend
+        base = c0 * (1 - t) + c1 * t
+        r = np.sqrt((yy - 0.32) ** 2 + (xx - 0.62) ** 2)
+        base += np.clip(1 - r / 0.9, 0, 1) * (0.12 * 255)      # subtle off-center glow for depth
+        grain = np.random.default_rng(seed or 0).normal(0, 4, (height, width, 1))
+        base = np.clip(base + grain, 0, 255).astype("uint8")
+        return Image.fromarray(base, "RGB")
 
 
 # ============================================================================
