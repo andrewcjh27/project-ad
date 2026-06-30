@@ -1,0 +1,115 @@
+==============================================================================
+PROJECT AD — SEGMENTATION + MATCHING SPIKE
+200 synthetic users · 18 products · 13 segments
+==============================================================================
+
+▶ seg_loyal_3  | size= 29 | lifecycle=loyal
+   interest centroid: cozy, mocha, holiday, peppermint, chocolate, caramel
+   dominant archetype: holiday_festive (59% of segment)
+   top products:
+      - peppermint_mocha score=0.737 (sim=0.671, seasonal_bev, holiday, margin=high)
+      - matcha_latte   score=0.536 (sim=0.434, tea, all, margin=mid)
+      - caramel_brulee score=0.529 (sim=0.323, seasonal_bev, holiday, margin=high)
+
+▶ seg_loyal_2  | size= 27 | lifecycle=loyal
+   interest centroid: coffee, sandwich, filling, food, croissant, morning
+   dominant archetype: commuter_food (59% of segment)
+   top products:
+      - pike_brewed    score=0.614 (sim=0.640, core_bev, all, margin=low)
+      - bacon_gouda    score=0.500 (sim=0.274, food, all, margin=high)
+      - croissant      score=0.429 (sim=0.156, food, all, margin=high)
+
+▶ seg_loyal_0  | size= 24 | lifecycle=loyal
+   interest centroid: iced, cold, afternoon, smooth, nitro, bold
+   dominant archetype: cold_brew_reg (71% of segment)
+   top products:
+      - nitro          score=0.650 (sim=0.624, cold_coffee, all, margin=mid)
+      - cold_brew      score=0.637 (sim=0.603, cold_coffee, all, margin=mid)
+      - pumpkin_ccb    score=0.536 (sim=0.335, seasonal_bev, fall, margin=high)
+
+▶ seg_new_0  | size= 18 | lifecycle=new
+   interest centroid: tea, fruity, healthy, green, chai, energizing
+   dominant archetype: tea_wellness (44% of segment)
+   top products:
+      - matcha_latte   score=0.569 (sim=0.615, tea, all, margin=mid)
+      - refresher      score=0.505 (sim=0.509, refresher, summer, margin=mid)
+      - pumpkin_ccb    score=0.424 (sim=0.107, seasonal_bev, fall, margin=high)
+
+▶ seg_loyal_1  | size= 16 | lifecycle=loyal
+   interest centroid: spice, warm, fall, autumn, ritual, cinnamon
+   dominant archetype: fall_seasonal (100% of segment)
+   top products:
+      - psl            score=0.711 (sim=0.627, seasonal_bev, fall, margin=high)
+      - pumpkin_ccb    score=0.495 (sim=0.266, seasonal_bev, fall, margin=high)
+      - chai_latte     score=0.405 (sim=0.217, tea, all, margin=mid)
+
+▶ seg_new_2  | size= 16 | lifecycle=new
+   interest centroid: seasonal, cozy, pumpkin, cinnamon, fall, spice
+   dominant archetype: fall_seasonal (62% of segment)
+   top products:
+      - psl            score=0.693 (sim=0.556, seasonal_bev, fall, margin=high)
+      - peppermint_mocha score=0.615 (sim=0.425, seasonal_bev, holiday, margin=high)
+      - caramel_brulee score=0.537 (sim=0.296, seasonal_bev, holiday, margin=high)
+
+▶ seg_lapsed_3  | size= 14 | lifecycle=lapsed
+   interest centroid: autumn, quick, ritual, pumpkin, morning, spice
+   dominant archetype: fall_seasonal (43% of segment)
+   top products:
+      - psl            score=0.554 (sim=0.490, seasonal_bev, fall, margin=high)
+      - latte          score=0.409 (sim=0.182, core_bev, all, margin=mid)
+      - pumpkin_ccb    score=0.389 (sim=0.216, seasonal_bev, fall, margin=high)
+
+▶ seg_vip_0  | size= 14 | lifecycle=vip
+   interest centroid: peppermint, nitro, iced, seasonal, caramel, festive
+   dominant archetype: holiday_festive (36% of segment)
+   top products:
+      - peppermint_mocha score=0.669 (sim=0.514, seasonal_bev, holiday, margin=high)
+      - caramel_brulee score=0.534 (sim=0.289, seasonal_bev, holiday, margin=high)
+      - pumpkin_ccb    score=0.483 (sim=0.204, seasonal_bev, fall, margin=high)
+
+▶ seg_lapsed_0  | size= 10 | lifecycle=lapsed
+   interest centroid: winter, chocolate, peppermint, festive, cozy, mocha
+   dominant archetype: holiday_festive (100% of segment)
+   top products:
+      - peppermint_mocha score=0.763 (sim=0.838, seasonal_bev, holiday, margin=high)
+      - caramel_brulee score=0.487 (sim=0.378, seasonal_bev, holiday, margin=high)
+      - caramel_macch  score=0.366 (sim=0.110, core_bev, all, margin=mid)
+
+▶ seg_new_1  | size= 10 | lifecycle=new
+   interest centroid: croissant, food, latte, quick, breakfast, filling
+   dominant archetype: commuter_food (100% of segment)
+   top products:
+      - bacon_gouda    score=0.446 (sim=0.310, food, all, margin=high)
+      - psl            score=0.399 (sim=0.065, seasonal_bev, fall, margin=high)
+      - caramel_brulee score=0.398 (sim=0.064, seasonal_bev, holiday, margin=high)
+
+▶ seg_new_3  | size=  8 | lifecycle=new
+   interest centroid: classic, simple, pike, brewed, black, place
+   dominant archetype: classic_simple (100% of segment)
+   top products:
+      - pike_brewed    score=0.813 (sim=0.930, core_bev, all, margin=low)
+      - cappuccino     score=0.428 (sim=0.214, core_bev, all, margin=mid)
+      - peppermint_mocha score=0.407 (sim=0.079, seasonal_bev, holiday, margin=high)
+
+▶ seg_lapsed_1  | size=  7 | lifecycle=lapsed
+   interest centroid: refreshing, brew, nitro, afternoon, everyday, smooth
+   dominant archetype: cold_brew_reg (100% of segment)
+   top products:
+      - nitro          score=0.694 (sim=0.656, cold_coffee, all, margin=mid)
+      - cold_brew      score=0.674 (sim=0.623, cold_coffee, all, margin=mid)
+      - pumpkin_ccb    score=0.482 (sim=0.370, seasonal_bev, fall, margin=high)
+
+▶ seg_lapsed_2  | size=  7 | lifecycle=lapsed
+   interest centroid: simple, classic, place, black, pike, everyday
+   dominant archetype: classic_simple (100% of segment)
+   top products:
+      - pike_brewed    score=0.810 (sim=0.925, core_bev, all, margin=low)
+      - cappuccino     score=0.428 (sim=0.213, core_bev, all, margin=mid)
+      - latte          score=0.407 (sim=0.178, core_bev, all, margin=mid)
+
+==============================================================================
+SANITY CHECK
+   mean segment purity (dominant archetype share): 75%
+   segments above 60% purity: 8/13
+   (high purity => clustering grouped similar users => one ad per segment is sound)
+==============================================================================

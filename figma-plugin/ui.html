@@ -1,0 +1,46 @@
+<!-- Project AD — Ad Importer UI -->
+<style>
+  body { font-family: Inter, -apple-system, sans-serif; margin: 0; padding: 14px; color: #1b1b1b; }
+  h3 { margin: 0 0 4px; font-size: 13px; }
+  p  { margin: 0 0 10px; font-size: 11px; color: #666; line-height: 1.4; }
+  label { font-size: 11px; font-weight: 600; display: block; margin: 10px 0 4px; }
+  textarea { width: 100%; height: 150px; font-family: monospace; font-size: 10px;
+             box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; padding: 8px; }
+  input[type=file] { font-size: 11px; }
+  button { margin-top: 14px; width: 100%; padding: 9px; border: 0; border-radius: 6px;
+           background: #00704A; color: #fff; font-weight: 600; font-size: 12px; cursor: pointer; }
+  button:hover { background: #006241; }
+</style>
+
+<h3>Import ad-spec → editable layers</h3>
+<p>Paste the ad-spec JSON, pick the rendered hero PNG, then Build. Text, layout,
+   scrim and logo come in as editable Figma layers.</p>
+
+<label>Ad-spec JSON</label>
+<textarea id="spec" placeholder='{ "brand_id": "starbucks", "output": {...}, "elements": [...] }'></textarea>
+
+<label>Hero image (PNG)</label>
+<input type="file" id="hero" accept="image/png,image/jpeg" />
+
+<button id="build">Build in Figma</button>
+
+<script>
+  let imageBytes = null;
+  document.getElementById("hero").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { imageBytes = new Uint8Array(reader.result); };
+    reader.readAsArrayBuffer(file);
+  });
+
+  document.getElementById("build").onclick = () => {
+    const specJson = document.getElementById("spec").value.trim();
+    if (!specJson) { return; }
+    parent.postMessage({ pluginMessage: {
+      type: "build",
+      specJson,
+      imageBytes: imageBytes ? Array.from(imageBytes) : null,
+    }}, "*");
+  };
+</script>

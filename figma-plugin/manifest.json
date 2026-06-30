@@ -1,0 +1,12 @@
+{
+  "name": "Project AD — Ad Importer",
+  "id": "project-ad-ad-importer",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "reasoning": "Spec JSON and hero image are provided through the plugin UI (paste / file picker); the plugin makes no network requests."
+  }
+}
