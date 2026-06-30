@@ -17,6 +17,7 @@ from image_agent import get_image_provider   # real image-model adapter (falls b
 import ad_brief                              # brand image style + optional manual overrides
 import llm_agent                             # Art Director / Copywriter brains (LLM or data-driven)
 import product_discovery                     # retrieves the product by interest (web-sourced for now)
+import brand_memory                          # retrieves past on-brand ads as few-shot exemplars
 
 # ----------------------------------------------------------------------------
 # Brand package (subset of Starbucks-Brand-Package.md, machine form)
@@ -121,13 +122,19 @@ class ArtDirector:
     def run(self, spec):
         p = spec["_product"]
         seg = spec["_segment"]
+        # Retrieve past on-brand ads for this segment interest as few-shot exemplars
+        # (soft guidance only; hard rules stay with BrandGuardian). Cold-start safe -> [].
+        exemplars = brand_memory.retrieve_exemplars(seg.get("dominant_interest", ""), spec["brand_id"])
+        spec["_exemplars"] = exemplars
+        spec["concept"]["exemplars_used"] = [e["exemplar_id"] for e in exemplars]
         # GENERATE the image prompt from data (product + segment + brand style),
         # unless a human override is set in ad_brief.MANUAL_IMAGE_PROMPT.
         if ad_brief.MANUAL_IMAGE_PROMPT:
             prompt, psrc = ad_brief.MANUAL_IMAGE_PROMPT + f". {ad_brief.PHOTO_TAG}.", "manual"
         else:
             prompt, psrc = llm_agent.generate_image_prompt(
-                p, seg, ad_brief.BRAND_IMAGE_STYLE, ad_brief.NEGATIVE_PROMPT, ad_brief.PHOTO_TAG)
+                p, seg, ad_brief.BRAND_IMAGE_STYLE, ad_brief.NEGATIVE_PROMPT, ad_brief.PHOTO_TAG,
+                exemplars=exemplars)
         spec["concept"]["big_idea"] = ""                          # written by Copywriter next
         W, H = spec["output"]["width"], spec["output"]["height"]
         spec["canvas"] = {
@@ -167,7 +174,8 @@ class Copywriter:
             head, sub, csrc = ad_brief.MANUAL_HEADLINE, ad_brief.MANUAL_SUBHEAD, "manual"
         else:
             head, sub, csrc = llm_agent.generate_copy(
-                spec["_product"], spec["_segment"], spec["concept"]["copy_angle"])
+                spec["_product"], spec["_segment"], spec["concept"]["copy_angle"],
+                exemplars=spec.get("_exemplars"))
         spec["concept"]["big_idea"] = head
         spec["concept"]["copy_source"] = csrc
         for el in spec["elements"]:
@@ -319,8 +327,11 @@ class Orchestrator:
             # targeted regeneration would route back to the responsible agent; demo asserts pass
             raise RuntimeError(f"Brand Guardian veto: {gates}")
         verdict = self.crit.run(spec, canvas)
+        # Quality-filtered brand memory: only remember Critic-approved ads.
+        if verdict == "approve":
+            brand_memory.remember(spec, spec["brand_id"])
         canvas.save(out_path)
-        spec.pop("_product", None); spec.pop("_segment", None)
+        spec.pop("_product", None); spec.pop("_segment", None); spec.pop("_exemplars", None)
         with open(out_path.replace(".png", ".spec.json"), "w") as fp:
             json.dump(spec, fp, indent=2)
         return spec, verdict, out_path
