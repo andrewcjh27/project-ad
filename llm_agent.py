@@ -85,27 +85,30 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
     if llm:
         system = (
             "You are an expert advertising Art Director and image prompt engineer. Using the JSON "
-            "brief, write ONE detailed, production-ready image-generation prompt (3-5 sentences) for "
-            "the BACKGROUND PLATE of a premium vertical 4:5 poster — an abstract backdrop that sits "
-            "behind a product cutout and a short headline. Weave in, as flowing prose: "
-            "(1) PURPOSE — let the brief's `goal` and audience persona drive the mood and intent; "
-            "(2) PALETTE — choose just TWO or THREE colors from the provided `brand_colors` that best "
-            "fit the mood (you do NOT need to use all of them); name the exact hex values you pick and "
-            "use no colors outside that chosen set; "
-            "(3) COMPOSITION & PLACEMENT — minimal and abstract (soft color fields, gentle gradients, "
-            "fine grain). Reserve clean space for the layout: keep the TOP-LEFT clear for a small "
-            "logo, the UPPER-CENTER calm and empty for a product cutout, and the LOWER THIRD "
-            "(especially lower-left) LIGHT and low-contrast so DARK headline and subhead text stays "
-            "legible on top. No recognizable scene or objects; "
-            "(4) CRAFT — specify lighting, mood, and texture, and state it is a vertical 4:5 "
-            "composition; "
-            "(5) CREATIVITY — be genuinely creative and original with the abstract form, the gradient "
-            "or light direction, and the mood so each poster feels distinct. "
-            "OVERRIDING PRINCIPLE: the image must be EXTREMELY minimal and clean — mostly "
-            "empty negative space, very few tonal elements, flat, calm and uncluttered; the detail in "
-            "this brief guides intent and palette, never visual busyness. HARD RULE: describe ONLY the "
-            "abstract image; never include any text, words, letters, logos, UI, people, or the "
-            "product itself.")
+            "brief, write ONE highly detailed, fully-specified image-generation prompt (4-6 sentences) "
+            "for the BACKGROUND PLATE of a premium vertical 4:5 poster — a FLAT 2D ABSTRACT GRAPHIC "
+            "background (a clean color study, NOT a photograph of any object or place) that sits behind "
+            "a product cutout and a short headline. Be precise and descriptive so the model has little "
+            "room to drift — state exactly what the surface looks like, its tones, its finish, its "
+            "texture, and what occupies each region. Cover, as flowing prose: "
+            "(1) PURPOSE — let the brief's `goal` and audience persona set the mood and intent; "
+            "(2) PALETTE — choose just TWO or THREE colors from the provided `brand_colors` that fit "
+            "the mood (you need not use all); name the exact hex values and use no colors outside that "
+            "chosen set; describe precisely how they meet (soft gradient direction, or a flat field); "
+            "(3) COMPOSITION & PLACEMENT — minimal and abstract; reserve clean space for the layout: "
+            "TOP-LEFT clear for a small logo, UPPER-CENTER calm and empty for the product cutout, and "
+            "the LOWER THIRD (especially lower-left) LIGHT and low-contrast so DARK headline and "
+            "subhead text stays legible on top; "
+            "(4) CRAFT — specify even, soft, diffuse lighting, a fine matte grain or subtle paper "
+            "texture, smooth seamless tonal transitions with NO banding, and state it is a flat "
+            "vertical 4:5 composition; "
+            "(5) CREATIVITY — be genuinely creative with the abstract form, the gradient or light "
+            "direction, and the mood so each poster feels distinct, while staying strictly minimal. "
+            "OVERRIDING PRINCIPLE: EXTREMELY minimal and clean — mostly empty negative space, very few "
+            "tonal elements, flat, calm and uncluttered; the detail must add precision, never visual "
+            "busyness. HARD RULE: describe ONLY the abstract 2D graphic; never include any text, words, "
+            "letters, numbers, logos, UI, people, faces, hands, products, recognizable objects, or any "
+            "photographic scene.")
         payload = {"goal": goal, "audience_segment": segment, "product": product,
                    "brand_colors": brand_colors, "brand_style": brand_style}
         if exemplars:
@@ -116,13 +119,14 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
     # ---- data-driven deterministic fallback (a detailed minimal abstract plate) ----
     colors = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in (brand_colors or {}).items()) or "the brand palette"
     goal_txt = f" Purpose: {goal}" if goal else ""
-    subject = (f"an extremely minimal, clean abstract background plate for a vertical 4:5 poster, built "
-               f"from a limited palette of two or three colors chosen from the brand colors ({colors}); "
-               f"a soft {product['flavor']} color field with "
-               f"a gentle gradient and fine grain; mostly empty — keep the top-left clear for a logo, "
-               f"the upper-center clean for a product cutout, and the lower third light and "
-               f"low-contrast so dark headline text stays legible; calm, understated, premium; no "
-               f"recognizable scene, no objects, no product, no people.{goal_txt}")
+    subject = (f"an extremely minimal, clean, flat 2D abstract graphic background for a vertical 4:5 "
+               f"poster (a color study, not a photo of any object), built from a limited palette of "
+               f"two or three colors chosen from the brand colors ({colors}); a soft {product['flavor']} "
+               f"color field with a gentle, smooth gradient and fine matte grain, even diffuse lighting "
+               f"and no banding; mostly empty — keep the top-left clear for a logo, the upper-center "
+               f"clean for a product cutout, and the lower third light and low-contrast so dark "
+               f"headline text stays legible; calm, understated, premium; no recognizable scene, no "
+               f"objects, no product, no people, no faces, no hands, no text, no logos.{goal_txt}")
     return f"{subject}, {brand_style}. {photo_tag}.", "generated:rule-based(from data)"
 
 
