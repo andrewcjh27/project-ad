@@ -95,8 +95,11 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
             "with deliberate clean NEGATIVE SPACE in the upper-center (for the product) and the lower "
             "third (for the headline), and no recognizable scene or objects; "
             "(4) CRAFT — specify lighting, mood, and texture, and state it is a vertical 4:5 "
-            "composition. HARD RULE: describe ONLY the abstract image; never include any text, words, "
-            "letters, logos, UI, people, or the product itself.")
+            "composition. OVERRIDING PRINCIPLE: the image must be EXTREMELY minimal and clean — mostly "
+            "empty negative space, very few tonal elements, flat, calm and uncluttered; the detail in "
+            "this brief guides intent and palette, never visual busyness. HARD RULE: describe ONLY the "
+            "abstract image; never include any text, words, letters, logos, UI, people, or the "
+            "product itself.")
         payload = {"goal": goal, "audience_segment": segment, "product": product,
                    "brand_colors": brand_colors, "brand_style": brand_style}
         if exemplars:
@@ -107,11 +110,11 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
     # ---- data-driven deterministic fallback (a detailed minimal abstract plate) ----
     colors = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in (brand_colors or {}).items()) or "the brand palette"
     goal_txt = f" Purpose: {goal}" if goal else ""
-    subject = (f"a minimal abstract background plate for a vertical 4:5 poster, built from a limited "
-               f"palette drawn from {colors}; a soft {product['flavor']} color field with a gentle "
-               f"gradient and fine grain; generous clean negative space in the upper-center for a "
-               f"product cutout and the lower third for a headline; calm, understated, premium; no "
-               f"recognizable scene, no objects, no product, no people.{goal_txt}")
+    subject = (f"an extremely minimal, clean abstract background plate for a vertical 4:5 poster, built "
+               f"from a limited palette drawn from {colors}; a soft {product['flavor']} color field with "
+               f"a gentle gradient and fine grain; mostly empty, with generous clean negative space in "
+               f"the upper-center for a product cutout and the lower third for a headline; calm, "
+               f"understated, premium; no recognizable scene, no objects, no product, no people.{goal_txt}")
     return f"{subject}, {brand_style}. {photo_tag}.", "generated:rule-based(from data)"
 
 
