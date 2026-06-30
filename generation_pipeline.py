@@ -117,14 +117,12 @@ def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
     if landscape:
         margin = round(0.05 * W)
         head_size, sub_size = round(0.075 * H), round(0.034 * H)
-        scrim_top = int(H * 0.45)
         text_w = round(0.55 * W)                              # copy in the left half
         head_y, sub_y = int(H * 0.62), int(H * 0.86)
     else:
         square = abs(W - H) < 1
         margin = round(0.074 * W)
         head_size, sub_size = round(0.068 * W), round(0.031 * W)
-        scrim_top = int(H * (0.50 if square else 0.52))
         text_w = W - 2 * margin
         head_y = int(H * (0.70 if square else 0.74))
         sub_y = int(H * (0.88 if square else 0.90))
@@ -133,19 +131,15 @@ def layout_elements(W, H, palette, prompt, psrc, headline, subhead):
     prod_box = ({"x": round(W*0.52), "y": round(H*0.12), "w": round(W*0.42), "h": round(H*0.66)}
                 if landscape else
                 {"x": round(W*0.24), "y": round(H*0.11), "w": round(W*0.52), "h": round(H*0.34)})
+    # Minimal treatment: dark text directly on the light background, no scrim.
     elements = [
         {"id": "product", "type": "product", "src": "product.png", "z": 6, "box": prod_box},
-        {"id": "scrim", "type": "shape", "shape": "rect", "z": 5,
-         "gradient": {"type": "linear", "angle": 180, "stops": [
-             {"color": "brand:colors.primary", "opacity": 0.0, "at": 0.0},
-             {"color": "brand:colors.primary", "opacity": 0.92, "at": 1.0}]},
-         "box": {"x": 0, "y": scrim_top, "w": W, "h": H - scrim_top}},
         {"id": "headline", "type": "text", "role": "headline", "z": 10,
-         "font": "brand:typography.fonts.expressive", "size_px": head_size, "color": "brand:colors.cream",
-         "auto_scrim": True, "box": {"x": margin, "y": head_y, "w": text_w, "h": round(0.20*H)},
+         "font": "brand:typography.fonts.expressive", "size_px": head_size, "color": "brand:colors.ink",
+         "box": {"x": margin, "y": head_y, "w": text_w, "h": round(0.20*H)},
          "content": headline, "copy": {"source": "generated", "locked": False}},
         {"id": "subhead", "type": "text", "role": "subhead", "z": 10,
-         "font": "brand:typography.fonts.body", "size_px": sub_size, "color": "brand:colors.cream",
+         "font": "brand:typography.fonts.body", "size_px": sub_size, "color": "brand:colors.ink",
          "box": {"x": margin + 2, "y": sub_y, "w": text_w, "h": round(0.06*H)},
          "content": subhead, "copy": {"source": "generated", "locked": False}},
         {"id": "logo", "type": "logo", "variant": "siren-white", "z": 20,
