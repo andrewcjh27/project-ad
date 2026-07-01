@@ -239,7 +239,7 @@
 
     <!-- Stage 1: copy -->
     <div id="revCopy">
-      <div class="rev-step">Step 1 of 2 — Copy</div>
+      <div class="rev-step">Step 1 of 3 — Copy</div>
       <h2 class="rev-title">Review the headline</h2>
       <div class="rev-brief" id="revBrief"></div>
       <label class="rev-label">Headline<input id="revHeadline" placeholder="Gemini will write one"></label>
@@ -253,7 +253,7 @@
 
     <!-- Stage 2: background -->
     <div id="revBg" class="hidden">
-      <div class="rev-step">Step 2 of 2 — Background</div>
+      <div class="rev-step">Step 2 of 3 — Background</div>
       <h2 class="rev-title">Review the background</h2>
       <div class="rev-imgwrap"><img id="revImg" alt="generated background"></div>
       <div class="rev-status" id="revBgStatus"></div>
@@ -267,6 +267,19 @@
         <div class="rev-actions">
           <button class="btn ghost" onclick="reviewUseEditedPrompt()">Use edited prompt</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Stage 3: compose the finished ad -->
+    <div id="revCompose" class="hidden">
+      <div class="rev-step">Step 3 of 3 — Compose</div>
+      <h2 class="rev-title">Review the finished ad</h2>
+      <div class="rev-imgwrap"><img id="composeImg" alt="composed ad"></div>
+      <div class="rev-status" id="revComposeStatus"></div>
+      <div class="rev-actions">
+        <button class="btn ghost" onclick="revStage('bg')">&larr; Background</button>
+        <button class="btn ghost" onclick="reviewRegenLayout()">Shuffle layout</button>
+        <button class="btn" onclick="reviewFinish()">Finish &amp; place</button>
       </div>
     </div>
   </div>
@@ -352,14 +365,15 @@ async function renderPoster(canvas,p){
   const ctx=canvas.getContext("2d");
   const accent=hexToRgb(p.brand_primary||"#1f6f54");
   const deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
-  const rng=mulberry32((p.seed||1)>>>0);
+  const rng=mulberry32((p.seed||1)>>>0);                       // background variation
+  const lrng=mulberry32(((p._layoutSeed||p.seed)||1)>>>0);      // layout/placement variation (decoupled)
   // Background: draw the generated AI image if we have one; else a preset.
   // (This function never calls the API — generation happens in generate().)
   let drew=false;
   if(p._bgImage){try{ctx.drawImage(await loadImg(p._bgImage),0,0,W,H);drew=true;}catch(e){}}
   if(!drew) drawBackground(ctx,rng,accent,deep,p.preset);
   const m=80, sz=150;
-  if(p.logo){try{const img=await loadImg(p.logo);const corners=[[m,70],[W-m-sz,70],[W-m-sz,H-70-sz]];const c=corners[Math.floor(rng()*corners.length)];drawContain(ctx,img,c[0],c[1],sz,sz);}catch(e){}}
+  if(p.logo){try{const img=await loadImg(p.logo);const corners=[[m,70],[W-m-sz,70],[W-m-sz,H-70-sz]];const c=corners[Math.floor(lrng()*corners.length)];drawContain(ctx,img,c[0],c[1],sz,sz);}catch(e){}}
   if(p.product){try{drawContain(ctx,await loadImg(p.product),W*0.24,H*0.11,W*0.52,H*0.34);}catch(e){}}
   ctx.fillStyle=INK;ctx.textBaseline="top";
   const head=cap(firstLine(p.headline)||firstLine(audienceOf(p))||(p.name||"").trim());
@@ -433,7 +447,7 @@ function briefSummaryHtml(p){
 const setRev=(sel,t)=>{const e=$(sel);if(e)e.textContent=t;};
 function openReview(){$("#review").classList.remove("hidden");}
 function reviewCancel(){$("#review").classList.add("hidden");}
-function revStage(s){$("#revCopy").classList.toggle("hidden",s!=='copy');$("#revBg").classList.toggle("hidden",s!=='bg');}
+function revStage(s){$("#revCopy").classList.toggle("hidden",s!=='copy');$("#revBg").classList.toggle("hidden",s!=='bg');$("#revCompose").classList.toggle("hidden",s!=='compose');}
 
 async function reviewRegenCopy(){
   const key=getKey();
@@ -482,7 +496,24 @@ async function genBgIntoReview(){
 async function reviewRegenBg(){current.seed=Math.floor(Math.random()*2**31);await genBgIntoReview();}
 function togglePrompt(){const b=$("#promptBox");b.classList.toggle("hidden");if(!b.classList.contains("hidden"))$("#revPrompt").value=current._imgPrompt||"";}
 async function reviewUseEditedPrompt(){current._imgPrompt=$("#revPrompt").value.trim();await genBgIntoReview();}
-async function reviewAcceptBg(){
+async function reviewAcceptBg(){ revStage('compose'); await composeIntoReview(); }
+async function composeIntoReview(){
+  if(!current._layoutSeed) current._layoutSeed=Math.floor(Math.random()*2**31);
+  setRev("#revComposeStatus","Composing the ad…");
+  $("#composeImg").classList.add("loadingimg");
+  const c=document.createElement("canvas");c.width=W;c.height=H;
+  await renderPoster(c,current);                 // background + product + logo + text
+  $("#composeImg").src=c.toDataURL("image/png");
+  $("#composeImg").classList.remove("loadingimg");
+  const parts=[];
+  if(firstLine(current.headline))parts.push("headline");
+  if(firstLine(current.subhead))parts.push("subhead");
+  if(current.product)parts.push("product");
+  if(current.logo)parts.push("logo");
+  setRev("#revComposeStatus","Includes: "+(parts.join(" · ")||"background only")+". Shuffle the layout or finish.");
+}
+function reviewRegenLayout(){current._layoutSeed=Math.floor(Math.random()*2**31);composeIntoReview();}
+async function reviewFinish(){
   $("#review").classList.add("hidden");
   showLoading();
   try{await renderPoster($("#poster"),current);}finally{showResult();}
