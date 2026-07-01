@@ -116,8 +116,11 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
         if exemplars:
             system += _EXEMPLAR_GUIDANCE
             payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
-        subject = llm.complete(system, json.dumps(payload))
-        return f"{subject} {photo_tag}.", f"generated:{llm.name}"
+        try:
+            subject = llm.complete(system, json.dumps(payload))
+            return f"{subject} {photo_tag}.", f"generated:{llm.name}"
+        except Exception:
+            pass   # LLM error -> fall through to the data-driven prompt below
     # ---- data-driven deterministic fallback (a detailed minimal abstract plate) ----
     colors = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in (brand_colors or {}).items()) or "the brand palette"
     goal_txt = f" Purpose: {goal}" if goal else ""
