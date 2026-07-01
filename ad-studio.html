@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Project AD — Ad Studio</title>
+<title>PRO-AD — Ad Studio</title>
 <style>
   :root{--ink:#0a0a0a;--muted:#7c7c7c;--line:rgba(0,0,0,.10);--bg:#ffffff;--card:#fff;--radius:14px;
     --sans:-apple-system,"SF Pro Display",BlinkMacSystemFont,"Helvetica Neue","Segoe UI",Inter,Arial,sans-serif}
@@ -88,13 +88,34 @@
   .presets{margin-top:14px}
   .preset-btns{display:flex;gap:8px;flex-wrap:wrap}
   .preset-btns .btn{padding:8px 16px;font-size:13px}
+  /* review overlay */
+  .review-overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.42);backdrop-filter:blur(4px)}
+  .review-card{position:relative;background:#fff;border-radius:18px;border:1px solid var(--line);width:min(560px,100%);max-height:90vh;overflow:auto;padding:34px 34px 28px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+  .review-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:26px;line-height:1;color:var(--muted);cursor:pointer}
+  .review-close:hover{color:#000}
+  .rev-step{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:600;margin-bottom:8px}
+  .rev-title{font-weight:600;font-size:1.9rem;letter-spacing:-.03em;line-height:1.02;margin:0 0 18px}
+  .rev-brief{display:flex;flex-direction:column;gap:7px;font-size:13px;background:#fafafa;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:20px}
+  .rev-brief div{display:flex;gap:10px}
+  .rev-brief span{flex:0 0 80px;color:var(--muted);text-transform:uppercase;font-size:10.5px;letter-spacing:.05em;padding-top:2px}
+  .rev-label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:600;color:#555;letter-spacing:.03em;text-transform:uppercase;margin-bottom:14px}
+  .rev-label span{text-transform:none;font-weight:400;letter-spacing:0}
+  .rev-label input,.rev-label textarea{font:inherit;font-size:15px;font-weight:400;letter-spacing:-.01em;text-transform:none;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  .rev-label input:focus,.rev-label textarea:focus{outline:none;border-color:#000}
+  .rev-label textarea{resize:vertical;line-height:1.5}
+  .rev-imgwrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fafafa;aspect-ratio:4/5;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+  .rev-imgwrap img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .2s}
+  .rev-imgwrap img.loadingimg{opacity:.35}
+  .rev-status{font-size:12px;min-height:16px;margin-bottom:16px;letter-spacing:0;color:var(--muted)}
+  .rev-actions{display:flex;gap:10px;flex-wrap:wrap}
+  #promptBox{margin-top:20px;border-top:1px solid var(--line);padding-top:18px}
   .hidden{display:none!important}
   @media(max-width:820px){.editor{grid-template-columns:1fr;gap:32px}.row{flex-direction:column}.preview{position:static}main{padding:40px 6% 72px}.keyfield{width:130px}}
 </style>
 </head>
 <body>
 <header>
-  <div class="brand" onclick="showGallery()">Project AD</div>
+  <div class="brand" onclick="showGallery()">PRO-AD</div>
   <div class="header-right">
     <input id="f_apikey" type="password" class="keyfield" placeholder="Gemini API key" autocomplete="off"
            title="Used for AI copy + image generation. A free-tier key works for copy. Stored only in this browser; requests go straight to Google.">
@@ -209,6 +230,46 @@
     </div>
   </section>
 </main>
+
+<!-- ═══ Generate review overlay (copy → background) ═══════════════════════ -->
+<div id="review" class="review-overlay hidden" onclick="if(event.target===this)reviewCancel()">
+  <div class="review-card">
+    <button class="review-close" onclick="reviewCancel()" title="Cancel">&times;</button>
+
+    <!-- Stage 1: copy -->
+    <div id="revCopy">
+      <div class="rev-step">Step 1 of 2 — Copy</div>
+      <h2 class="rev-title">Review the headline</h2>
+      <div class="rev-brief" id="revBrief"></div>
+      <label class="rev-label">Headline<input id="revHeadline" placeholder="Gemini will write one"></label>
+      <label class="rev-label">Subhead <span class="muted">(optional)</span><input id="revSubhead" placeholder="optional"></label>
+      <div class="rev-status" id="revCopyStatus"></div>
+      <div class="rev-actions">
+        <button class="btn ghost" onclick="reviewRegenCopy()">Regenerate</button>
+        <button class="btn" onclick="reviewAcceptCopy()">Accept &amp; continue &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Stage 2: background -->
+    <div id="revBg" class="hidden">
+      <div class="rev-step">Step 2 of 2 — Background</div>
+      <h2 class="rev-title">Review the background</h2>
+      <div class="rev-imgwrap"><img id="revImg" alt="generated background"></div>
+      <div class="rev-status" id="revBgStatus"></div>
+      <div class="rev-actions">
+        <button class="btn ghost" onclick="reviewRegenBg()">Regenerate</button>
+        <button class="btn ghost" onclick="togglePrompt()">View prompt</button>
+        <button class="btn" onclick="reviewAcceptBg()">Use this &rarr;</button>
+      </div>
+      <div id="promptBox" class="hidden">
+        <label class="rev-label">Image prompt<textarea id="revPrompt" rows="6"></textarea></label>
+        <div class="rev-actions">
+          <button class="btn ghost" onclick="reviewUseEditedPrompt()">Use edited prompt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 const W=1080, H=1350, INK="#141110", WHITE=[250,250,248];
@@ -344,40 +405,83 @@ function renderRefThumbs(){const el=$("#refThumbs");if(!el)return;
 function removeRef(i){(current.refs||[]).splice(i,1);renderRefThumbs();}
 
 /* ---------- actions ---------- */
+/* Generate is a two-stage review: (1) copy — see the brief + Gemini headline,
+   regenerate or edit, then accept; (2) background — see the image, regenerate,
+   or view/edit the prompt and re-run; accept to composite the final poster. */
 async function generate(newSeed){
   collect();
   if(newSeed||!current.seed)current.seed=Math.floor(Math.random()*2**31);
-  const key=getKey();
   hidePresets();
-  showLoading();                 // show the painting animation while we work
-  const st=[];
-  // COPY: AI-written when the headline is blank; preset text on failure/no key.
-  if(!firstLine(current.headline)){
-    if(key){
-      try{
-        const j=extractJson(await geminiText(COPY_SYS,JSON.stringify(briefOf(current)),key));
-        current.headline=(j.headline||"").trim();
-        current.subhead=(firstLine(current.subhead)||j.subhead||"").trim();
-        $("#f_headline").value=current.headline;$("#f_subhead").value=current.subhead;
-        st.push("copy: AI");
-      }catch(e){current.headline=(audienceOf(current)||current.name||"").trim();st.push("copy: preset ("+e.message+")");}
-    }else{current.headline=(audienceOf(current)||current.name||"").trim();st.push("copy: preset (no key)");}
-  }else{st.push("copy: manual");}
-  // BACKGROUND: AI is the default. Try it; on failure/no key, fall back to a preset.
+  openReview(); revStage('copy');
+  $("#revBrief").innerHTML=briefSummaryHtml(current);
+  $("#revHeadline").value=firstLine(current.headline)||"";
+  $("#revSubhead").value=firstLine(current.subhead)||"";
+  if($("#revHeadline").value) setRev("#revCopyStatus","Your headline — edit it or regenerate.");
+  else await reviewRegenCopy();          // no headline yet -> write one with Gemini
+}
+function briefSummaryHtml(p){
+  const rows=[["Brand",p.name],["Description",p.description],["Audience",audienceOf(p)],
+    ["Values",p.values],["Voice",p.identity],["Goal",p.agenda],["Product",p.products]];
+  const items=rows.filter(r=>r[1]&&r[1].trim()).map(r=>`<div><span>${r[0]}</span>${esc(r[1])}</div>`).join("");
+  return items||'<div class="muted">No brief details entered.</div>';
+}
+const setRev=(sel,t)=>{const e=$(sel);if(e)e.textContent=t;};
+function openReview(){$("#review").classList.remove("hidden");}
+function reviewCancel(){$("#review").classList.add("hidden");}
+function revStage(s){$("#revCopy").classList.toggle("hidden",s!=='copy');$("#revBg").classList.toggle("hidden",s!=='bg');}
+
+async function reviewRegenCopy(){
+  const key=getKey();
+  if(!key){$("#revHeadline").value=(audienceOf(current)||current.name||"").trim();setRev("#revCopyStatus","No API key — using your audience as the headline.");return;}
+  setRev("#revCopyStatus","Writing copy…");
+  try{
+    const j=extractJson(await geminiText(COPY_SYS,JSON.stringify(briefOf(current)),key));
+    $("#revHeadline").value=(j.headline||"").trim();
+    $("#revSubhead").value=(j.subhead||"").trim();
+    setRev("#revCopyStatus","Written by Gemini — edit if you like.");
+  }catch(e){setRev("#revCopyStatus","Copy error ("+e.message+") — type one below.");}
+}
+async function reviewAcceptCopy(){
+  current.headline=$("#revHeadline").value.trim();
+  current.subhead=$("#revSubhead").value.trim();
+  $("#f_headline").value=current.headline;$("#f_subhead").value=current.subhead;
+  revStage('bg'); $("#promptBox").classList.add("hidden");
+  current._imgPrompt=bgPrompt(current,(current.refs||[]).length>0);
+  $("#revPrompt").value=current._imgPrompt;
+  await genBgIntoReview();
+}
+function presetDataUrl(p){
+  const c=document.createElement("canvas");c.width=W;c.height=H;
+  const accent=hexToRgb(p.brand_primary||"#1f6f54"),deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
+  drawBackground(c.getContext("2d"),mulberry32((p.seed||1)>>>0),accent,deep,p.preset);
+  return c.toDataURL("image/png");
+}
+async function genBgIntoReview(){
+  const key=getKey();
+  $("#revImg").classList.add("loadingimg");
+  setRev("#revBgStatus","Generating background…");
   current._bgImage=null;
-  let aiOk=false;
   if(key){
-    setStatus((st.concat("bg: generating…")).join(" · "));
     try{
       const refs=(current.refs||[]).slice(0,4);
-      current._bgImage=await geminiImage(bgPrompt(current,refs.length>0),key,refs);
-      aiOk=true;st.push("bg: AI"+(refs.length?" (refs)":""));
-    }catch(e){st.push("bg: preset (API "+e.message+")");}
-  }else{st.push("bg: preset (no key)");}
-  setStatus(st.join(" · "));
-  try { await renderPoster($("#poster"),current); }
-  finally { showResult(); }   // always drop the loader to reveal the result
-  if(!aiOk) showPresets();    // couldn't use AI -> offer the presets
+      current._bgImage=await geminiImage(current._imgPrompt,key,refs);
+      $("#revImg").src=current._bgImage;
+      setRev("#revBgStatus","Generated by Gemini"+(refs.length?" · guided by your references":"")+".");
+      $("#revImg").classList.remove("loadingimg");return;
+    }catch(e){setRev("#revBgStatus","AI unavailable ("+e.message+") — showing a preset background.");}
+  }else{setRev("#revBgStatus","No API key — showing a preset background.");}
+  current._bgImage=null;
+  $("#revImg").src=presetDataUrl(current);
+  $("#revImg").classList.remove("loadingimg");
+}
+async function reviewRegenBg(){current.seed=Math.floor(Math.random()*2**31);await genBgIntoReview();}
+function togglePrompt(){const b=$("#promptBox");b.classList.toggle("hidden");if(!b.classList.contains("hidden"))$("#revPrompt").value=current._imgPrompt||"";}
+async function reviewUseEditedPrompt(){current._imgPrompt=$("#revPrompt").value.trim();await genBgIntoReview();}
+async function reviewAcceptBg(){
+  $("#review").classList.add("hidden");
+  showLoading();
+  try{await renderPoster($("#poster"),current);}finally{showResult();}
+  setStatus(current._bgImage?"Done · AI background":"Done · preset background");
 }
 function showLoading(){const ph=$("#placeholder");if(!ph)return;ph.classList.remove("hidden");ph.classList.add("busy");const c=$("#phCap");if(c)c.textContent="Painting your ad…";}
 function showResult(){const ph=$("#placeholder");if(ph){ph.classList.add("hidden");ph.classList.remove("busy");}}
