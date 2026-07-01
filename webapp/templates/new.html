@@ -2,50 +2,96 @@
 {% block body %}
   <a href="{{ url_for('index') }}" class="back">&larr; All projects</a>
   <h1>Add project</h1>
-  <p class="lead">Enter the brand data — we generate a personalized minimal poster.</p>
-  <form method="post" action="{{ url_for('create') }}" enctype="multipart/form-data" class="form">
-    <label>Project / brand name
-      <input name="name" required placeholder="e.g. Acme Coffee">
-    </label>
-    <div class="row">
-      <label>Brand primary color
-        <input type="color" name="brand_primary" value="#00704A">
+  <div class="steps">
+    <span class="step active" data-step="1" onclick="wizStep(1)">1 &middot; Brief</span>
+    <span class="step" data-step="2" onclick="wizStep(2)">2 &middot; Brand identity</span>
+    <span class="step" data-step="3" onclick="wizStep(3)">3 &middot; References <em>optional</em></span>
+  </div>
+  <form method="post" action="{{ url_for('create') }}" enctype="multipart/form-data" class="form" id="wiz">
+
+    <!-- Step 1: Brief -->
+    <div class="page" data-page="1">
+      <label>Project / brand name
+        <input name="name" required placeholder="e.g. Acme Coffee">
       </label>
-      <label>Secondary (optional)
-        <input type="color" name="brand_secondary" value="#1c1c1c">
+      <label>Brand / project description
+        <textarea name="description" rows="3" placeholder="What the brand is, the campaign, and what this ad is for."></textarea>
       </label>
-    </div>
-    <label>Brand identity / voice
-      <textarea name="identity" rows="2" placeholder="warm, minimal, premium"></textarea>
-    </label>
-    <label>Agenda / goals
-      <textarea name="agenda" rows="2" placeholder="launch the fall blend; reward loyal regulars"></textarea>
-    </label>
-    <label>Products / details
-      <textarea name="products" rows="2" placeholder="seasonal latte, cold brew, ..."></textarea>
-    </label>
-    <label>Target audience interest
-      <input name="target_interest" placeholder="e.g. cozy autumn ritual">
-    </label>
-    <div class="row">
-      <label>Headline (optional)
-        <input name="headline" placeholder="Fall, quietly.">
+      <label>Customer / audience data
+        <textarea name="target_interest" rows="3" placeholder="Who this targets: interests, moment, mindset (e.g. cozy autumn ritual, weekday commuters)."></textarea>
       </label>
-      <label>Subhead (optional)
-        <input name="subhead" placeholder="The autumn blend is back.">
+      <label>Brand product data <span class="muted">(optional)</span>
+        <textarea name="products" rows="2" placeholder="seasonal latte, cold brew, ..."></textarea>
       </label>
     </div>
-    <div class="row">
-      <label>Logo (PNG)
+
+    <!-- Step 2: Brand identity -->
+    <div class="page hidden" data-page="2">
+      <div class="row">
+        <label>Brand primary color
+          <input type="color" name="brand_primary" value="#00704A">
+        </label>
+        <label>Secondary <span class="muted">(optional)</span>
+          <input type="color" name="brand_secondary" value="#1c1c1c">
+        </label>
+      </div>
+      <label>Brand values
+        <textarea name="brand_values" rows="2" placeholder="e.g. warmth, craft, community, quiet confidence"></textarea>
+      </label>
+      <label>Brand identity / voice
+        <textarea name="identity" rows="2" placeholder="minimal, premium, understated"></textarea>
+      </label>
+      <label>Agenda / goals
+        <textarea name="agenda" rows="2" placeholder="launch the fall blend; reward loyal regulars"></textarea>
+      </label>
+      <div class="row">
+        <label>Headline <span class="muted">(blank = AI writes it)</span>
+          <input name="headline" placeholder="AI will write one">
+        </label>
+        <label>Subhead <span class="muted">(optional)</span>
+          <input name="subhead" placeholder="AI will write one">
+        </label>
+      </div>
+      <label>Logo <span class="muted">(PNG, optional)</span>
         <input type="file" name="logo" accept="image/*">
       </label>
-      <label>Product cutout (transparent PNG)
+    </div>
+
+    <!-- Step 3: References (optional) -->
+    <div class="page hidden" data-page="3">
+      <p class="muted tiny" style="margin:0">Optional. Upload past ads or visuals whose <em>style</em> you want the new ad to resemble — these steer the AI background's palette and mood (style only, never copied).</p>
+      <label>Reference / past ad images
+        <input type="file" name="ref_ads" accept="image/*" multiple>
+      </label>
+      <label>Product cutout <span class="muted">(transparent PNG, optional)</span>
         <input type="file" name="product" accept="image/*">
       </label>
+      <p class="muted tiny">The ad is generated with AI by default (background + copy) when the server has a Gemini key; otherwise it falls back to a minimal preset background. Copy is AI-written whenever you leave the headline blank.</p>
     </div>
-    <label>Reference / past ads (optional, multiple)
-      <input type="file" name="ref_ads" accept="image/*" multiple>
-    </label>
-    <button class="btn block" type="submit">Create &amp; generate</button>
+
+    <div class="wizard-nav">
+      <button class="btn ghost" type="button" id="wizBack" onclick="wizGo(-1)" style="visibility:hidden">Back</button>
+      <button class="btn" type="button" id="wizNext" onclick="wizGo(1)">Next</button>
+      <button class="btn" type="submit" id="wizSubmit" style="display:none">Create &amp; generate</button>
+    </div>
   </form>
+
+  <script>
+    let ws = 1;
+    function wizStep(n){
+      ws = Math.max(1, Math.min(3, n));
+      document.querySelectorAll('#wiz .page').forEach(p => p.classList.toggle('hidden', +p.dataset.page !== ws));
+      document.querySelectorAll('.step').forEach(s => s.classList.toggle('active', +s.dataset.step === ws));
+      document.getElementById('wizBack').style.visibility = ws === 1 ? 'hidden' : 'visible';
+      document.getElementById('wizNext').style.display = ws === 3 ? 'none' : '';
+      document.getElementById('wizSubmit').style.display = ws === 3 ? '' : 'none';
+    }
+    function wizGo(d){
+      if (d > 0 && ws === 1){                              // require a name before leaving step 1
+        const nm = document.querySelector('[name=name]');
+        if (nm && !nm.value.trim()){ nm.reportValidity(); return; }
+      }
+      wizStep(ws + d);
+    }
+  </script>
 {% endblock %}
