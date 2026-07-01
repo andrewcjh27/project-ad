@@ -96,7 +96,7 @@ def create():
             ref_paths.append(p)
 
     proj = {k: request.form.get(k, "") for k in FIELDS}
-    proj.update({"logo_path": logo_path, "product_path": product_path})
+    proj.update({"logo_path": logo_path, "product_path": product_path, "ref_ads": ref_paths})
     proj["name"] = proj["name"] or "Untitled"
     proj["brand_primary"] = proj["brand_primary"] or "#00704A"
 

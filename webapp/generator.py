@@ -8,6 +8,7 @@ composited on top. Aligned to the brand + interest; diverse per seed.
 """
 import os
 import sys
+import json
 import random
 
 # Make the repo-root modules (image_agent) importable when run from anywhere.
@@ -15,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from PIL import Image, ImageDraw, ImageFont       # noqa: E402
 from image_agent import ProceduralProvider, get_image_provider   # noqa: E402
 import llm_agent                                    # noqa: E402  (free-tier LLM copy)
+import reference_style                              # noqa: E402  (style from reference ads)
 
 W, H = 1080, 1350
 INK = (20, 17, 15)
@@ -71,9 +73,21 @@ def _paste_contained(canvas, path, box):
 
 def generate_poster(project, out_path, seed=None):
     """Render the project's poster. Returns (out_path, seed_used)."""
-    accent = _hex_to_rgb(project.get("brand_primary"))
-    deep = (_hex_to_rgb(project["brand_secondary"])
-            if project.get("brand_secondary") else _darken(accent))
+    # Reference-ad style: analyze uploads -> palette + a style phrase that condition output.
+    refs = project.get("ref_ads") or []
+    if isinstance(refs, str):
+        try:
+            refs = json.loads(refs)
+        except Exception:
+            refs = []
+    style = reference_style.analyze_references([r for r in refs if r and os.path.exists(r)]) if refs else None
+
+    if style:
+        accent, deep = reference_style.render_palette(style)     # match the references' tones
+    else:
+        accent = _hex_to_rgb(project.get("brand_primary"))
+        deep = (_hex_to_rgb(project["brand_secondary"])
+                if project.get("brand_secondary") else _darken(accent))
     seed = seed if seed is not None else random.randint(1, 2**31 - 1)
 
     # Background: procedural by default (free); nano banana if AD_IMAGE_PROVIDER=gemini
@@ -82,7 +96,7 @@ def generate_poster(project, out_path, seed=None):
     img_prompt = (f"An extremely minimal, clean, flat 2D abstract background for a vertical 4:5 poster; "
                   f"a limited palette of two or three colors from {project.get('brand_primary','')} and "
                   f"{sec}; soft gradient and fine grain, mostly empty negative space; no text, no logos, "
-                  f"no objects, no people.")
+                  f"no objects, no people.") + reference_style.style_to_prompt(style)
     provider = get_image_provider(os.getenv("AD_IMAGE_PROVIDER") or "procedural")
     try:
         bg = provider.generate(img_prompt, "", W, H, seed=seed, palette=(accent, deep))
