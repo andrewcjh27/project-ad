@@ -49,9 +49,10 @@
   .refthumb{position:relative}
   .refthumb img{height:72px;border-radius:6px;border:1px solid var(--line);display:block}
   .refthumb button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--ink);color:#fff;cursor:pointer;font-size:12px;line-height:1}
-  .ai-box{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:10px}
-  .chk{flex-direction:row!important;align-items:center;gap:8px;font-weight:500;color:#333}
-  .chk input{width:auto}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .keyfield{font:inherit;font-size:13px;padding:8px 10px;border:1px solid #dcdcdc;border-radius:8px;background:#fff;color:var(--ink);width:180px}
+  .keyfield:focus{outline:none;border-color:#9a9a9a}
+  @media(max-width:760px){.keyfield{width:120px}}
   .preview{position:sticky;top:90px}
   .preview canvas{width:100%;border:1px solid var(--line);border-radius:var(--radius);display:block;background:#fff}
   .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
@@ -66,12 +67,16 @@
 <body>
 <header>
   <div class="brand" onclick="showGallery()">Project AD</div>
-  <button class="btn" onclick="newProject()">+ Add project</button>
+  <div class="header-right">
+    <input id="f_apikey" type="password" class="keyfield" placeholder="Gemini API key" autocomplete="off"
+           title="Used for AI copy + image generation. A free-tier key works for copy. Stored only in this browser; requests go straight to Google.">
+    <button class="btn" onclick="newProject()">+ Add project</button>
+  </div>
 </header>
 <main>
   <section id="gallery">
     <h1>Projects</h1>
-    <p class="lead">On-brand, personalized ad posters. By default it uses the Gemini API with your key; if the key is missing or the API server fails, it automatically falls back to the built-in offline preset.</p>
+    <p class="lead">On-brand, personalized ad posters. Add your Gemini key in the top bar and it generates with AI by default; if the key is missing or the API fails, it falls back to a built-in preset.</p>
     <div id="empty" class="empty"><p>No projects yet.</p><button class="btn" onclick="newProject()">+ Add your first project</button></div>
     <div id="cards" class="grid"></div>
   </section>
@@ -112,17 +117,11 @@
 
         <!-- ── Page 3: References (optional) ─────────────────────────── -->
         <div class="page hidden" data-page="3">
-          <p class="muted tiny" style="margin:0">Optional. Upload past ads or visuals whose <em>style</em> you want the new ad to resemble. When the AI background is on, these steer palette and mood (style only — never copied).</p>
+          <p class="muted tiny" style="margin:0">Optional. Upload past ads or visuals whose <em>style</em> you want the new ad to resemble — these steer the AI background's palette and mood (style only, never copied).</p>
           <label>Reference / past ad images<input type="file" id="f_refs" accept="image/*" multiple></label>
           <div id="refThumbs" class="refthumbs"></div>
           <label>Product cutout <span class="muted">(transparent PNG, optional)</span><input type="file" id="f_product" accept="image/*"></label>
-          <div class="ai-box">
-            <h3>AI settings</h3>
-            <label>Gemini API key <span class="muted">(free-tier works for copy; image gen needs a paid/billing key)</span>
-              <input id="f_apikey" type="password" placeholder="paste your key">
-            </label>
-            <p class="muted tiny">The ad is generated with AI by default — copy and background come from the Gemini API. If the API is unavailable (no key, quota, or error), it falls back to a preset background you can choose from. Your key is stored only in this browser; requests go straight to Google.</p>
-          </div>
+          <p class="muted tiny">The ad is generated with AI by default (copy + background) using the Gemini key in the top bar. If the API is unavailable — no key, quota, or error — it falls back to a preset background you can pick after generating.</p>
         </div>
 
         <div class="wizard-nav">
