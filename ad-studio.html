@@ -325,7 +325,11 @@ function briefOf(p){return {name:p.name,description:p.description,audience:audie
 function bgPrompt(p,hasRefs){
   const sec=p.brand_secondary||"a darker shade";
   const feel=[p.values,p.identity].filter(Boolean).join(", ");
-  return `An extremely minimal, clean, flat 2D abstract background for a vertical 4:5 poster; a limited palette of two or three colors drawn from ${p.brand_primary||"#1f6f54"} and ${sec}${feel?`; brand feel: ${feel}`:""}; soft gradient and fine grain, generous empty negative space, lower third kept light for dark text; no text, no logos, no objects, no people.`+
+  // House minimal style, distilled from the reference ads (see reference/README.md):
+  // monochromatic single-hue palette, one soft focal glow, a single light source,
+  // generous negative space, low-to-balanced contrast, restrained and premium.
+  return `A premium, extremely minimal, flat 2D abstract poster background (vertical 4:5) in a MONOCHROMATIC scheme — two or three tones from a single hue family drawn from ${p.brand_primary||"#1f6f54"} and ${sec}${feel?`; brand feel: ${feel}`:""}. `+
+    `Composition: one calm focal glow or soft organic shape, a single gentle light source, generous empty negative space, low-to-balanced contrast, fine subtle grain. Keep uncluttered areas for text (upper-centre for a headline; lower third kept light for dark text). Restrained and elegant — no text, no logos, no objects, no people.`+
     (hasRefs?" Match the visual STYLE, palette and mood of the provided reference images — never copy their content.":"");
 }
 

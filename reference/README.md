@@ -1,41 +1,41 @@
 # Reference ads — house minimal style
 
-These are the reference ads that define the minimal aesthetic **PRO-AD** should
-aim for on most projects. Put the image files in this folder (`.jpg` / `.png` /
-`.webp`), then in the Ad Studio upload them on **Step 3 · References** of a
-project so the generator matches their palette and mood (style only — never
-copied).
+These are the reference ads that define the minimal aesthetic **PRO-AD** aims for.
+Their shared design language is now baked into the default background prompt
+(`ad-studio.html` → `bgPrompt`, and `webapp/generator.py`), so new ads lean
+minimal by default. To match a *specific* reference's look on a project, upload
+it on **Step 3 · References** in the studio (style only — never copied).
 
-## The references
+## The references (palettes from the built-in analyzer)
 
-1. **apple-beyond-innovation** — dark, cinematic product hero. Near-black canvas,
-   a single warm light sweep across the top, lots of negative space, the product
-   emerging half-lit from shadow, a short clean sans headline set high and centered.
-   *Mood: premium, dramatic, restrained.*
+| File | Brand ad | Palette | Analyzer read |
+|------|----------|---------|----------------|
+| `apple-beyond-innovation.jpg` | Apple, "Beyond Innovation" | `#040202 #38221C #8F6855 #D9CAC2` | minimal & flat · dark · neutral · low-contrast |
+| `alure-skincare.png` | Alure skincare | `#374D28 #6E7C58 #CFDEBA #A6B38E` | minimal & flat · mid-toned · warm · balanced |
+| `lotte-2percent.png` | Lotte 2% | `#83AEDA #CCDAEB #C98F78 #668454` | minimal & flat · light · cool · low-contrast |
+| `starbucks-royal-coffee.png` | Starbucks, "The Royal Coffee" | `#8C2620 #561915 #9C6659 #D5BDAC` | moderately detailed · dark · warm · low-contrast |
 
-2. **alure-skincare** — soft organic flowing shapes in a limited green palette,
-   oversized ghosted brand letterforms behind the product, natural props (leaves,
-   avocado), a calm supporting paragraph. *Mood: natural, editorial, airy.*
+Each ad exemplifies a different mood — dark/cinematic (Apple), natural/editorial
+(Alure), fresh/airy (Lotte), rich/dramatic (Starbucks) — but they share one clear
+design language.
 
-3. **lotte-2percent** — bright, clean product-in-water. Light-blue gradient, plenty
-   of white space, crisp products + fruit with reflections, an oversized number as
-   the focal type. *Mood: fresh, energetic, simple.*
+## Shared minimal-design DNA (encoded into the default prompt)
 
-## Shared minimal-design DNA (what to carry into generated ads)
+- **Monochromatic** — each ad commits to a *single hue family* with 2–3 tones
+  (black/copper · greens · blues · reds), never a rainbow. This is the strongest
+  common thread.
+- **One clear focal subject** with generous negative space around it.
+- **Soft, flat backgrounds** — a gradient, a single gentle light source, organic
+  shapes, or a solid field. No clutter.
+- **Low-to-balanced contrast**, restrained and premium in mood.
+- **Clean type hierarchy** — one confident headline + a short supporting line;
+  logo kept small; text given a calm, high-contrast area to sit in.
 
-- One clear focal subject with generous negative space around it.
-- A limited palette (2–3 tones), drawn from the brand color — not a rainbow.
-- Flat / soft backgrounds: a gradient, a single light source, or organic shapes — no clutter.
-- A short, confident headline in a clean sans; an understated supporting line.
-- Text kept in a calm, high-contrast area; product and logo given room to breathe.
+## Adding more references
 
-## Files
+Drop image files here (`.jpg` / `.png` / `.webp`, not gitignored) and commit
+them. Run the analyzer on any image with:
 
-Add the images here and commit them (this folder is **not** gitignored):
-
-```
-reference/
-  apple-beyond-innovation.jpg
-  alure-skincare.jpg
-  lotte-2percent.jpg
+```bash
+python3 -c "import reference_style as rs; import json; print(json.dumps(rs.analyze_references(['reference/<file>']), indent=2, default=str))"
 ```
