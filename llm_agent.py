@@ -184,6 +184,26 @@ def generate_copy(product, segment, angle, exemplars=None):
     return head, sub, "generated:rule-based(from data)"
 
 
+# ── Web console: headline + subhead from a free-form brand brief ────────────
+def generate_brand_copy(brief):
+    """LLM headline + subhead from an arbitrary brand brief (web console).
+
+    Returns (headline, subhead, source) or None if no LLM is available / on error.
+    """
+    llm = get_llm()
+    if not llm:
+        return None
+    system = ("You are a brand Copywriter. From the brand brief, write a short ad HEADLINE (<=5 "
+              "words) and a brief one-line SUBHEAD in a minimal, understated voice — restrained, "
+              "never hype or hard-sell. Adapt to the brand and its target interest. Return JSON "
+              "{\"headline\":..,\"subhead\":..}.")
+    try:
+        j = _extract_json(llm.complete(system, json.dumps(brief)))
+        return j.get("headline", ""), j.get("subhead", ""), f"generated:{llm.name}"
+    except Exception:
+        return None
+
+
 # ── Audience Strategist: fuse a trait-mixture into ONE persona ───────────────
 def generate_persona(persona_struct):
     """LLM-write a named persona + narrative + creative angle from a trait mixture.

@@ -13,7 +13,8 @@ import random
 # Make the repo-root modules (image_agent) importable when run from anywhere.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from PIL import Image, ImageDraw, ImageFont       # noqa: E402
-from image_agent import ProceduralProvider        # noqa: E402
+from image_agent import ProceduralProvider, get_image_provider   # noqa: E402
+import llm_agent                                    # noqa: E402  (free-tier LLM copy)
 
 W, H = 1080, 1350
 INK = (20, 17, 15)
@@ -75,8 +76,19 @@ def generate_poster(project, out_path, seed=None):
             if project.get("brand_secondary") else _darken(accent))
     seed = seed if seed is not None else random.randint(1, 2**31 - 1)
 
-    # Diverse minimal background in the brand color (same engine as the pipeline).
-    canvas = ProceduralProvider().generate("", "", W, H, seed=seed, palette=(accent, deep)).convert("RGB")
+    # Background: procedural by default (free); nano banana if AD_IMAGE_PROVIDER=gemini
+    # (+ GEMINI_IMAGE_API_KEY). The prompt is used only when a real image model runs.
+    sec = project.get("brand_secondary") or "a darker shade"
+    img_prompt = (f"An extremely minimal, clean, flat 2D abstract background for a vertical 4:5 poster; "
+                  f"a limited palette of two or three colors from {project.get('brand_primary','')} and "
+                  f"{sec}; soft gradient and fine grain, mostly empty negative space; no text, no logos, "
+                  f"no objects, no people.")
+    provider = get_image_provider(os.getenv("AD_IMAGE_PROVIDER") or "procedural")
+    try:
+        bg = provider.generate(img_prompt, "", W, H, seed=seed, palette=(accent, deep))
+    except Exception:
+        bg = ProceduralProvider().generate(img_prompt, "", W, H, seed=seed, palette=(accent, deep))
+    canvas = bg.convert("RGB")
     draw = ImageDraw.Draw(canvas, "RGBA")
 
     # Logo — only when uploaded; its corner varies with the design (not fixed).
@@ -92,11 +104,20 @@ def generate_poster(project, out_path, seed=None):
     if product and os.path.exists(product):
         _paste_contained(canvas, product, (int(W * 0.24), int(H * 0.11), int(W * 0.52), int(H * 0.34)))
 
-    # Headline + subhead — dark text on the light field (lower third).
-    headline = (project.get("headline") or project.get("target_interest") or project.get("name") or "").strip()
+    # Headline + subhead — LLM-written from the brand brief when not provided (free text tier).
+    headline = (project.get("headline") or "").strip()
+    subhead = (project.get("subhead") or "").strip()
+    if not headline:
+        brief = {k: project.get(k, "") for k in ("name", "identity", "agenda", "products", "target_interest")}
+        res = llm_agent.generate_brand_copy(brief)
+        if res:
+            headline, sub2, _ = res
+            subhead = subhead or sub2
+        else:
+            headline = (project.get("target_interest") or project.get("name") or "").strip()
     if headline:
         headline = headline[0].upper() + headline[1:]
-    subhead = (project.get("subhead") or "").strip()
+    project["headline"], project["subhead"] = headline, subhead   # persist the copy actually used
     hf, sf = _font(74), _font(34)
     y = int(H * 0.74)
     for ln in _wrap(draw, headline, hf, W - 2 * MARGIN):
