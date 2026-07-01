@@ -57,6 +57,27 @@
   .preview canvas{width:100%;border:1px solid var(--line);border-radius:var(--radius);display:block;background:#fff}
   .canvas-wrap{position:relative}
   .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px;color:var(--muted);font-size:14px;background:#fbfaf8;border:1px dashed #dcdcdc;border-radius:var(--radius)}
+  .painter{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .painter svg{width:180px;height:150px;overflow:visible}
+  .painter .wood{stroke:#cabfb0;stroke-width:5;stroke-linecap:round}
+  .painter .board{fill:#fff;stroke:#e2ddd4;stroke-width:2}
+  .painter .skin{fill:#f0c9a8}
+  .painter .shirt{fill:#1a1a1a}
+  .painter .armline{stroke:#1a1a1a;stroke-width:5;stroke-linecap:round}
+  .painter .brush{stroke:#8a6f4a;stroke-width:5;stroke-linecap:round}
+  .painter .brushtip{fill:#e98773}
+  .painter .arm{transform-box:fill-box;transform-origin:right center;animation:paint 1.05s ease-in-out infinite alternate}
+  .painter .artist{animation:bob 2.6s ease-in-out infinite}
+  .painter .dab{opacity:0}
+  .painter .d1{fill:#e98773;animation:dab 3.3s ease-in-out infinite}
+  .painter .d2{fill:#2f8f83;animation:dab 3.3s ease-in-out .6s infinite}
+  .painter .d3{fill:#e0a94e;animation:dab 3.3s ease-in-out 1.2s infinite}
+  .painter-cap{font-size:13px;color:var(--muted);min-height:16px;letter-spacing:.01em}
+  .placeholder.busy .arm{animation-duration:.6s}
+  @keyframes paint{from{transform:rotate(-10deg)}to{transform:rotate(12deg)}}
+  @keyframes dab{0%,100%{opacity:0}35%,70%{opacity:.9}}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @media (prefers-reduced-motion: reduce){.painter .arm,.painter .artist,.painter .dab{animation:none}.painter .dab{opacity:.85}}
   .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
   .status{margin-top:10px;font-size:12px;min-height:16px}
   .presets{margin-top:12px}
@@ -135,7 +156,33 @@
       <div class="preview">
         <div class="canvas-wrap">
           <canvas id="poster" width="1080" height="1350"></canvas>
-          <div id="placeholder" class="placeholder">Fill in the brief, then click <b>Generate</b> to create the ad.</div>
+          <div id="placeholder" class="placeholder">
+            <div class="painter">
+              <svg viewBox="0 0 240 200" aria-hidden="true">
+                <!-- easel -->
+                <line x1="60" y1="58" x2="40" y2="172" class="wood"/>
+                <line x1="122" y1="58" x2="142" y2="172" class="wood"/>
+                <line x1="70" y1="150" x2="132" y2="150" class="wood"/>
+                <!-- canvas board -->
+                <rect x="50" y="38" width="84" height="74" rx="5" class="board"/>
+                <!-- paint strokes that appear on loop -->
+                <rect x="62" y="54" width="42" height="8" rx="4" class="dab d1"/>
+                <rect x="62" y="72" width="58" height="8" rx="4" class="dab d2"/>
+                <circle cx="96" cy="96" r="9" class="dab d3"/>
+                <!-- artist -->
+                <g class="artist">
+                  <circle cx="188" cy="66" r="16" class="skin"/>
+                  <rect x="170" y="82" width="36" height="50" rx="15" class="shirt"/>
+                  <g class="arm">
+                    <line x1="174" y1="96" x2="132" y2="90" class="armline"/>
+                    <line x1="132" y1="90" x2="116" y2="87" class="brush"/>
+                    <circle cx="114" cy="86" r="4.5" class="brushtip"/>
+                  </g>
+                </g>
+              </svg>
+              <div class="painter-cap" id="phCap"></div>
+            </div>
+          </div>
         </div>
         <div class="actions">
           <button class="btn" onclick="generate(false)">Generate</button>
@@ -297,6 +344,7 @@ async function generate(newSeed){
   if(newSeed||!current.seed)current.seed=Math.floor(Math.random()*2**31);
   const key=getKey();
   hidePresets();
+  showLoading();                 // show the painting animation while we work
   const st=[];
   // COPY: AI-written when the headline is blank; preset text on failure/no key.
   if(!firstLine(current.headline)){
@@ -322,14 +370,17 @@ async function generate(newSeed){
     }catch(e){st.push("bg: preset (API "+e.message+")");}
   }else{st.push("bg: preset (no key)");}
   setStatus(st.join(" · "));
-  await renderPoster($("#poster"),current);
-  showResult();
-  if(!aiOk) showPresets();   // couldn't use AI -> offer the presets
+  try { await renderPoster($("#poster"),current); }
+  finally { showResult(); }   // always drop the loader to reveal the result
+  if(!aiOk) showPresets();    // couldn't use AI -> offer the presets
 }
-function showResult(){const ph=$("#placeholder");if(ph)ph.classList.add("hidden");}
+function showLoading(){const ph=$("#placeholder");if(!ph)return;ph.classList.remove("hidden");ph.classList.add("busy");const c=$("#phCap");if(c)c.textContent="Painting your ad…";}
+function showResult(){const ph=$("#placeholder");if(ph){ph.classList.add("hidden");ph.classList.remove("busy");}}
 function showPlaceholderOrLast(){
   const ph=$("#placeholder"), ctx=$("#poster").getContext("2d");
   ctx.clearRect(0,0,W,H);
+  ph.classList.remove("busy");
+  const c=$("#phCap"); if(c) c.textContent="";                 // idle: just the looping animation
   if(current.poster){ph.classList.add("hidden");loadImg(current.poster).then(img=>ctx.drawImage(img,0,0,W,H)).catch(()=>{});}
   else ph.classList.remove("hidden");
 }
