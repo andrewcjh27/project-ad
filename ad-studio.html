@@ -158,11 +158,16 @@ async function renderPoster(canvas,p){
   const ctx=canvas.getContext("2d");
   const accent=hexToRgb(p.brand_primary||"#1f6f54");
   const deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
-  drawBackground(ctx,mulberry32((p.seed||1)>>>0),accent,deep);
-  const m=80;
-  // logo top-left (uploaded, else a brand dot)
-  if(p.logo){try{drawContain(ctx,await loadImg(p.logo),m,70,150,150);}catch(e){}}
-  else{ctx.beginPath();ctx.arc(m+55,125,55,0,Math.PI*2);ctx.fillStyle=rgb(accent);ctx.fill();}
+  const rng=mulberry32((p.seed||1)>>>0);
+  drawBackground(ctx,rng,accent,deep);
+  const m=80, sz=150;
+  // logo — only when uploaded; its corner varies with the design (not fixed).
+  if(p.logo){try{
+    const img=await loadImg(p.logo);
+    const corners=[[m,70],[W-m-sz,70],[W-m-sz,H-70-sz]];   // TL / TR / BR
+    const c=corners[Math.floor(rng()*corners.length)];
+    drawContain(ctx,img,c[0],c[1],sz,sz);
+  }catch(e){}}
   // product upper-center (optional)
   if(p.product){try{drawContain(ctx,await loadImg(p.product),W*0.24,H*0.11,W*0.52,H*0.34);}catch(e){}}
   // dark headline + subhead, lower third

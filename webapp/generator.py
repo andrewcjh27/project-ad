@@ -79,12 +79,13 @@ def generate_poster(project, out_path, seed=None):
     canvas = ProceduralProvider().generate("", "", W, H, seed=seed, palette=(accent, deep)).convert("RGB")
     draw = ImageDraw.Draw(canvas, "RGBA")
 
-    # Logo (top-left) — uploaded, else a brand-color dot placeholder.
+    # Logo — only when uploaded; its corner varies with the design (not fixed).
     logo = project.get("logo_path")
     if logo and os.path.exists(logo):
-        _paste_contained(canvas, logo, (MARGIN, 70, 150, 150))
-    else:
-        draw.ellipse([MARGIN, 70, MARGIN + 110, 180], fill=(*accent, 255))
+        sz, rng = 150, random.Random(seed)
+        corners = [(MARGIN, 70), (W - MARGIN - sz, 70), (W - MARGIN - sz, H - 70 - sz)]
+        lx, ly = rng.choice(corners)
+        _paste_contained(canvas, logo, (lx, ly, sz, sz))
 
     # Optional product cutout (upper-center negative space).
     product = project.get("product_path")
