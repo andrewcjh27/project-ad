@@ -14,16 +14,12 @@
   .brand{font-weight:600;font-size:16px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
   main{max-width:1000px;margin:0 auto;padding:36px 32px 80px}
   h1{font-weight:600;font-size:28px;letter-spacing:-.01em;margin:0 0 4px}
-  h2{font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:26px 0 10px}
   .lead{color:var(--muted);margin:0 0 26px}
-  .muted{color:var(--muted)}
-  .btn{display:inline-block;background:var(--ink);color:#fff;border:none;border-radius:8px;padding:10px 18px;
+  .muted{color:var(--muted)} .tiny{font-size:12px}
+  .btn{display:inline-block;background:var(--ink);color:#fff;border:none;border-radius:8px;padding:10px 16px;
     font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s}
-  .btn:hover{opacity:.85}
-  .btn.ghost{background:transparent;color:var(--ink);border:1px solid #d6d6d6}
+  .btn:hover{opacity:.85} .btn.ghost{background:transparent;color:var(--ink);border:1px solid #d6d6d6}
   .back{background:none;border:none;padding:0;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;margin-bottom:16px}
-  .back:hover{color:var(--ink)}
-  /* gallery */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px;margin-top:22px}
   .card{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card);cursor:pointer;transition:transform .15s,box-shadow .15s}
   .card:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.08)}
@@ -32,7 +28,6 @@
   .card-meta strong{font-size:15px}.card-meta .muted{font-size:13px}
   .empty{text-align:center;padding:64px 20px;border:1px dashed #dcdcdc;border-radius:var(--radius);margin-top:26px}
   .empty p{color:var(--muted);margin:0 0 16px}
-  /* editor */
   .editor{display:grid;grid-template-columns:1fr 380px;gap:36px;align-items:start;margin-top:10px}
   .form{display:flex;flex-direction:column;gap:16px}
   .form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500;color:#555}
@@ -42,9 +37,13 @@
   .form input[type=file]{font-size:13px;padding:9px;background:#fafafa}
   .form textarea{resize:vertical}
   .row{display:flex;gap:16px}.row label{flex:1}
+  .ai-box{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:10px}
+  .chk{flex-direction:row!important;align-items:center;gap:8px;font-weight:500;color:#333}
+  .chk input{width:auto}
   .preview{position:sticky;top:90px}
   .preview canvas{width:100%;border:1px solid var(--line);border-radius:var(--radius);display:block;background:#fff}
-  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .status{margin-top:10px;font-size:12px;min-height:16px}
   .hidden{display:none!important}
   @media(max-width:760px){.editor{grid-template-columns:1fr}.row{flex-direction:column}.preview{position:static}}
 </style>
@@ -55,22 +54,17 @@
   <button class="btn" onclick="newProject()">+ Add project</button>
 </header>
 <main>
-  <!-- GALLERY -->
   <section id="gallery">
     <h1>Projects</h1>
-    <p class="lead">On-brand, personalized ad posters — saved in your browser. Fully offline.</p>
-    <div id="empty" class="empty">
-      <p>No projects yet.</p>
-      <button class="btn" onclick="newProject()">+ Add your first project</button>
-    </div>
+    <p class="lead">On-brand, personalized ad posters. Uses the Gemini API when you add a key; falls back to offline generation if the key is missing or the API fails.</p>
+    <div id="empty" class="empty"><p>No projects yet.</p><button class="btn" onclick="newProject()">+ Add your first project</button></div>
     <div id="cards" class="grid"></div>
   </section>
 
-  <!-- EDITOR -->
   <section id="editor" class="hidden">
     <button class="back" onclick="showGallery()">&larr; All projects</button>
     <h1 id="editorTitle">Add project</h1>
-    <p class="lead">Enter the brand data — a personalized minimal poster is generated live.</p>
+    <p class="lead">Enter the brand data. Leave the headline blank to let the AI write it.</p>
     <div class="editor">
       <div class="form">
         <label>Project / brand name<input id="f_name" placeholder="e.g. Acme Coffee"></label>
@@ -83,21 +77,30 @@
         <label>Products / details<textarea id="f_products" rows="2" placeholder="seasonal latte, cold brew, ..."></textarea></label>
         <label>Target audience interest<input id="f_interest" placeholder="e.g. cozy autumn ritual"></label>
         <div class="row">
-          <label>Headline (optional)<input id="f_headline" placeholder="Fall, quietly."></label>
-          <label>Subhead (optional)<input id="f_subhead" placeholder="The autumn blend is back."></label>
+          <label>Headline <span class="muted">(blank = AI writes it)</span><input id="f_headline" placeholder="AI will write one"></label>
+          <label>Subhead (optional)<input id="f_subhead" placeholder="AI will write one"></label>
         </div>
         <div class="row">
           <label>Logo (PNG)<input type="file" id="f_logo" accept="image/*"></label>
           <label>Product cutout (transparent PNG)<input type="file" id="f_product" accept="image/*"></label>
         </div>
+        <div class="ai-box">
+          <label>Gemini API key <span class="muted">(optional — enables AI copy; a free-tier key works)</span>
+            <input id="f_apikey" type="password" placeholder="paste your key">
+          </label>
+          <label class="chk"><input type="checkbox" id="f_aibg"> Use AI background <span class="muted">(needs a paid/billing key)</span></label>
+          <p class="muted tiny">Stored only in your browser; requests go straight to Google with your own key.</p>
+        </div>
       </div>
       <div class="preview">
         <canvas id="poster" width="1080" height="1350"></canvas>
         <div class="actions">
-          <button class="btn" onclick="generate(true)">Regenerate</button>
-          <button class="btn ghost" onclick="download()">Download PNG</button>
-          <button class="btn" onclick="saveProject()">Save project</button>
+          <button class="btn" onclick="generate(false)">Generate</button>
+          <button class="btn ghost" onclick="generate(true)">Regenerate</button>
+          <button class="btn ghost" onclick="download()">Download</button>
+          <button class="btn" onclick="saveProject()">Save</button>
         </div>
+        <div id="status" class="status muted"></div>
       </div>
     </div>
   </section>
@@ -123,54 +126,67 @@ const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(
 function drawContain(ctx,img,x,y,bw,bh){const s=Math.min(bw/img.width,bh/img.height);const nw=img.width*s,nh=img.height*s;ctx.drawImage(img,x+(bw-nw)/2,y+(bh-nh)/2,nw,nh);}
 function wrap(ctx,text,maxW){const words=(text||"").split(" ");const lines=[];let cur="";for(const w of words){const t=(cur+" "+w).trim();if(ctx.measureText(t).width<=maxW)cur=t;else{if(cur)lines.push(cur);cur=w;}}if(cur)lines.push(cur);return lines;}
 
-/* ---------- diverse minimal background ---------- */
+/* ---------- Gemini API (online-first; offline fallback on any error) ---------- */
+const API = "https://generativelanguage.googleapis.com/v1beta/models";
+const getKey = () => (($("#f_apikey") && $("#f_apikey").value) || localStorage.getItem("pa_key") || "").trim();
+const useAIbg = () => !!($("#f_aibg") && $("#f_aibg").checked);
+const setStatus = t => { const s=$("#status"); if(s) s.textContent=t; };
+function extractJson(t){t=t.trim();if(t.startsWith("```")){t=t.replace(/^```(json)?/i,"").replace(/```$/,"");}const i=t.indexOf("{"),j=t.lastIndexOf("}");if(i>=0&&j>i)t=t.slice(i,j+1);return JSON.parse(t);}
+async function geminiText(system,user,key){
+  const r=await fetch(`${API}/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({system_instruction:{parts:[{text:system}]},contents:[{parts:[{text:user}]}],generationConfig:{temperature:0.8}})});
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  const j=await r.json();
+  return ((j.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||"").join("");
+}
+async function geminiImage(prompt,key){
+  const r=await fetch(`${API}/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(key)}`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseModalities:["IMAGE"]}})});
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  const j=await r.json();
+  const part=((j.candidates||[])[0]?.content?.parts||[]).find(p=>p.inlineData||p.inline_data);
+  if(!part) throw new Error("no image");
+  return "data:image/png;base64,"+(part.inlineData||part.inline_data).data;
+}
+const COPY_SYS='You are a brand Copywriter. From the brand brief, write a short ad HEADLINE (<=5 words) and a brief one-line SUBHEAD in a minimal, understated voice — restrained, never hype. Return JSON {"headline":..,"subhead":..}.';
+function bgPrompt(p){
+  const sec=p.brand_secondary||"a darker shade";
+  return `An extremely minimal, clean, flat 2D abstract background for a vertical 4:5 poster; a limited palette of two or three colors from ${p.brand_primary||"#1f6f54"} and ${sec}; soft gradient and fine grain, mostly empty negative space, lower third kept light for dark text; no text, no logos, no objects, no people.`;
+}
+
+/* ---------- offline procedural background ---------- */
 function drawBackground(ctx,rng,accent,deep){
   const styles=["gradient","vignette","flat","circle"];
   const style=styles[Math.floor(rng()*styles.length)];
-  const tone = rng()<0.7 ? accent : accent.map((c,i)=>Math.round(0.6*c+0.4*deep[i]));
-  if(style==="flat"){
-    const t=tone.map((c,i)=>Math.round(0.45*c+0.55*WHITE[i]));
-    ctx.fillStyle=rgb(t);ctx.fillRect(0,0,W,H);
-  }else if(style==="circle"){
-    ctx.fillStyle=rgb(WHITE);ctx.fillRect(0,0,W,H);
-    const cx=W*(0.42+rng()*0.16),cy=H*(0.26+rng()*0.14),r=H*(0.22+rng()*0.08);
-    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=rgb(tone);ctx.fill();
-  }else if(style==="vignette"){
-    ctx.fillStyle=rgb(WHITE);ctx.fillRect(0,0,W,H);
-    const ox=W*(0.35+rng()*0.3),oy=H*(0.85+rng()*0.2),rad=Math.max(W,H)*(0.7+rng()*0.25);
-    const g=ctx.createRadialGradient(ox,oy,0,ox,oy,rad);
-    g.addColorStop(0,rgb(tone,0.95));g.addColorStop(1,rgb(WHITE,0));
-    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  }else{
-    const d=rng()*0.4;
-    const g=ctx.createLinearGradient(0,0,d*W,H);
-    g.addColorStop(0,rgb(WHITE));g.addColorStop(1,rgb(tone));
-    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  }
-  // fine grain
+  const tone=rng()<0.7?accent:accent.map((c,i)=>Math.round(0.6*c+0.4*deep[i]));
+  const yy=v=>v;
+  if(style==="flat"){const t=tone.map((c,i)=>Math.round(0.45*c+0.55*WHITE[i]));ctx.fillStyle=rgb(t);ctx.fillRect(0,0,W,H);}
+  else if(style==="circle"){ctx.fillStyle=rgb(WHITE);ctx.fillRect(0,0,W,H);const cx=W*(0.42+rng()*0.16),cy=H*(0.26+rng()*0.14),r=H*(0.22+rng()*0.08);ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=rgb(tone);ctx.fill();}
+  else if(style==="vignette"){ctx.fillStyle=rgb(WHITE);ctx.fillRect(0,0,W,H);const ox=W*(0.35+rng()*0.3),oy=H*(0.85+rng()*0.2),rad=Math.max(W,H)*(0.7+rng()*0.25);const g=ctx.createRadialGradient(ox,oy,0,ox,oy,rad);g.addColorStop(0,rgb(tone,0.95));g.addColorStop(1,rgb(WHITE,0));ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+  else{const d=rng()*0.4;const g=ctx.createLinearGradient(0,0,d*W,H);g.addColorStop(0,rgb(WHITE));g.addColorStop(1,rgb(tone));ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
   const im=ctx.getImageData(0,0,W,H),d=im.data;
   for(let i=0;i<d.length;i+=4){const n=(rng()*2-1)*6;d[i]+=n;d[i+1]+=n;d[i+2]+=n;}
   ctx.putImageData(im,0,0);
 }
 
-/* ---------- render the poster ---------- */
-async function renderPoster(canvas,p){
+/* ---------- render ---------- */
+async function renderPoster(canvas,p,key){
   const ctx=canvas.getContext("2d");
   const accent=hexToRgb(p.brand_primary||"#1f6f54");
   const deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
   const rng=mulberry32((p.seed||1)>>>0);
-  drawBackground(ctx,rng,accent,deep);
+  // Background: online-first if enabled + key, else offline procedural.
+  let aiBg=false;
+  if(key&&useAIbg()){
+    try{ctx.drawImage(await loadImg(await geminiImage(bgPrompt(p),key)),0,0,W,H);aiBg=true;setStatus((($("#status").textContent||"")+" · bg: AI").trim());}
+    catch(e){setStatus((($("#status").textContent||"")+" · bg: offline (API "+e.message+")").trim());}
+  }
+  if(!aiBg) drawBackground(ctx,rng,accent,deep);
   const m=80, sz=150;
-  // logo — only when uploaded; its corner varies with the design (not fixed).
-  if(p.logo){try{
-    const img=await loadImg(p.logo);
-    const corners=[[m,70],[W-m-sz,70],[W-m-sz,H-70-sz]];   // TL / TR / BR
-    const c=corners[Math.floor(rng()*corners.length)];
-    drawContain(ctx,img,c[0],c[1],sz,sz);
-  }catch(e){}}
-  // product upper-center (optional)
+  if(p.logo){try{const img=await loadImg(p.logo);const corners=[[m,70],[W-m-sz,70],[W-m-sz,H-70-sz]];const c=corners[Math.floor(rng()*corners.length)];drawContain(ctx,img,c[0],c[1],sz,sz);}catch(e){}}
   if(p.product){try{drawContain(ctx,await loadImg(p.product),W*0.24,H*0.11,W*0.52,H*0.34);}catch(e){}}
-  // dark headline + subhead, lower third
   ctx.fillStyle=INK;ctx.textBaseline="top";
   const head=cap((p.headline||p.target_interest||p.name||"").trim());
   ctx.font='600 74px Georgia,"Times New Roman",serif';
@@ -193,7 +209,7 @@ function readFile(input,key){
     const s=Math.min(1,700/Math.max(img.width,img.height));
     const c=document.createElement("canvas");c.width=img.width*s;c.height=img.height*s;
     c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-    current[key]=c.toDataURL("image/png");generate(false);
+    current[key]=c.toDataURL("image/png");renderLocal();
   };img.src=fr.result;};
   fr.readAsDataURL(f);
 }
@@ -202,8 +218,25 @@ function readFile(input,key){
 async function generate(newSeed){
   collect();
   if(newSeed||!current.seed)current.seed=Math.floor(Math.random()*2**31);
-  await renderPoster($("#poster"),current);
+  const key=getKey();
+  setStatus("");
+  // COPY online-first: only when the headline was left blank.
+  if(!current.headline){
+    if(key){
+      try{
+        const brief={name:current.name,identity:current.identity,agenda:current.agenda,products:current.products,target_interest:current.target_interest};
+        const j=extractJson(await geminiText(COPY_SYS,JSON.stringify(brief),key));
+        current.headline=(j.headline||"").trim();
+        current.subhead=(current.subhead||j.subhead||"").trim();
+        $("#f_headline").value=current.headline;$("#f_subhead").value=current.subhead;
+        setStatus("copy: AI");
+      }catch(e){current.headline=(current.target_interest||current.name||"").trim();setStatus("copy: offline (API "+e.message+")");}
+    }else{current.headline=(current.target_interest||current.name||"").trim();setStatus("offline (no API key)");}
+  }else{setStatus("copy: manual");}
+  await renderPoster($("#poster"),current,key);
 }
+function renderLocal(){collect();if(!current.seed)current.seed=Math.floor(Math.random()*2**31);renderPoster($("#poster"),current,null);}
+let _t;function liveRender(){clearTimeout(_t);_t=setTimeout(renderLocal,250);}
 function makeThumb(canvas){const c=document.createElement("canvas");c.width=400;c.height=500;c.getContext("2d").drawImage(canvas,0,0,400,500);return c.toDataURL("image/png");}
 function saveProject(){
   collect();
@@ -216,8 +249,8 @@ function saveProject(){
   showGallery();
 }
 function download(){const a=document.createElement("a");a.download=(current.name||"ad")+".png";a.href=$("#poster").toDataURL("image/png");a.click();}
-function newProject(){current={seed:Math.floor(Math.random()*2**31)};fill(current);$("#f_logo").value="";$("#f_product").value="";$("#editorTitle").textContent="Add project";showEditor();generate(false);}
-function openProject(id){current=Object.assign({},load().find(x=>x.id===id));fill(current);$("#f_logo").value="";$("#f_product").value="";$("#editorTitle").textContent=current.name||"Project";showEditor();renderPoster($("#poster"),current);}
+function newProject(){current={seed:Math.floor(Math.random()*2**31)};fill(current);$("#f_logo").value="";$("#f_product").value="";$("#editorTitle").textContent="Add project";showEditor();setStatus("");renderLocal();}
+function openProject(id){current=Object.assign({},load().find(x=>x.id===id));fill(current);$("#f_logo").value="";$("#f_product").value="";$("#editorTitle").textContent=current.name||"Project";showEditor();setStatus("");renderLocal();}
 
 /* ---------- views ---------- */
 function renderGallery(){
@@ -231,7 +264,9 @@ function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classLi
 /* ---------- init ---------- */
 $("#f_logo").addEventListener("change",e=>readFile(e.target,"logo"));
 $("#f_product").addEventListener("change",e=>readFile(e.target,"product"));
-["input","change"].forEach(ev=>$("#editor").addEventListener(ev,e=>{if(e.target.type!=="file")generate(false);}));
+$("#f_apikey").value=localStorage.getItem("pa_key")||"";
+$("#f_apikey").addEventListener("input",e=>localStorage.setItem("pa_key",e.target.value.trim()));
+["input","change"].forEach(ev=>$("#editor").addEventListener(ev,e=>{if(e.target.type!=="file"&&e.target.id!=="f_apikey")liveRender();}));
 showGallery();
 </script>
 </body>
