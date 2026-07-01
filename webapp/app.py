@@ -23,7 +23,8 @@ from flask import (Flask, request, redirect, url_for, render_template,
                    send_from_directory, abort)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import generator   # webapp/generator.py
+import generator          # webapp/generator.py
+import reference_style    # repo-root module (path added by generator import)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(BASE, "projects.db")
@@ -124,7 +125,9 @@ def project(pid):
     con.close()
     if not row:
         abort(404)
-    return render_template("project.html", p=row, ref_ads=json.loads(row["ref_ads"] or "[]"))
+    refs = json.loads(row["ref_ads"] or "[]")
+    style = reference_style.analyze_references([r for r in refs if r and os.path.exists(r)]) if refs else None
+    return render_template("project.html", p=row, ref_ads=refs, style=style)
 
 
 @app.route("/regenerate/<pid>", methods=["POST"])

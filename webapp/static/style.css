@@ -82,6 +82,9 @@ a { color: var(--ink); }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: middle; margin: 0 6px 0 0; border: 1px solid #ddd; }
 .refs { display: flex; gap: 12px; flex-wrap: wrap; }
 .refs img { height: 140px; border-radius: 8px; border: 1px solid var(--line); }
+.refstyle .swatches { display: flex; gap: 8px; margin-bottom: 8px; }
+.swatch-lg { width: 46px; height: 46px; border-radius: 8px; border: 1px solid var(--line); }
+.refstyle .tiny { margin-top: 2px; }
 
 @media (max-width: 720px) {
   main { padding: 28px 20px 60px; }
