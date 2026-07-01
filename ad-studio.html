@@ -14,7 +14,8 @@
   .brand{font-weight:600;font-size:16px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
   main{max-width:1000px;margin:0 auto;padding:36px 32px 80px}
   h1{font-weight:600;font-size:28px;letter-spacing:-.01em;margin:0 0 4px}
-  .lead{color:var(--muted);margin:0 0 26px}
+  h3{font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:6px 0 -4px}
+  .lead{color:var(--muted);margin:0 0 22px}
   .muted{color:var(--muted)} .tiny{font-size:12px}
   .btn{display:inline-block;background:var(--ink);color:#fff;border:none;border-radius:8px;padding:10px 16px;
     font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s}
@@ -28,8 +29,14 @@
   .card-meta strong{font-size:15px}.card-meta .muted{font-size:13px}
   .empty{text-align:center;padding:64px 20px;border:1px dashed #dcdcdc;border-radius:var(--radius);margin-top:26px}
   .empty p{color:var(--muted);margin:0 0 16px}
+  /* wizard */
+  .steps{display:flex;gap:8px;margin:0 0 22px;flex-wrap:wrap}
+  .step{font-size:13px;color:var(--muted);padding:6px 13px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer}
+  .step.active{color:var(--ink);border-color:var(--ink);font-weight:600}
+  .step em{font-style:normal;opacity:.55;margin-left:4px}
   .editor{display:grid;grid-template-columns:1fr 380px;gap:36px;align-items:start;margin-top:10px}
   .form{display:flex;flex-direction:column;gap:16px}
+  .page{display:flex;flex-direction:column;gap:16px}
   .form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500;color:#555}
   .form input,.form textarea{font:inherit;font-size:15px;padding:11px 12px;border:1px solid #dcdcdc;border-radius:8px;background:#fff;color:var(--ink)}
   .form input:focus,.form textarea:focus{outline:none;border-color:#9a9a9a}
@@ -37,6 +44,11 @@
   .form input[type=file]{font-size:13px;padding:9px;background:#fafafa}
   .form textarea{resize:vertical}
   .row{display:flex;gap:16px}.row label{flex:1}
+  .wizard-nav{display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+  .refthumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+  .refthumb{position:relative}
+  .refthumb img{height:72px;border-radius:6px;border:1px solid var(--line);display:block}
+  .refthumb button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--ink);color:#fff;cursor:pointer;font-size:12px;line-height:1}
   .ai-box{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:10px}
   .chk{flex-direction:row!important;align-items:center;gap:8px;font-weight:500;color:#333}
   .chk input{width:auto}
@@ -56,7 +68,7 @@
 <main>
   <section id="gallery">
     <h1>Projects</h1>
-    <p class="lead">On-brand, personalized ad posters. Uses the Gemini API when you add a key; falls back to offline generation if the key is missing or the API fails.</p>
+    <p class="lead">On-brand, personalized ad posters. By default it uses the Gemini API with your key; if the key is missing or the API server fails, it automatically falls back to the built-in offline preset.</p>
     <div id="empty" class="empty"><p>No projects yet.</p><button class="btn" onclick="newProject()">+ Add your first project</button></div>
     <div id="cards" class="grid"></div>
   </section>
@@ -64,34 +76,59 @@
   <section id="editor" class="hidden">
     <button class="back" onclick="showGallery()">&larr; All projects</button>
     <h1 id="editorTitle">Add project</h1>
-    <p class="lead">Enter the brand data. Leave the headline blank to let the AI write it.</p>
+    <div class="steps">
+      <span class="step active" data-step="1" onclick="showStep(1)">1 · Brief</span>
+      <span class="step" data-step="2" onclick="showStep(2)">2 · Brand identity</span>
+      <span class="step" data-step="3" onclick="showStep(3)">3 · References <em>optional</em></span>
+    </div>
     <div class="editor">
       <div class="form">
-        <label>Project / brand name<input id="f_name" placeholder="e.g. Acme Coffee"></label>
-        <div class="row">
-          <label>Brand primary color<input type="color" id="f_primary" value="#1f6f54"></label>
-          <label>Secondary (optional)<input type="color" id="f_secondary" value="#14251b"></label>
+        <!-- ── Page 1: Brief ─────────────────────────────────────────── -->
+        <div class="page" data-page="1">
+          <label>Project / brand name<input id="f_name" placeholder="e.g. Acme Coffee"></label>
+          <label>Brand / project description<textarea id="f_description" rows="3" placeholder="What the brand is, the campaign, and what this ad is for."></textarea></label>
+          <label>Customer / audience data<textarea id="f_audience" rows="3" placeholder="Who this targets: interests, moment, mindset (e.g. cozy autumn ritual, weekday commuters)."></textarea></label>
+          <label>Brand product data <span class="muted">(optional)</span><textarea id="f_products" rows="2" placeholder="seasonal latte, cold brew, ..."></textarea></label>
         </div>
-        <label>Brand identity / voice<textarea id="f_identity" rows="2" placeholder="warm, minimal, premium"></textarea></label>
-        <label>Agenda / goals<textarea id="f_agenda" rows="2" placeholder="launch the fall blend; reward loyal regulars"></textarea></label>
-        <label>Products / details<textarea id="f_products" rows="2" placeholder="seasonal latte, cold brew, ..."></textarea></label>
-        <label>Target audience interest<input id="f_interest" placeholder="e.g. cozy autumn ritual"></label>
-        <div class="row">
-          <label>Headline <span class="muted">(blank = AI writes it)</span><input id="f_headline" placeholder="AI will write one"></label>
-          <label>Subhead (optional)<input id="f_subhead" placeholder="AI will write one"></label>
+
+        <!-- ── Page 2: Brand identity ────────────────────────────────── -->
+        <div class="page hidden" data-page="2">
+          <div class="row">
+            <label>Brand primary color<input type="color" id="f_primary" value="#1f6f54"></label>
+            <label>Secondary <span class="muted">(optional)</span><input type="color" id="f_secondary" value="#14251b"></label>
+          </div>
+          <label>Brand values<textarea id="f_values" rows="2" placeholder="e.g. warmth, craft, community, quiet confidence"></textarea></label>
+          <label>Brand identity / voice<textarea id="f_identity" rows="2" placeholder="minimal, premium, understated"></textarea></label>
+          <label>Agenda / goals<textarea id="f_agenda" rows="2" placeholder="launch the fall blend; reward loyal regulars"></textarea></label>
+          <div class="row">
+            <label>Headline <span class="muted">(blank = AI writes it)</span><input id="f_headline" placeholder="AI will write one"></label>
+            <label>Subhead <span class="muted">(optional)</span><input id="f_subhead" placeholder="AI will write one"></label>
+          </div>
+          <label>Logo <span class="muted">(PNG, optional)</span><input type="file" id="f_logo" accept="image/*"></label>
         </div>
-        <div class="row">
-          <label>Logo (PNG)<input type="file" id="f_logo" accept="image/*"></label>
-          <label>Product cutout (transparent PNG)<input type="file" id="f_product" accept="image/*"></label>
+
+        <!-- ── Page 3: References (optional) ─────────────────────────── -->
+        <div class="page hidden" data-page="3">
+          <p class="muted tiny" style="margin:0">Optional. Upload past ads or visuals whose <em>style</em> you want the new ad to resemble. When the AI background is on, these steer palette and mood (style only — never copied).</p>
+          <label>Reference / past ad images<input type="file" id="f_refs" accept="image/*" multiple></label>
+          <div id="refThumbs" class="refthumbs"></div>
+          <label>Product cutout <span class="muted">(transparent PNG, optional)</span><input type="file" id="f_product" accept="image/*"></label>
+          <div class="ai-box">
+            <h3>AI settings</h3>
+            <label>Gemini API key <span class="muted">(enables AI copy; a free-tier key works)</span>
+              <input id="f_apikey" type="password" placeholder="paste your key">
+            </label>
+            <label class="chk"><input type="checkbox" id="f_aibg" checked> Use AI background <span class="muted">(image gen needs a paid/billing key)</span></label>
+            <p class="muted tiny">Default is API-first: with a key, copy (and the background, if enabled) are AI-generated; on any API failure it falls back to the offline preset. Your key is stored only in this browser and requests go straight to Google.</p>
+          </div>
         </div>
-        <div class="ai-box">
-          <label>Gemini API key <span class="muted">(optional — enables AI copy; a free-tier key works)</span>
-            <input id="f_apikey" type="password" placeholder="paste your key">
-          </label>
-          <label class="chk"><input type="checkbox" id="f_aibg"> Use AI background <span class="muted">(needs a paid/billing key)</span></label>
-          <p class="muted tiny">Stored only in your browser; requests go straight to Google with your own key.</p>
+
+        <div class="wizard-nav">
+          <button class="btn ghost" id="btnBack" onclick="step(-1)" style="visibility:hidden">Back</button>
+          <button class="btn" id="btnNext" onclick="step(1)">Next</button>
         </div>
       </div>
+
       <div class="preview">
         <canvas id="poster" width="1080" height="1350"></canvas>
         <div class="actions">
@@ -122,9 +159,11 @@ function hexToRgb(h){h=(h||"#888888").replace("#","");if(h.length===3)h=h.split(
 const darken=(c,f=0.35)=>c.map(v=>Math.round(v*f));
 const rgb=(c,a)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a==null?1:a})`;
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
+const audienceOf=p=>(p.audience||p.target_interest||"").trim();   // back-compat with older saves
 const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});
 function drawContain(ctx,img,x,y,bw,bh){const s=Math.min(bw/img.width,bh/img.height);const nw=img.width*s,nh=img.height*s;ctx.drawImage(img,x+(bw-nw)/2,y+(bh-nh)/2,nw,nh);}
 function wrap(ctx,text,maxW){const words=(text||"").split(" ");const lines=[];let cur="";for(const w of words){const t=(cur+" "+w).trim();if(ctx.measureText(t).width<=maxW)cur=t;else{if(cur)lines.push(cur);cur=w;}}if(cur)lines.push(cur);return lines;}
+const firstLine=s=>(s||"").split("\n")[0].trim();
 
 /* ---------- Gemini API (online-first; offline fallback on any error) ---------- */
 const API = "https://generativelanguage.googleapis.com/v1beta/models";
@@ -132,6 +171,7 @@ const getKey = () => (($("#f_apikey") && $("#f_apikey").value) || localStorage.g
 const useAIbg = () => !!($("#f_aibg") && $("#f_aibg").checked);
 const setStatus = t => { const s=$("#status"); if(s) s.textContent=t; };
 function extractJson(t){t=t.trim();if(t.startsWith("```")){t=t.replace(/^```(json)?/i,"").replace(/```$/,"");}const i=t.indexOf("{"),j=t.lastIndexOf("}");if(i>=0&&j>i)t=t.slice(i,j+1);return JSON.parse(t);}
+function dataUrlPart(d){const m=/^data:(.*?);base64,(.*)$/.exec(d||"");return m?{inline_data:{mime_type:m[1],data:m[2]}}:null;}
 async function geminiText(system,user,key){
   const r=await fetch(`${API}/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`,{
     method:"POST",headers:{"Content-Type":"application/json"},
@@ -140,10 +180,12 @@ async function geminiText(system,user,key){
   const j=await r.json();
   return ((j.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||"").join("");
 }
-async function geminiImage(prompt,key){
+async function geminiImage(prompt,key,refs){
+  const parts=[{text:prompt}];
+  (refs||[]).forEach(d=>{const p=dataUrlPart(d);if(p)parts.push(p);});   // reference images steer the style
   const r=await fetch(`${API}/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(key)}`,{
     method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseModalities:["IMAGE"]}})});
+    body:JSON.stringify({contents:[{parts}],generationConfig:{responseModalities:["IMAGE"]}})});
   if(!r.ok) throw new Error("HTTP "+r.status);
   const j=await r.json();
   const part=((j.candidates||[])[0]?.content?.parts||[]).find(p=>p.inlineData||p.inline_data);
@@ -151,17 +193,19 @@ async function geminiImage(prompt,key){
   return "data:image/png;base64,"+(part.inlineData||part.inline_data).data;
 }
 const COPY_SYS='You are a brand Copywriter. From the brand brief, write a short ad HEADLINE (<=5 words) and a brief one-line SUBHEAD in a minimal, understated voice — restrained, never hype. Return JSON {"headline":..,"subhead":..}.';
-function bgPrompt(p){
+function briefOf(p){return {name:p.name,description:p.description,audience:audienceOf(p),products:p.products,values:p.values,identity:p.identity,agenda:p.agenda};}
+function bgPrompt(p,hasRefs){
   const sec=p.brand_secondary||"a darker shade";
-  return `An extremely minimal, clean, flat 2D abstract background for a vertical 4:5 poster; a limited palette of two or three colors from ${p.brand_primary||"#1f6f54"} and ${sec}; soft gradient and fine grain, mostly empty negative space, lower third kept light for dark text; no text, no logos, no objects, no people.`;
+  const feel=[p.values,p.identity].filter(Boolean).join(", ");
+  return `An extremely minimal, clean, flat 2D abstract background for a vertical 4:5 poster; a limited palette of two or three colors drawn from ${p.brand_primary||"#1f6f54"} and ${sec}${feel?`; brand feel: ${feel}`:""}; soft gradient and fine grain, generous empty negative space, lower third kept light for dark text; no text, no logos, no objects, no people.`+
+    (hasRefs?" Match the visual STYLE, palette and mood of the provided reference images — never copy their content.":"");
 }
 
-/* ---------- offline procedural background ---------- */
+/* ---------- offline procedural background (the preset fallback) ---------- */
 function drawBackground(ctx,rng,accent,deep){
   const styles=["gradient","vignette","flat","circle"];
   const style=styles[Math.floor(rng()*styles.length)];
   const tone=rng()<0.7?accent:accent.map((c,i)=>Math.round(0.6*c+0.4*deep[i]));
-  const yy=v=>v;
   if(style==="flat"){const t=tone.map((c,i)=>Math.round(0.45*c+0.55*WHITE[i]));ctx.fillStyle=rgb(t);ctx.fillRect(0,0,W,H);}
   else if(style==="circle"){ctx.fillStyle=rgb(WHITE);ctx.fillRect(0,0,W,H);const cx=W*(0.42+rng()*0.16),cy=H*(0.26+rng()*0.14),r=H*(0.22+rng()*0.08);ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=rgb(tone);ctx.fill();}
   else if(style==="vignette"){ctx.fillStyle=rgb(WHITE);ctx.fillRect(0,0,W,H);const ox=W*(0.35+rng()*0.3),oy=H*(0.85+rng()*0.2),rad=Math.max(W,H)*(0.7+rng()*0.25);const g=ctx.createRadialGradient(ox,oy,0,ox,oy,rad);g.addColorStop(0,rgb(tone,0.95));g.addColorStop(1,rgb(WHITE,0));ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
@@ -177,42 +221,66 @@ async function renderPoster(canvas,p,key){
   const accent=hexToRgb(p.brand_primary||"#1f6f54");
   const deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
   const rng=mulberry32((p.seed||1)>>>0);
-  // Background: online-first if enabled + key, else offline procedural.
+  // Background: API-first if enabled + key, else the offline preset.
   let aiBg=false;
   if(key&&useAIbg()){
-    try{ctx.drawImage(await loadImg(await geminiImage(bgPrompt(p),key)),0,0,W,H);aiBg=true;setStatus((($("#status").textContent||"")+" · bg: AI").trim());}
-    catch(e){setStatus((($("#status").textContent||"")+" · bg: offline (API "+e.message+")").trim());}
+    try{
+      const refs=(p.refs||[]).slice(0,4);
+      ctx.drawImage(await loadImg(await geminiImage(bgPrompt(p,refs.length>0),key,refs)),0,0,W,H);
+      aiBg=true;setStatus(((($("#status").textContent)||"")+" · bg: AI"+(refs.length?" (refs)":"")).trim());
+    }catch(e){setStatus(((($("#status").textContent)||"")+" · bg: offline (API "+e.message+")").trim());}
   }
   if(!aiBg) drawBackground(ctx,rng,accent,deep);
   const m=80, sz=150;
   if(p.logo){try{const img=await loadImg(p.logo);const corners=[[m,70],[W-m-sz,70],[W-m-sz,H-70-sz]];const c=corners[Math.floor(rng()*corners.length)];drawContain(ctx,img,c[0],c[1],sz,sz);}catch(e){}}
   if(p.product){try{drawContain(ctx,await loadImg(p.product),W*0.24,H*0.11,W*0.52,H*0.34);}catch(e){}}
   ctx.fillStyle=INK;ctx.textBaseline="top";
-  const head=cap((p.headline||p.target_interest||p.name||"").trim());
+  const head=cap(firstLine(p.headline)||firstLine(audienceOf(p))||(p.name||"").trim());
   ctx.font='600 74px Georgia,"Times New Roman",serif';
   let y=H*0.72;
   for(const ln of wrap(ctx,head,W-2*m)){ctx.fillText(ln,m,y);y+=74*1.12;}
-  const sub=(p.subhead||"").trim();
+  const sub=firstLine(p.subhead);
   if(sub){ctx.font='400 34px Georgia,serif';ctx.fillText(wrap(ctx,sub,W-2*m)[0]||"",m+2,H*0.90);}
 }
 
 /* ---------- form <-> state ---------- */
-const FIELDS={name:"f_name",brand_primary:"f_primary",brand_secondary:"f_secondary",identity:"f_identity",
-  agenda:"f_agenda",products:"f_products",target_interest:"f_interest",headline:"f_headline",subhead:"f_subhead"};
+const FIELDS={name:"f_name",description:"f_description",audience:"f_audience",products:"f_products",
+  brand_primary:"f_primary",brand_secondary:"f_secondary",values:"f_values",identity:"f_identity",
+  agenda:"f_agenda",headline:"f_headline",subhead:"f_subhead"};
 function collect(){for(const k in FIELDS)current[k]=$("#"+FIELDS[k]).value;}
-function fill(p){for(const k in FIELDS)$("#"+FIELDS[k]).value=p[k]||($("#"+FIELDS[k]).type==="color"?$("#"+FIELDS[k]).value:"");}
+function fill(p){for(const k in FIELDS){const el=$("#"+FIELDS[k]);el.value=(p[k]!=null&&p[k]!=="")?p[k]:(el.type==="color"?el.value:"");}
+  if(p.audience==null&&p.target_interest)$("#f_audience").value=p.target_interest;}
 
-function readFile(input,key){
+function readImage(input,key,max){
   const f=input.files[0];if(!f)return;
   const fr=new FileReader();
   fr.onload=()=>{const img=new Image();img.onload=()=>{
-    const s=Math.min(1,700/Math.max(img.width,img.height));
+    const s=Math.min(1,max/Math.max(img.width,img.height));
     const c=document.createElement("canvas");c.width=img.width*s;c.height=img.height*s;
     c.getContext("2d").drawImage(img,0,0,c.width,c.height);
     current[key]=c.toDataURL("image/png");renderLocal();
   };img.src=fr.result;};
   fr.readAsDataURL(f);
 }
+function readRefs(input){
+  const files=[...input.files];if(!files.length)return;
+  current.refs=current.refs||[];let pending=files.length;
+  files.forEach(f=>{
+    const fr=new FileReader();
+    fr.onload=()=>{const img=new Image();img.onload=()=>{
+      const s=Math.min(1,420/Math.max(img.width,img.height));
+      const c=document.createElement("canvas");c.width=img.width*s;c.height=img.height*s;
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      current.refs.push(c.toDataURL("image/jpeg",0.82));
+      if(--pending===0){renderRefThumbs();renderLocal();}
+    };img.src=fr.result;};
+    fr.readAsDataURL(f);
+  });
+  input.value="";
+}
+function renderRefThumbs(){const el=$("#refThumbs");if(!el)return;
+  el.innerHTML=(current.refs||[]).map((d,i)=>`<div class="refthumb"><img src="${d}" alt=""><button type="button" title="remove" onclick="removeRef(${i})">&times;</button></div>`).join("");}
+function removeRef(i){(current.refs||[]).splice(i,1);renderRefThumbs();renderLocal();}
 
 /* ---------- actions ---------- */
 async function generate(newSeed){
@@ -220,18 +288,17 @@ async function generate(newSeed){
   if(newSeed||!current.seed)current.seed=Math.floor(Math.random()*2**31);
   const key=getKey();
   setStatus("");
-  // COPY online-first: only when the headline was left blank.
-  if(!current.headline){
+  // COPY: API-first when the headline was left blank; preset fallback on failure.
+  if(!firstLine(current.headline)){
     if(key){
       try{
-        const brief={name:current.name,identity:current.identity,agenda:current.agenda,products:current.products,target_interest:current.target_interest};
-        const j=extractJson(await geminiText(COPY_SYS,JSON.stringify(brief),key));
+        const j=extractJson(await geminiText(COPY_SYS,JSON.stringify(briefOf(current)),key));
         current.headline=(j.headline||"").trim();
-        current.subhead=(current.subhead||j.subhead||"").trim();
+        current.subhead=(firstLine(current.subhead)||j.subhead||"").trim();
         $("#f_headline").value=current.headline;$("#f_subhead").value=current.subhead;
         setStatus("copy: AI");
-      }catch(e){current.headline=(current.target_interest||current.name||"").trim();setStatus("copy: offline (API "+e.message+")");}
-    }else{current.headline=(current.target_interest||current.name||"").trim();setStatus("offline (no API key)");}
+      }catch(e){current.headline=(audienceOf(current)||current.name||"").trim();setStatus("copy: offline (API "+e.message+")");}
+    }else{current.headline=(audienceOf(current)||current.name||"").trim();setStatus("offline (no API key)");}
   }else{setStatus("copy: manual");}
   await renderPoster($("#poster"),current,key);
 }
@@ -245,25 +312,39 @@ function saveProject(){
   current.id=current.id||("p"+Date.now());
   const i=list.findIndex(x=>x.id===current.id);
   if(i>=0)list[i]=current;else list.unshift(current);
-  try{store(list);}catch(e){alert("Storage full — remove some projects or smaller images.");return;}
+  try{store(list);}catch(e){alert("Storage full — remove some projects or use smaller / fewer reference images.");return;}
   showGallery();
 }
 function download(){const a=document.createElement("a");a.download=(current.name||"ad")+".png";a.href=$("#poster").toDataURL("image/png");a.click();}
-function newProject(){current={seed:Math.floor(Math.random()*2**31)};fill(current);$("#f_logo").value="";$("#f_product").value="";$("#editorTitle").textContent="Add project";showEditor();setStatus("");renderLocal();}
-function openProject(id){current=Object.assign({},load().find(x=>x.id===id));fill(current);$("#f_logo").value="";$("#f_product").value="";$("#editorTitle").textContent=current.name||"Project";showEditor();setStatus("");renderLocal();}
+
+/* ---------- wizard navigation ---------- */
+let curStep=1;
+function showStep(n){
+  curStep=Math.max(1,Math.min(3,n));
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("hidden",+p.dataset.page!==curStep));
+  document.querySelectorAll(".step").forEach(s=>s.classList.toggle("active",+s.dataset.step===curStep));
+  $("#btnBack").style.visibility=curStep===1?"hidden":"visible";
+  $("#btnNext").classList.toggle("hidden",curStep===3);
+}
+function step(d){showStep(curStep+d);}
+
+function resetFiles(){["f_logo","f_product","f_refs"].forEach(id=>{const el=$("#"+id);if(el)el.value="";});}
+function newProject(){current={seed:Math.floor(Math.random()*2**31)};fill(current);resetFiles();renderRefThumbs();$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");renderLocal();}
+function openProject(id){current=Object.assign({},load().find(x=>x.id===id));fill(current);resetFiles();renderRefThumbs();$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");renderLocal();}
 
 /* ---------- views ---------- */
 function renderGallery(){
   const list=load(),g=$("#cards");
   $("#empty").style.display=list.length?"none":"block";
-  g.innerHTML=list.map(p=>`<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster||""}" alt=""><div class="card-meta"><strong>${esc(p.name||"Untitled")}</strong><span class="muted">${esc(p.target_interest||"")}</span></div></div>`).join("");
+  g.innerHTML=list.map(p=>`<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster||""}" alt=""><div class="card-meta"><strong>${esc(p.name||"Untitled")}</strong><span class="muted">${esc(audienceOf(p))}</span></div></div>`).join("");
 }
 function showGallery(){$("#editor").classList.add("hidden");$("#gallery").classList.remove("hidden");renderGallery();}
 function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");}
 
 /* ---------- init ---------- */
-$("#f_logo").addEventListener("change",e=>readFile(e.target,"logo"));
-$("#f_product").addEventListener("change",e=>readFile(e.target,"product"));
+$("#f_logo").addEventListener("change",e=>readImage(e.target,"logo",700));
+$("#f_product").addEventListener("change",e=>readImage(e.target,"product",700));
+$("#f_refs").addEventListener("change",e=>readRefs(e.target));
 $("#f_apikey").value=localStorage.getItem("pa_key")||"";
 $("#f_apikey").addEventListener("input",e=>localStorage.setItem("pa_key",e.target.value.trim()));
 ["input","change"].forEach(ev=>$("#editor").addEventListener(ev,e=>{if(e.target.type!=="file"&&e.target.id!=="f_apikey")liveRender();}));
