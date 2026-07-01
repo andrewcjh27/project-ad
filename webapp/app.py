@@ -46,6 +46,18 @@ def db():
     return con
 
 
+def load_project(pid):
+    """Fetch one project row by id (aborts 404 if missing). Always closes the connection."""
+    con = db()
+    try:
+        row = con.execute("SELECT * FROM projects WHERE id=?", (pid,)).fetchone()
+    finally:
+        con.close()
+    if not row:
+        abort(404)
+    return row
+
+
 def init_db():
     con = db()
     con.execute("""CREATE TABLE IF NOT EXISTS projects (
@@ -126,11 +138,7 @@ def create():
 
 @app.route("/project/<pid>")
 def project(pid):
-    con = db()
-    row = con.execute("SELECT * FROM projects WHERE id=?", (pid,)).fetchone()
-    con.close()
-    if not row:
-        abort(404)
+    row = load_project(pid)
     refs = json.loads(row["ref_ads"] or "[]")
     style = reference_style.analyze_references([r for r in refs if r and os.path.exists(r)]) if refs else None
     return render_template("project.html", p=row, ref_ads=refs, style=style)
@@ -138,13 +146,10 @@ def project(pid):
 
 @app.route("/regenerate/<pid>", methods=["POST"])
 def regenerate(pid):
-    con = db()
-    row = con.execute("SELECT * FROM projects WHERE id=?", (pid,)).fetchone()
-    if not row:
-        con.close()
-        abort(404)
+    row = load_project(pid)
     poster = os.path.join(GENERATED, pid + ".png")
     _, seed = generator.generate_poster(dict(row), poster)   # new random seed -> new design
+    con = db()
     con.execute("UPDATE projects SET hero_seed=? WHERE id=?", (seed, pid))
     con.commit()
     con.close()
