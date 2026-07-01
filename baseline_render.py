@@ -16,7 +16,7 @@ Real vs. stand-in:
   - Logo: drop ./fonts/logo.png for your real mark; else a refined emblem.
 """
 
-import os, math
+import os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
