@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project AD — Ad Studio</title>
+<style>
+  :root{--ink:#1a1a1a;--muted:#8c8c8c;--line:#ececec;--bg:#fbfaf8;--card:#fff;--radius:12px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  header{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;
+    padding:16px 32px;background:rgba(251,250,248,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .brand{font-weight:600;font-size:16px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+  main{max-width:1000px;margin:0 auto;padding:36px 32px 80px}
+  h1{font-weight:600;font-size:28px;letter-spacing:-.01em;margin:0 0 4px}
+  h2{font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:26px 0 10px}
+  .lead{color:var(--muted);margin:0 0 26px}
+  .muted{color:var(--muted)}
+  .btn{display:inline-block;background:var(--ink);color:#fff;border:none;border-radius:8px;padding:10px 18px;
+    font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s}
+  .btn:hover{opacity:.85}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid #d6d6d6}
+  .back{background:none;border:none;padding:0;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;margin-bottom:16px}
+  .back:hover{color:var(--ink)}
+  /* gallery */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px;margin-top:22px}
+  .card{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card);cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .card:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.08)}
+  .card img{width:100%;display:block;aspect-ratio:4/5;object-fit:cover;background:#f0efec}
+  .card-meta{padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+  .card-meta strong{font-size:15px}.card-meta .muted{font-size:13px}
+  .empty{text-align:center;padding:64px 20px;border:1px dashed #dcdcdc;border-radius:var(--radius);margin-top:26px}
+  .empty p{color:var(--muted);margin:0 0 16px}
+  /* editor */
+  .editor{display:grid;grid-template-columns:1fr 380px;gap:36px;align-items:start;margin-top:10px}
+  .form{display:flex;flex-direction:column;gap:16px}
+  .form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500;color:#555}
+  .form input,.form textarea{font:inherit;font-size:15px;padding:11px 12px;border:1px solid #dcdcdc;border-radius:8px;background:#fff;color:var(--ink)}
+  .form input:focus,.form textarea:focus{outline:none;border-color:#9a9a9a}
+  .form input[type=color]{padding:3px;height:44px;cursor:pointer}
+  .form input[type=file]{font-size:13px;padding:9px;background:#fafafa}
+  .form textarea{resize:vertical}
+  .row{display:flex;gap:16px}.row label{flex:1}
+  .preview{position:sticky;top:90px}
+  .preview canvas{width:100%;border:1px solid var(--line);border-radius:var(--radius);display:block;background:#fff}
+  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .hidden{display:none!important}
+  @media(max-width:760px){.editor{grid-template-columns:1fr}.row{flex-direction:column}.preview{position:static}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand" onclick="showGallery()">Project AD</div>
+  <button class="btn" onclick="newProject()">+ Add project</button>
+</header>
+<main>
+  <!-- GALLERY -->
+  <section id="gallery">
+    <h1>Projects</h1>
+    <p class="lead">On-brand, personalized ad posters — saved in your browser. Fully offline.</p>
+    <div id="empty" class="empty">
+      <p>No projects yet.</p>
+      <button class="btn" onclick="newProject()">+ Add your first project</button>
+    </div>
+    <div id="cards" class="grid"></div>
+  </section>
+
+  <!-- EDITOR -->
+  <section id="editor" class="hidden">
+    <button class="back" onclick="showGallery()">&larr; All projects</button>
+    <h1 id="editorTitle">Add project</h1>
+    <p class="lead">Enter the brand data — a personalized minimal poster is generated live.</p>
+    <div class="editor">
+      <div class="form">
+        <label>Project / brand name<input id="f_name" placeholder="e.g. Acme Coffee"></label>
+        <div class="row">
+          <label>Brand primary color<input type="color" id="f_primary" value="#1f6f54"></label>
+          <label>Secondary (optional)<input type="color" id="f_secondary" value="#14251b"></label>
+        </div>
+        <label>Brand identity / voice<textarea id="f_identity" rows="2" placeholder="warm, minimal, premium"></textarea></label>
+        <label>Agenda / goals<textarea id="f_agenda" rows="2" placeholder="launch the fall blend; reward loyal regulars"></textarea></label>
+        <label>Products / details<textarea id="f_products" rows="2" placeholder="seasonal latte, cold brew, ..."></textarea></label>
+        <label>Target audience interest<input id="f_interest" placeholder="e.g. cozy autumn ritual"></label>
+        <div class="row">
+          <label>Headline (optional)<input id="f_headline" placeholder="Fall, quietly."></label>
+          <label>Subhead (optional)<input id="f_subhead" placeholder="The autumn blend is back."></label>
+        </div>
+        <div class="row">
+          <label>Logo (PNG)<input type="file" id="f_logo" accept="image/*"></label>
+          <label>Product cutout (transparent PNG)<input type="file" id="f_product" accept="image/*"></label>
+        </div>
+      </div>
+      <div class="preview">
+        <canvas id="poster" width="1080" height="1350"></canvas>
+        <div class="actions">
+          <button class="btn" onclick="generate(true)">Regenerate</button>
+          <button class="btn ghost" onclick="download()">Download PNG</button>
+          <button class="btn" onclick="saveProject()">Save project</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const W=1080, H=1350, INK="#141110", WHITE=[250,250,248];
+const $ = s => document.querySelector(s);
+let current = {};
+
+/* ---------- storage ---------- */
+const load = () => JSON.parse(localStorage.getItem("projectad")||"[]");
+const store = list => localStorage.setItem("projectad", JSON.stringify(list));
+const esc = s => (s||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- helpers ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hexToRgb(h){h=(h||"#888888").replace("#","");if(h.length===3)h=h.split("").map(c=>c+c).join("");return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+const darken=(c,f=0.35)=>c.map(v=>Math.round(v*f));
+const rgb=(c,a)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a==null?1:a})`;
+const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
+const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});
+function drawContain(ctx,img,x,y,bw,bh){const s=Math.min(bw/img.width,bh/img.height);const nw=img.width*s,nh=img.height*s;ctx.drawImage(img,x+(bw-nw)/2,y+(bh-nh)/2,nw,nh);}
+function wrap(ctx,text,maxW){const words=(text||"").split(" ");const lines=[];let cur="";for(const w of words){const t=(cur+" "+w).trim();if(ctx.measureText(t).width<=maxW)cur=t;else{if(cur)lines.push(cur);cur=w;}}if(cur)lines.push(cur);return lines;}
+
+/* ---------- diverse minimal background ---------- */
+function drawBackground(ctx,rng,accent,deep){
+  const styles=["gradient","vignette","flat","circle"];
+  const style=styles[Math.floor(rng()*styles.length)];
+  const tone = rng()<0.7 ? accent : accent.map((c,i)=>Math.round(0.6*c+0.4*deep[i]));
+  if(style==="flat"){
+    const t=tone.map((c,i)=>Math.round(0.45*c+0.55*WHITE[i]));
+    ctx.fillStyle=rgb(t);ctx.fillRect(0,0,W,H);
+  }else if(style==="circle"){
+    ctx.fillStyle=rgb(WHITE);ctx.fillRect(0,0,W,H);
+    const cx=W*(0.42+rng()*0.16),cy=H*(0.26+rng()*0.14),r=H*(0.22+rng()*0.08);
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=rgb(tone);ctx.fill();
+  }else if(style==="vignette"){
+    ctx.fillStyle=rgb(WHITE);ctx.fillRect(0,0,W,H);
+    const ox=W*(0.35+rng()*0.3),oy=H*(0.85+rng()*0.2),rad=Math.max(W,H)*(0.7+rng()*0.25);
+    const g=ctx.createRadialGradient(ox,oy,0,ox,oy,rad);
+    g.addColorStop(0,rgb(tone,0.95));g.addColorStop(1,rgb(WHITE,0));
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  }else{
+    const d=rng()*0.4;
+    const g=ctx.createLinearGradient(0,0,d*W,H);
+    g.addColorStop(0,rgb(WHITE));g.addColorStop(1,rgb(tone));
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  }
+  // fine grain
+  const im=ctx.getImageData(0,0,W,H),d=im.data;
+  for(let i=0;i<d.length;i+=4){const n=(rng()*2-1)*6;d[i]+=n;d[i+1]+=n;d[i+2]+=n;}
+  ctx.putImageData(im,0,0);
+}
+
+/* ---------- render the poster ---------- */
+async function renderPoster(canvas,p){
+  const ctx=canvas.getContext("2d");
+  const accent=hexToRgb(p.brand_primary||"#1f6f54");
+  const deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
+  drawBackground(ctx,mulberry32((p.seed||1)>>>0),accent,deep);
+  const m=80;
+  // logo top-left (uploaded, else a brand dot)
+  if(p.logo){try{drawContain(ctx,await loadImg(p.logo),m,70,150,150);}catch(e){}}
+  else{ctx.beginPath();ctx.arc(m+55,125,55,0,Math.PI*2);ctx.fillStyle=rgb(accent);ctx.fill();}
+  // product upper-center (optional)
+  if(p.product){try{drawContain(ctx,await loadImg(p.product),W*0.24,H*0.11,W*0.52,H*0.34);}catch(e){}}
+  // dark headline + subhead, lower third
+  ctx.fillStyle=INK;ctx.textBaseline="top";
+  const head=cap((p.headline||p.target_interest||p.name||"").trim());
+  ctx.font='600 74px Georgia,"Times New Roman",serif';
+  let y=H*0.72;
+  for(const ln of wrap(ctx,head,W-2*m)){ctx.fillText(ln,m,y);y+=74*1.12;}
+  const sub=(p.subhead||"").trim();
+  if(sub){ctx.font='400 34px Georgia,serif';ctx.fillText(wrap(ctx,sub,W-2*m)[0]||"",m+2,H*0.90);}
+}
+
+/* ---------- form <-> state ---------- */
+const FIELDS={name:"f_name",brand_primary:"f_primary",brand_secondary:"f_secondary",identity:"f_identity",
+  agenda:"f_agenda",products:"f_products",target_interest:"f_interest",headline:"f_headline",subhead:"f_subhead"};
+function collect(){for(const k in FIELDS)current[k]=$("#"+FIELDS[k]).value;}
+function fill(p){for(const k in FIELDS)$("#"+FIELDS[k]).value=p[k]||($("#"+FIELDS[k]).type==="color"?$("#"+FIELDS[k]).value:"");}
+
+function readFile(input,key){
+  const f=input.files[0];if(!f)return;
+  const fr=new FileReader();
+  fr.onload=()=>{const img=new Image();img.onload=()=>{
+    const s=Math.min(1,700/Math.max(img.width,img.height));
+    const c=document.createElement("canvas");c.width=img.width*s;c.height=img.height*s;
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    current[key]=c.toDataURL("image/png");generate(false);
+  };img.src=fr.result;};
+  fr.readAsDataURL(f);
+}
+
+/* ---------- actions ---------- */
+async function generate(newSeed){
+  collect();
+  if(newSeed||!current.seed)current.seed=Math.floor(Math.random()*2**31);
+  await renderPoster($("#poster"),current);
+}
+function makeThumb(canvas){const c=document.createElement("canvas");c.width=400;c.height=500;c.getContext("2d").drawImage(canvas,0,0,400,500);return c.toDataURL("image/png");}
+function saveProject(){
+  collect();
+  const list=load();
+  current.poster=makeThumb($("#poster"));
+  current.id=current.id||("p"+Date.now());
+  const i=list.findIndex(x=>x.id===current.id);
+  if(i>=0)list[i]=current;else list.unshift(current);
+  try{store(list);}catch(e){alert("Storage full — remove some projects or smaller images.");return;}
+  showGallery();
+}
+function download(){const a=document.createElement("a");a.download=(current.name||"ad")+".png";a.href=$("#poster").toDataURL("image/png");a.click();}
+function newProject(){current={seed:Math.floor(Math.random()*2**31)};fill(current);$("#f_logo").value="";$("#f_product").value="";$("#editorTitle").textContent="Add project";showEditor();generate(false);}
+function openProject(id){current=Object.assign({},load().find(x=>x.id===id));fill(current);$("#f_logo").value="";$("#f_product").value="";$("#editorTitle").textContent=current.name||"Project";showEditor();renderPoster($("#poster"),current);}
+
+/* ---------- views ---------- */
+function renderGallery(){
+  const list=load(),g=$("#cards");
+  $("#empty").style.display=list.length?"none":"block";
+  g.innerHTML=list.map(p=>`<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster||""}" alt=""><div class="card-meta"><strong>${esc(p.name||"Untitled")}</strong><span class="muted">${esc(p.target_interest||"")}</span></div></div>`).join("");
+}
+function showGallery(){$("#editor").classList.add("hidden");$("#gallery").classList.remove("hidden");renderGallery();}
+function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");}
+
+/* ---------- init ---------- */
+$("#f_logo").addEventListener("change",e=>readFile(e.target,"logo"));
+$("#f_product").addEventListener("change",e=>readFile(e.target,"product"));
+["input","change"].forEach(ev=>$("#editor").addEventListener(ev,e=>{if(e.target.type!=="file")generate(false);}));
+showGallery();
+</script>
+</body>
+</html>
