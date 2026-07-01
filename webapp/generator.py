@@ -93,11 +93,16 @@ def generate_poster(project, out_path, seed=None):
     # Background: procedural by default (free); nano banana if AD_IMAGE_PROVIDER=gemini
     # (+ GEMINI_IMAGE_API_KEY). The prompt is used only when a real image model runs.
     sec = project.get("brand_secondary") or "a darker shade"
+    feel = ", ".join(x for x in (project.get("brand_values"), project.get("identity")) if x)
     img_prompt = (f"An extremely minimal, clean, flat 2D abstract background for a vertical 4:5 poster; "
                   f"a limited palette of two or three colors from {project.get('brand_primary','')} and "
-                  f"{sec}; soft gradient and fine grain, mostly empty negative space; no text, no logos, "
-                  f"no objects, no people.") + reference_style.style_to_prompt(style)
-    provider = get_image_provider(os.getenv("AD_IMAGE_PROVIDER") or "procedural")
+                  f"{sec}{('; brand feel: ' + feel) if feel else ''}; soft gradient and fine grain, mostly "
+                  f"empty negative space; no text, no logos, no objects, no people.") + reference_style.style_to_prompt(style)
+    # AI is the default when the server has a Gemini key; otherwise the minimal
+    # procedural preset. Either way, a provider error falls back to the preset.
+    default_provider = ("gemini" if (os.getenv("GEMINI_IMAGE_API_KEY") or os.getenv("GEMINI_API_KEY"))
+                        else "procedural")
+    provider = get_image_provider(os.getenv("AD_IMAGE_PROVIDER") or default_provider)
     try:
         bg = provider.generate(img_prompt, "", W, H, seed=seed, palette=(accent, deep))
     except Exception:
@@ -122,7 +127,8 @@ def generate_poster(project, out_path, seed=None):
     headline = (project.get("headline") or "").strip()
     subhead = (project.get("subhead") or "").strip()
     if not headline:
-        brief = {k: project.get(k, "") for k in ("name", "identity", "agenda", "products", "target_interest")}
+        brief = {k: project.get(k, "") for k in
+                 ("name", "description", "identity", "brand_values", "agenda", "products", "target_interest")}
         res = llm_agent.generate_brand_copy(brief)
         if res:
             headline, sub2, _ = res

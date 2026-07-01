@@ -36,8 +36,8 @@ os.makedirs(GENERATED, exist_ok=True)
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024   # 16 MB upload cap
 
-FIELDS = ["name", "brand_primary", "brand_secondary", "identity", "agenda",
-          "products", "target_interest", "headline", "subhead"]
+FIELDS = ["name", "brand_primary", "brand_secondary", "description", "identity",
+          "brand_values", "agenda", "products", "target_interest", "headline", "subhead"]
 
 
 def db():
@@ -49,10 +49,16 @@ def db():
 def init_db():
     con = db()
     con.execute("""CREATE TABLE IF NOT EXISTS projects (
-        id TEXT PRIMARY KEY, name TEXT, created_at TEXT,
-        brand_primary TEXT, brand_secondary TEXT, identity TEXT, agenda TEXT,
+        id TEXT PRIMARY KEY, name TEXT, created_at TEXT, description TEXT,
+        brand_primary TEXT, brand_secondary TEXT, brand_values TEXT, identity TEXT, agenda TEXT,
         products TEXT, target_interest TEXT, headline TEXT, subhead TEXT,
         logo_path TEXT, product_path TEXT, ref_ads TEXT, poster_path TEXT, hero_seed INTEGER)""")
+    # Migrate older DBs that predate the wizard fields.
+    for col in ("description", "brand_values"):
+        try:
+            con.execute(f"ALTER TABLE projects ADD COLUMN {col} TEXT")
+        except sqlite3.OperationalError:
+            pass
     con.commit()
     con.close()
 
@@ -106,11 +112,11 @@ def create():
 
     con = db()
     con.execute(
-        """INSERT INTO projects (id,name,created_at,brand_primary,brand_secondary,identity,agenda,
-           products,target_interest,headline,subhead,logo_path,product_path,ref_ads,poster_path,hero_seed)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-        (pid, proj["name"], datetime.datetime.now().isoformat(timespec="seconds"),
-         proj["brand_primary"], proj["brand_secondary"], proj["identity"], proj["agenda"],
+        """INSERT INTO projects (id,name,created_at,description,brand_primary,brand_secondary,brand_values,
+           identity,agenda,products,target_interest,headline,subhead,logo_path,product_path,ref_ads,poster_path,hero_seed)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (pid, proj["name"], datetime.datetime.now().isoformat(timespec="seconds"), proj["description"],
+         proj["brand_primary"], proj["brand_secondary"], proj["brand_values"], proj["identity"], proj["agenda"],
          proj["products"], proj["target_interest"], proj["headline"], proj["subhead"],
          logo_path, product_path, json.dumps(ref_paths), poster, seed))
     con.commit()

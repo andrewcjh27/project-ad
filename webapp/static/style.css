@@ -59,6 +59,16 @@ a { color: var(--ink); }
 .empty { text-align: center; padding: 70px 20px; border: 1px dashed #dcdcdc; border-radius: var(--radius); margin-top: 28px; }
 .empty p { color: var(--muted); margin: 0 0 18px; }
 
+/* Wizard */
+.steps { display: flex; gap: 8px; margin: 0 0 22px; flex-wrap: wrap; }
+.step { font-size: 13px; color: var(--muted); padding: 6px 13px; border: 1px solid var(--line); border-radius: 999px; background: #fff; cursor: pointer; }
+.step.active { color: var(--ink); border-color: var(--ink); font-weight: 600; }
+.step em { font-style: normal; opacity: .55; margin-left: 4px; }
+.page { display: flex; flex-direction: column; gap: 18px; }
+.wizard-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.hidden { display: none !important; }
+.tiny { font-size: 12px; }
+
 /* Form */
 .form { display: flex; flex-direction: column; gap: 18px; max-width: 660px; margin-top: 8px; }
 .form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: #555; }
