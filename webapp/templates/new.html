@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block body %}
-  <a href="{{ url_for('index') }}" class="muted">&larr; All projects</a>
+  <a href="{{ url_for('index') }}" class="back">&larr; All projects</a>
   <h1>Add project</h1>
+  <p class="lead">Enter the brand data — we generate a personalized minimal poster.</p>
   <form method="post" action="{{ url_for('create') }}" enctype="multipart/form-data" class="form">
     <label>Project / brand name
       <input name="name" required placeholder="e.g. Acme Coffee">
@@ -45,6 +46,6 @@
     <label>Reference / past ads (optional, multiple)
       <input type="file" name="ref_ads" accept="image/*" multiple>
     </label>
-    <button class="btn" type="submit">Create &amp; generate</button>
+    <button class="btn block" type="submit">Create &amp; generate</button>
   </form>
 {% endblock %}

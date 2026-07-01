@@ -76,7 +76,10 @@ class GeminiImageProvider(ImageProvider):
     def generate(self, prompt, negative, width, height, seed=None, palette=None):
         from google import genai
         from google.genai import types
-        client = genai.Client()                        # reads GEMINI_API_KEY / GOOGLE_API_KEY
+        # Image-specific key first, so you can bill images on a paid key while text
+        # stays on a free GEMINI_API_KEY. Falls back to the shared key.
+        client = genai.Client(api_key=(os.getenv("GEMINI_IMAGE_API_KEY")
+                                       or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")))
         resp = client.models.generate_content(
             model="gemini-2.5-flash-image",            # "nano banana"
             contents=_compose_prompt(prompt, negative),
@@ -184,8 +187,17 @@ class ProceduralProvider(ImageProvider):
 # Factory
 # ============================================================================
 def get_image_provider(prefer=None):
-    """Pick a provider by env keys (or `prefer` name). Always returns something."""
-    if prefer == "gemini" or (prefer is None and (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))):
+    """Pick a provider by env keys (or `prefer` name). Always returns something.
+
+    AD_IMAGE_PROVIDER overrides auto-detection: set it to "procedural" to keep
+    images free (e.g. use a Gemini key for LLM copy but not paid image gen), or
+    to "gemini" / "openai" / "replicate" to force one. Images can bill on a
+    separate GEMINI_IMAGE_API_KEY while text stays on a free GEMINI_API_KEY.
+    """
+    prefer = prefer or os.getenv("AD_IMAGE_PROVIDER")
+    if prefer == "procedural":
+        return ProceduralProvider()
+    if prefer == "gemini" or (prefer is None and (os.getenv("GEMINI_IMAGE_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))):
         try:
             from google import genai  # noqa
             return GeminiImageProvider()

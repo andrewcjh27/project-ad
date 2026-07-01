@@ -23,7 +23,8 @@ from flask import (Flask, request, redirect, url_for, render_template,
                    send_from_directory, abort)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import generator   # webapp/generator.py
+import generator          # webapp/generator.py
+import reference_style    # repo-root module (path added by generator import)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(BASE, "projects.db")
@@ -33,6 +34,7 @@ os.makedirs(UPLOADS, exist_ok=True)
 os.makedirs(GENERATED, exist_ok=True)
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024   # 16 MB upload cap
 
 FIELDS = ["name", "brand_primary", "brand_secondary", "identity", "agenda",
           "products", "target_interest", "headline", "subhead"]
@@ -95,7 +97,7 @@ def create():
             ref_paths.append(p)
 
     proj = {k: request.form.get(k, "") for k in FIELDS}
-    proj.update({"logo_path": logo_path, "product_path": product_path})
+    proj.update({"logo_path": logo_path, "product_path": product_path, "ref_ads": ref_paths})
     proj["name"] = proj["name"] or "Untitled"
     proj["brand_primary"] = proj["brand_primary"] or "#00704A"
 
@@ -123,7 +125,9 @@ def project(pid):
     con.close()
     if not row:
         abort(404)
-    return render_template("project.html", p=row, ref_ads=json.loads(row["ref_ads"] or "[]"))
+    refs = json.loads(row["ref_ads"] or "[]")
+    style = reference_style.analyze_references([r for r in refs if r and os.path.exists(r)]) if refs else None
+    return render_template("project.html", p=row, ref_ads=refs, style=style)
 
 
 @app.route("/regenerate/<pid>", methods=["POST"])
@@ -156,4 +160,4 @@ def file():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

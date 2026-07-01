@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
-  <a href="{{ url_for('index') }}" class="muted">&larr; All projects</a>
+  <a href="{{ url_for('index') }}" class="back">&larr; All projects</a>
   <h1>{{ p['name'] }}</h1>
   <div class="detail">
     <div class="poster">
@@ -22,6 +22,19 @@
       <dt>Seed</dt><dd class="muted">{{ p['hero_seed'] }}</dd>
     </dl>
   </div>
+  {% if style %}
+    <h2>Detected reference style</h2>
+    <div class="refstyle">
+      <div class="swatches">
+        {% for hx in style.hex_palette %}<span class="swatch-lg" style="background: {{ hx }}" title="{{ hx }}"></span>{% endfor %}
+      </div>
+      <p class="muted">{{ style.busyness_label }} · {{ style.brightness_label }} · {{ style.warmth_label }} · {{ style.contrast_label }}</p>
+      {% if style.vision and style.vision.style_summary %}
+        <p class="vision">&ldquo;{{ style.vision.style_summary }}&rdquo;</p>
+      {% endif %}
+      <p class="muted tiny">The generated ad's palette and mood are drawn from your reference ads.</p>
+    </div>
+  {% endif %}
   {% if ref_ads %}
     <h2>Reference ads</h2>
     <div class="refs">

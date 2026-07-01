@@ -17,6 +17,25 @@ pip install -r requirements.txt      # includes flask
 python3 webapp/app.py                 # -> http://localhost:5000
 ```
 
+## Deploy (so you and others can use it via a URL)
+The repo ships a `Procfile` (`web: gunicorn wsgi:app`) and a `wsgi.py` entry.
+
+**Render (free, easiest):**
+1. Push the repo to GitHub (done).
+2. On https://render.com → New → Web Service → connect the repo/branch.
+3. Build command: `pip install -r requirements.txt` · Start command: `gunicorn wsgi:app`.
+4. Deploy → you get a public `https://<name>.onrender.com` URL to share.
+
+**Railway / Fly.io / any host** work the same way via the `Procfile`.
+
+Run it like production locally:
+```bash
+gunicorn wsgi:app            # -> http://localhost:8000
+```
+Note: the free tiers use an **ephemeral disk**, so `projects.db` and uploads
+reset on redeploy. For durable storage, attach a persistent volume or swap
+SQLite for a hosted Postgres + object storage (next step).
+
 ## Storage (all local, gitignored)
 - `webapp/projects.db` — SQLite, one row per project
 - `webapp/uploads/<project_id>/` — uploaded logo / product / reference ads

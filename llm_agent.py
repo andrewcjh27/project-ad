@@ -40,7 +40,8 @@ class _Gemini:
     def complete(self, system, user):
         from google import genai
         from google.genai import types
-        r = genai.Client().models.generate_content(    # reads GEMINI_API_KEY / GOOGLE_API_KEY
+        client = genai.Client()                        # reads GEMINI_API_KEY / GOOGLE_API_KEY
+        r = client.models.generate_content(
             model="gemini-2.5-flash", contents=user,
             config=types.GenerateContentConfig(system_instruction=system, temperature=0.8))
         return r.text.strip()
@@ -116,8 +117,11 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
         if exemplars:
             system += _EXEMPLAR_GUIDANCE
             payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
-        subject = llm.complete(system, json.dumps(payload))
-        return f"{subject} {photo_tag}.", f"generated:{llm.name}"
+        try:
+            subject = llm.complete(system, json.dumps(payload))
+            return f"{subject} {photo_tag}.", f"generated:{llm.name}"
+        except Exception:
+            pass   # LLM error -> fall through to the data-driven prompt below
     # ---- data-driven deterministic fallback (a detailed minimal abstract plate) ----
     colors = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in (brand_colors or {}).items()) or "the brand palette"
     goal_txt = f" Purpose: {goal}" if goal else ""
@@ -130,6 +134,19 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
                f"headline text stays legible; calm, understated, premium; no recognizable scene, no "
                f"objects, no product, no people, no faces, no hands, no text, no logos.{goal_txt}")
     return f"{subject}, {brand_style}. {photo_tag}.", "generated:rule-based(from data)"
+
+
+def _extract_json(text):
+    """Parse a JSON object from an LLM reply, tolerating markdown fences / stray prose."""
+    t = text.strip()
+    if t.startswith("```"):
+        t = t.strip("`")
+        if t[:4].lower() == "json":
+            t = t[4:]
+    i, j = t.find("{"), t.rfind("}")
+    if i >= 0 and j > i:
+        t = t[i:j + 1]
+    return json.loads(t)
 
 
 # ── Copywriter: generate HEADLINE + SUBHEAD from data ───────────────────────
@@ -146,7 +163,7 @@ def generate_copy(product, segment, angle, exemplars=None):
             payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
         user = json.dumps(payload)
         try:
-            j = json.loads(llm.complete(system, user))
+            j = _extract_json(llm.complete(system, user))
             return j["headline"], j["subhead"], f"generated:{llm.name}"
         except Exception:
             pass
@@ -165,6 +182,59 @@ def generate_copy(product, segment, angle, exemplars=None):
         "vip":    "Quietly, just for you.",
     }.get(segment.get("lifecycle", "loyal"), "Made for the moment.")
     return head, sub, "generated:rule-based(from data)"
+
+
+# ── Web console: headline + subhead from a free-form brand brief ────────────
+def generate_brand_copy(brief):
+    """LLM headline + subhead from an arbitrary brand brief (web console).
+
+    Returns (headline, subhead, source) or None if no LLM is available / on error.
+    """
+    llm = get_llm()
+    if not llm:
+        return None
+    system = ("You are a brand Copywriter. From the brand brief, write a short ad HEADLINE (<=5 "
+              "words) and a brief one-line SUBHEAD in a minimal, understated voice — restrained, "
+              "never hype or hard-sell. Adapt to the brand and its target interest. Return JSON "
+              "{\"headline\":..,\"subhead\":..}.")
+    try:
+        j = _extract_json(llm.complete(system, json.dumps(brief)))
+        return j.get("headline", ""), j.get("subhead", ""), f"generated:{llm.name}"
+    except Exception:
+        return None
+
+
+# ── Reference Analyst: capture the VISUAL STYLE of reference ads (vision) ────
+def analyze_style_vision(images):
+    """Vision-LLM style profile from reference images (list of (bytes, mime)).
+
+    Returns a style dict, or None if no Gemini key / SDK / on error. Runs on the
+    free text tier — gemini-2.5-flash reads the images and writes a JSON profile;
+    it describes STYLE only, never the reference content.
+    """
+    if not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")):
+        return None
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        return None
+    system = ("You are an art director capturing the VISUAL STYLE of reference ads so we can generate "
+              "NEW ads in the same style (never copies). Return ONLY JSON with keys: style_summary "
+              "(one sentence), composition, mood, lighting, color_feel, texture, typography, and "
+              "prompt_phrase (a concise instruction to reproduce this style on a minimal abstract "
+              "poster background). Describe STYLE only — never the specific subjects or content.")
+    parts = [types.Part.from_text(text="Analyze the visual style of these reference ads.")]
+    for data, mime in images:
+        parts.append(types.Part.from_bytes(data=data, mime_type=mime))
+    try:
+        client = genai.Client()
+        r = client.models.generate_content(
+            model="gemini-2.5-flash", contents=parts,
+            config=types.GenerateContentConfig(system_instruction=system, temperature=0.4))
+        return _extract_json(r.text)
+    except Exception:
+        return None
 
 
 # ── Audience Strategist: fuse a trait-mixture into ONE persona ───────────────
