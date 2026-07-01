@@ -184,7 +184,15 @@ class ProceduralProvider(ImageProvider):
 # Factory
 # ============================================================================
 def get_image_provider(prefer=None):
-    """Pick a provider by env keys (or `prefer` name). Always returns something."""
+    """Pick a provider by env keys (or `prefer` name). Always returns something.
+
+    AD_IMAGE_PROVIDER overrides auto-detection: set it to "procedural" to keep
+    images free (e.g. use a Gemini key for LLM copy but not paid image gen), or
+    to "gemini" / "openai" / "replicate" to force one.
+    """
+    prefer = prefer or os.getenv("AD_IMAGE_PROVIDER")
+    if prefer == "procedural":
+        return ProceduralProvider()
     if prefer == "gemini" or (prefer is None and (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))):
         try:
             from google import genai  # noqa
