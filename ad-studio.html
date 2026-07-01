@@ -58,7 +58,8 @@
   .keyfield{font:inherit;font-size:13px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);width:190px}
   .keyfield:focus{outline:none;border-color:#000}
   .preview{position:sticky;top:100px}
-  .preview canvas{width:100%;border:1px solid var(--line);border-radius:var(--radius);display:block;background:#fff}
+  .preview canvas{width:100%;border:1px solid transparent;border-radius:var(--radius);display:block;background:#fff}
+  .canvas-wrap.framed canvas{border-color:var(--line)}
   .canvas-wrap{position:relative}
   .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px;color:var(--muted);font-size:14px;background:transparent}
   .painter{display:flex;flex-direction:column;align-items:center;gap:12px}
@@ -483,15 +484,16 @@ async function reviewAcceptBg(){
   try{await renderPoster($("#poster"),current);}finally{showResult();}
   setStatus(current._bgImage?"Done · AI background":"Done · preset background");
 }
-function showLoading(){const ph=$("#placeholder");if(!ph)return;ph.classList.remove("hidden");ph.classList.add("busy");const c=$("#phCap");if(c)c.textContent="Painting your ad…";}
-function showResult(){const ph=$("#placeholder");if(ph){ph.classList.add("hidden");ph.classList.remove("busy");}}
+const cwrap=()=>$(".canvas-wrap");
+function showLoading(){const ph=$("#placeholder");if(!ph)return;ph.classList.remove("hidden");ph.classList.add("busy");cwrap()&&cwrap().classList.remove("framed");const c=$("#phCap");if(c)c.textContent="Painting your ad…";}
+function showResult(){const ph=$("#placeholder");if(ph){ph.classList.add("hidden");ph.classList.remove("busy");}cwrap()&&cwrap().classList.add("framed");}
 function showPlaceholderOrLast(){
   const ph=$("#placeholder"), ctx=$("#poster").getContext("2d");
   ctx.clearRect(0,0,W,H);
   ph.classList.remove("busy");
   const c=$("#phCap"); if(c) c.textContent="";                 // idle: just the looping animation
-  if(current.poster){ph.classList.add("hidden");loadImg(current.poster).then(img=>ctx.drawImage(img,0,0,W,H)).catch(()=>{});}
-  else ph.classList.remove("hidden");
+  if(current.poster){ph.classList.add("hidden");cwrap()&&cwrap().classList.add("framed");loadImg(current.poster).then(img=>ctx.drawImage(img,0,0,W,H)).catch(()=>{});}
+  else {ph.classList.remove("hidden");cwrap()&&cwrap().classList.remove("framed");}
 }
 function makeThumb(canvas){const c=document.createElement("canvas");c.width=400;c.height=500;c.getContext("2d").drawImage(canvas,0,0,400,500);return c.toDataURL("image/png");}
 function saveProject(){
