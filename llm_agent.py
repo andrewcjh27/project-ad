@@ -204,6 +204,39 @@ def generate_brand_copy(brief):
         return None
 
 
+# ── Reference Analyst: capture the VISUAL STYLE of reference ads (vision) ────
+def analyze_style_vision(images):
+    """Vision-LLM style profile from reference images (list of (bytes, mime)).
+
+    Returns a style dict, or None if no Gemini key / SDK / on error. Runs on the
+    free text tier — gemini-2.5-flash reads the images and writes a JSON profile;
+    it describes STYLE only, never the reference content.
+    """
+    if not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")):
+        return None
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        return None
+    system = ("You are an art director capturing the VISUAL STYLE of reference ads so we can generate "
+              "NEW ads in the same style (never copies). Return ONLY JSON with keys: style_summary "
+              "(one sentence), composition, mood, lighting, color_feel, texture, typography, and "
+              "prompt_phrase (a concise instruction to reproduce this style on a minimal abstract "
+              "poster background). Describe STYLE only — never the specific subjects or content.")
+    parts = [types.Part.from_text(text="Analyze the visual style of these reference ads.")]
+    for data, mime in images:
+        parts.append(types.Part.from_bytes(data=data, mime_type=mime))
+    try:
+        client = genai.Client()
+        r = client.models.generate_content(
+            model="gemini-2.5-flash", contents=parts,
+            config=types.GenerateContentConfig(system_instruction=system, temperature=0.4))
+        return _extract_json(r.text)
+    except Exception:
+        return None
+
+
 # ── Audience Strategist: fuse a trait-mixture into ONE persona ───────────────
 def generate_persona(persona_struct):
     """LLM-write a named persona + narrative + creative angle from a trait mixture.

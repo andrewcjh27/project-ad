@@ -85,6 +85,7 @@ a { color: var(--ink); }
 .refstyle .swatches { display: flex; gap: 8px; margin-bottom: 8px; }
 .swatch-lg { width: 46px; height: 46px; border-radius: 8px; border: 1px solid var(--line); }
 .refstyle .tiny { margin-top: 2px; }
+.refstyle .vision { font-style: italic; color: var(--ink); margin: 6px 0 2px; font-size: 14px; }
 
 @media (max-width: 720px) {
   main { padding: 28px 20px 60px; }
