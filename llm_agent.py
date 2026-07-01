@@ -40,7 +40,8 @@ class _Gemini:
     def complete(self, system, user):
         from google import genai
         from google.genai import types
-        r = genai.Client().models.generate_content(    # reads GEMINI_API_KEY / GOOGLE_API_KEY
+        client = genai.Client()                        # reads GEMINI_API_KEY / GOOGLE_API_KEY
+        r = client.models.generate_content(
             model="gemini-2.5-flash", contents=user,
             config=types.GenerateContentConfig(system_instruction=system, temperature=0.8))
         return r.text.strip()
@@ -135,6 +136,19 @@ def generate_image_prompt(product, segment, brand_style, negative, photo_tag,
     return f"{subject}, {brand_style}. {photo_tag}.", "generated:rule-based(from data)"
 
 
+def _extract_json(text):
+    """Parse a JSON object from an LLM reply, tolerating markdown fences / stray prose."""
+    t = text.strip()
+    if t.startswith("```"):
+        t = t.strip("`")
+        if t[:4].lower() == "json":
+            t = t[4:]
+    i, j = t.find("{"), t.rfind("}")
+    if i >= 0 and j > i:
+        t = t[i:j + 1]
+    return json.loads(t)
+
+
 # ── Copywriter: generate HEADLINE + SUBHEAD from data ───────────────────────
 def generate_copy(product, segment, angle, exemplars=None):
     llm = get_llm()
@@ -149,7 +163,7 @@ def generate_copy(product, segment, angle, exemplars=None):
             payload["past_on_brand_examples"] = _exemplars_for_prompt(exemplars)
         user = json.dumps(payload)
         try:
-            j = json.loads(llm.complete(system, user))
+            j = _extract_json(llm.complete(system, user))
             return j["headline"], j["subhead"], f"generated:{llm.name}"
         except Exception:
             pass
