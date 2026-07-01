@@ -56,6 +56,9 @@
   .preview canvas{width:100%;border:1px solid var(--line);border-radius:var(--radius);display:block;background:#fff}
   .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
   .status{margin-top:10px;font-size:12px;min-height:16px}
+  .presets{margin-top:12px}
+  .preset-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .preset-btns .btn{padding:7px 12px;font-size:13px}
   .hidden{display:none!important}
   @media(max-width:760px){.editor{grid-template-columns:1fr}.row{flex-direction:column}.preview{position:static}}
 </style>
@@ -115,11 +118,10 @@
           <label>Product cutout <span class="muted">(transparent PNG, optional)</span><input type="file" id="f_product" accept="image/*"></label>
           <div class="ai-box">
             <h3>AI settings</h3>
-            <label>Gemini API key <span class="muted">(enables AI copy; a free-tier key works)</span>
+            <label>Gemini API key <span class="muted">(free-tier works for copy; image gen needs a paid/billing key)</span>
               <input id="f_apikey" type="password" placeholder="paste your key">
             </label>
-            <label class="chk"><input type="checkbox" id="f_aibg" checked> Use AI background <span class="muted">(image gen needs a paid/billing key)</span></label>
-            <p class="muted tiny">Default is API-first: with a key, copy (and the background, if enabled) are AI-generated; on any API failure it falls back to the offline preset. Your key is stored only in this browser and requests go straight to Google.</p>
+            <p class="muted tiny">The ad is generated with AI by default — copy and background come from the Gemini API. If the API is unavailable (no key, quota, or error), it falls back to a preset background you can choose from. Your key is stored only in this browser; requests go straight to Google.</p>
           </div>
         </div>
 
@@ -138,6 +140,15 @@
           <button class="btn" onclick="saveProject()">Save</button>
         </div>
         <div id="status" class="status muted"></div>
+        <div id="presetBar" class="presets hidden">
+          <div class="tiny muted" style="margin-bottom:6px">AI background unavailable — pick a preset instead:</div>
+          <div class="preset-btns">
+            <button class="btn ghost" onclick="usePreset('gradient')">Gradient</button>
+            <button class="btn ghost" onclick="usePreset('vignette')">Vignette</button>
+            <button class="btn ghost" onclick="usePreset('flat')">Flat</button>
+            <button class="btn ghost" onclick="usePreset('circle')">Wash</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -168,7 +179,6 @@ const firstLine=s=>(s||"").split("\n")[0].trim();
 /* ---------- Gemini API (online-first; offline fallback on any error) ---------- */
 const API = "https://generativelanguage.googleapis.com/v1beta/models";
 const getKey = () => (($("#f_apikey") && $("#f_apikey").value) || localStorage.getItem("pa_key") || "").trim();
-const useAIbg = () => !!($("#f_aibg") && $("#f_aibg").checked);
 const setStatus = t => { const s=$("#status"); if(s) s.textContent=t; };
 function extractJson(t){t=t.trim();if(t.startsWith("```")){t=t.replace(/^```(json)?/i,"").replace(/```$/,"");}const i=t.indexOf("{"),j=t.lastIndexOf("}");if(i>=0&&j>i)t=t.slice(i,j+1);return JSON.parse(t);}
 function dataUrlPart(d){const m=/^data:(.*?);base64,(.*)$/.exec(d||"");return m?{inline_data:{mime_type:m[1],data:m[2]}}:null;}
@@ -202,9 +212,9 @@ function bgPrompt(p,hasRefs){
 }
 
 /* ---------- offline procedural background (the preset fallback) ---------- */
-function drawBackground(ctx,rng,accent,deep){
+function drawBackground(ctx,rng,accent,deep,forceStyle){
   const styles=["gradient","vignette","flat","circle"];
-  const style=styles[Math.floor(rng()*styles.length)];
+  const style=(forceStyle&&styles.includes(forceStyle))?forceStyle:styles[Math.floor(rng()*styles.length)];
   const tone=rng()<0.7?accent:accent.map((c,i)=>Math.round(0.6*c+0.4*deep[i]));
   if(style==="flat"){const t=tone.map((c,i)=>Math.round(0.45*c+0.55*WHITE[i]));ctx.fillStyle=rgb(t);ctx.fillRect(0,0,W,H);}
   else if(style==="circle"){ctx.fillStyle=rgb(WHITE);ctx.fillRect(0,0,W,H);const cx=W*(0.42+rng()*0.16),cy=H*(0.26+rng()*0.14),r=H*(0.22+rng()*0.08);ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=rgb(tone);ctx.fill();}
@@ -216,21 +226,16 @@ function drawBackground(ctx,rng,accent,deep){
 }
 
 /* ---------- render ---------- */
-async function renderPoster(canvas,p,key){
+async function renderPoster(canvas,p){
   const ctx=canvas.getContext("2d");
   const accent=hexToRgb(p.brand_primary||"#1f6f54");
   const deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
   const rng=mulberry32((p.seed||1)>>>0);
-  // Background: API-first if enabled + key, else the offline preset.
-  let aiBg=false;
-  if(key&&useAIbg()){
-    try{
-      const refs=(p.refs||[]).slice(0,4);
-      ctx.drawImage(await loadImg(await geminiImage(bgPrompt(p,refs.length>0),key,refs)),0,0,W,H);
-      aiBg=true;setStatus(((($("#status").textContent)||"")+" · bg: AI"+(refs.length?" (refs)":"")).trim());
-    }catch(e){setStatus(((($("#status").textContent)||"")+" · bg: offline (API "+e.message+")").trim());}
-  }
-  if(!aiBg) drawBackground(ctx,rng,accent,deep);
+  // Background: draw the generated AI image if we have one; else a preset.
+  // (This function never calls the API — generation happens in generate().)
+  let drew=false;
+  if(p._bgImage){try{ctx.drawImage(await loadImg(p._bgImage),0,0,W,H);drew=true;}catch(e){}}
+  if(!drew) drawBackground(ctx,rng,accent,deep,p.preset);
   const m=80, sz=150;
   if(p.logo){try{const img=await loadImg(p.logo);const corners=[[m,70],[W-m-sz,70],[W-m-sz,H-70-sz]];const c=corners[Math.floor(rng()*corners.length)];drawContain(ctx,img,c[0],c[1],sz,sz);}catch(e){}}
   if(p.product){try{drawContain(ctx,await loadImg(p.product),W*0.24,H*0.11,W*0.52,H*0.34);}catch(e){}}
@@ -287,8 +292,9 @@ async function generate(newSeed){
   collect();
   if(newSeed||!current.seed)current.seed=Math.floor(Math.random()*2**31);
   const key=getKey();
-  setStatus("");
-  // COPY: API-first when the headline was left blank; preset fallback on failure.
+  hidePresets();
+  const st=[];
+  // COPY: AI-written when the headline is blank; preset text on failure/no key.
   if(!firstLine(current.headline)){
     if(key){
       try{
@@ -296,13 +302,26 @@ async function generate(newSeed){
         current.headline=(j.headline||"").trim();
         current.subhead=(firstLine(current.subhead)||j.subhead||"").trim();
         $("#f_headline").value=current.headline;$("#f_subhead").value=current.subhead;
-        setStatus("copy: AI");
-      }catch(e){current.headline=(audienceOf(current)||current.name||"").trim();setStatus("copy: offline (API "+e.message+")");}
-    }else{current.headline=(audienceOf(current)||current.name||"").trim();setStatus("offline (no API key)");}
-  }else{setStatus("copy: manual");}
-  await renderPoster($("#poster"),current,key);
+        st.push("copy: AI");
+      }catch(e){current.headline=(audienceOf(current)||current.name||"").trim();st.push("copy: preset ("+e.message+")");}
+    }else{current.headline=(audienceOf(current)||current.name||"").trim();st.push("copy: preset (no key)");}
+  }else{st.push("copy: manual");}
+  // BACKGROUND: AI is the default. Try it; on failure/no key, fall back to a preset.
+  current._bgImage=null;
+  let aiOk=false;
+  if(key){
+    setStatus((st.concat("bg: generating…")).join(" · "));
+    try{
+      const refs=(current.refs||[]).slice(0,4);
+      current._bgImage=await geminiImage(bgPrompt(current,refs.length>0),key,refs);
+      aiOk=true;st.push("bg: AI"+(refs.length?" (refs)":""));
+    }catch(e){st.push("bg: preset (API "+e.message+")");}
+  }else{st.push("bg: preset (no key)");}
+  setStatus(st.join(" · "));
+  await renderPoster($("#poster"),current);
+  if(!aiOk) showPresets();   // couldn't use AI -> offer the presets
 }
-function renderLocal(){collect();if(!current.seed)current.seed=Math.floor(Math.random()*2**31);renderPoster($("#poster"),current,null);}
+function renderLocal(){collect();if(!current.seed)current.seed=Math.floor(Math.random()*2**31);renderPoster($("#poster"),current);}
 let _t;function liveRender(){clearTimeout(_t);_t=setTimeout(renderLocal,250);}
 function makeThumb(canvas){const c=document.createElement("canvas");c.width=400;c.height=500;c.getContext("2d").drawImage(canvas,0,0,400,500);return c.toDataURL("image/png");}
 function saveProject(){
@@ -310,12 +329,18 @@ function saveProject(){
   const list=load();
   current.poster=makeThumb($("#poster"));
   current.id=current.id||("p"+Date.now());
-  const i=list.findIndex(x=>x.id===current.id);
-  if(i>=0)list[i]=current;else list.unshift(current);
+  const rec=Object.assign({},current); delete rec._bgImage;   // keep storage light — don't persist the full AI image
+  const i=list.findIndex(x=>x.id===rec.id);
+  if(i>=0)list[i]=rec;else list.unshift(rec);
   try{store(list);}catch(e){alert("Storage full — remove some projects or use smaller / fewer reference images.");return;}
   showGallery();
 }
 function download(){const a=document.createElement("a");a.download=(current.name||"ad")+".png";a.href=$("#poster").toDataURL("image/png");a.click();}
+
+/* ---------- presets (fallback background when AI is unavailable) ---------- */
+function showPresets(){$("#presetBar").classList.remove("hidden");}
+function hidePresets(){$("#presetBar").classList.add("hidden");}
+function usePreset(style){collect();current._bgImage=null;current.preset=style;renderPoster($("#poster"),current);setStatus("bg: preset ("+style+")");}
 
 /* ---------- wizard navigation ---------- */
 let curStep=1;
@@ -329,8 +354,8 @@ function showStep(n){
 function step(d){showStep(curStep+d);}
 
 function resetFiles(){["f_logo","f_product","f_refs"].forEach(id=>{const el=$("#"+id);if(el)el.value="";});}
-function newProject(){current={seed:Math.floor(Math.random()*2**31)};fill(current);resetFiles();renderRefThumbs();$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");renderLocal();}
-function openProject(id){current=Object.assign({},load().find(x=>x.id===id));fill(current);resetFiles();renderRefThumbs();$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");renderLocal();}
+function newProject(){current={seed:Math.floor(Math.random()*2**31)};fill(current);resetFiles();renderRefThumbs();hidePresets();$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");renderLocal();}
+function openProject(id){current=Object.assign({},load().find(x=>x.id===id));fill(current);resetFiles();renderRefThumbs();hidePresets();$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");renderLocal();}
 
 /* ---------- views ---------- */
 function renderGallery(){
