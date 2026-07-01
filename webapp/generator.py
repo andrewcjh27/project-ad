@@ -94,10 +94,15 @@ def generate_poster(project, out_path, seed=None):
     # (+ GEMINI_IMAGE_API_KEY). The prompt is used only when a real image model runs.
     sec = project.get("brand_secondary") or "a darker shade"
     feel = ", ".join(x for x in (project.get("brand_values"), project.get("identity")) if x)
-    img_prompt = (f"An extremely minimal, clean, flat 2D abstract background for a vertical 4:5 poster; "
-                  f"a limited palette of two or three colors from {project.get('brand_primary','')} and "
-                  f"{sec}{('; brand feel: ' + feel) if feel else ''}; soft gradient and fine grain, mostly "
-                  f"empty negative space; no text, no logos, no objects, no people.") + reference_style.style_to_prompt(style)
+    # House minimal style, distilled from the reference ads (see reference/README.md):
+    # monochromatic single-hue palette, one soft focal glow, generous negative space,
+    # low-to-balanced contrast, restrained and premium.
+    img_prompt = (f"A premium, extremely minimal, flat 2D abstract poster background (vertical 4:5) in a "
+                  f"MONOCHROMATIC scheme — two or three tones from a single hue family drawn from "
+                  f"{project.get('brand_primary','')} and {sec}{('; brand feel: ' + feel) if feel else ''}. "
+                  f"One calm focal glow or soft organic shape, a single gentle light source, generous empty "
+                  f"negative space, low-to-balanced contrast, fine subtle grain; keep uncluttered areas for text. "
+                  f"Restrained and elegant — no text, no logos, no objects, no people.") + reference_style.style_to_prompt(style)
     # AI is the default when the server has a Gemini key; otherwise the minimal
     # procedural preset. Either way, a provider error falls back to the preset.
     default_provider = ("gemini" if (os.getenv("GEMINI_IMAGE_API_KEY") or os.getenv("GEMINI_API_KEY"))

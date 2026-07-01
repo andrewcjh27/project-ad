@@ -12,7 +12,7 @@ The Compositor and Brand Guardian are real deterministic code (production-shaped
 """
 
 import json, os, copy, random
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 from image_agent import get_image_provider   # real image-model adapter (falls back to procedural)
 import ad_brief                              # brand image style + optional manual overrides
 import llm_agent                             # Art Director / Copywriter brains (LLM or data-driven)
@@ -295,7 +295,6 @@ class Compositor:
         return lines
 
     def run(self, spec, hero):
-        W, H = spec["output"]["width"], spec["output"]["height"]
         canvas = hero.convert("RGB").copy()
         draw = ImageDraw.Draw(canvas, "RGBA")
         for el in sorted(spec["elements"], key=lambda e: e.get("z", 0)):

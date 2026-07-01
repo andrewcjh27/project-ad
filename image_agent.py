@@ -21,11 +21,11 @@ The brand imagery rules + negative prompt come from the ad-spec, so output stays
 on-brand regardless of provider (see Starbucks-Brand-Package.md imagery block).
 """
 
-import os, io, math
+import os, io
 import numpy as np
 
 try:
-    from PIL import Image, ImageDraw, ImageFilter
+    from PIL import Image
 except ImportError:
     raise SystemExit("pip install pillow")
 
