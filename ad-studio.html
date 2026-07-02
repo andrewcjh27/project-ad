@@ -86,9 +86,14 @@
   @media (prefers-reduced-motion: reduce){.painter .arm,.painter .artist,.painter .dab,.card{animation:none}.painter .dab{opacity:.85}}
   .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
   .status{margin-top:12px;font-size:12px;min-height:16px;letter-spacing:0}
-  .formatbar{display:flex;gap:6px;margin-bottom:10px}
-  .fmtbtn{font:inherit;font-size:12px;padding:5px 12px;border:1px solid rgba(0,0,0,.16);border-radius:999px;background:#fff;color:var(--muted);cursor:pointer}
-  .fmtbtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}
+  .fmtgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .fmtcard{border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;padding:16px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:9px;transition:border-color .12s,box-shadow .12s}
+  .fmtcard:hover{border-color:#000}
+  .fmtcard.on{border-color:#000;box-shadow:0 0 0 2px var(--ink) inset}
+  .fmtcard .swatch{background:#eceae6;border:1px solid rgba(0,0,0,.12);border-radius:3px;width:44px;display:flex;align-items:flex-end;justify-content:center}
+  .fmtcard.on .swatch{background:var(--ink)}
+  .fmtcard .flabel{font-size:14px;font-weight:600;color:var(--ink)}
+  .fmtcard .fdim{font-size:11px;color:var(--muted);letter-spacing:.02em}
   .modebar{display:flex;gap:8px;margin-bottom:14px}
   .modebtn{font:inherit;font-size:13px;padding:8px 14px;border:1px solid rgba(0,0,0,.16);border-radius:999px;background:#fff;color:var(--muted);cursor:pointer}
   .modebtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}
@@ -199,7 +204,6 @@
       </div>
 
       <div class="preview">
-        <div id="formatBar" class="formatbar"></div>
         <div class="canvas-wrap">
           <canvas id="poster" width="1080" height="1350"></canvas>
           <div id="placeholder" class="placeholder">
@@ -249,9 +253,20 @@
   <div class="review-card">
     <button class="review-close" onclick="reviewCancel()" title="Cancel">&times;</button>
 
-    <!-- Stage 1: copy -->
-    <div id="revCopy">
-      <div class="rev-step">Step 1 of 2 — Copy</div>
+    <!-- Stage 1: format / size -->
+    <div id="revFormat">
+      <div class="rev-step">Step 1 of 3 — Size</div>
+      <h2 class="rev-title">Choose the ad size</h2>
+      <p class="rev-status" id="revFmtNote">The copy and image prompt are tailored to this size.</p>
+      <div class="fmtgrid" id="fmtGrid"></div>
+      <div class="rev-actions">
+        <button class="btn" onclick="reviewAcceptFormat()">Continue &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Stage 2: copy -->
+    <div id="revCopy" class="hidden">
+      <div class="rev-step">Step 2 of 3 — Copy</div>
       <h2 class="rev-title">Review the headline</h2>
       <div class="rev-brief" id="revBrief"></div>
       <label class="rev-label">Headline<input id="revHeadline" placeholder="Gemini will write one"></label>
@@ -267,7 +282,7 @@
     <div id="revBg" class="hidden">
       <!-- 2a: review / edit the ad prompt (no image yet) -->
       <div id="revPromptView">
-        <div class="rev-step">Step 2 of 2 — Ad prompt</div>
+        <div class="rev-step">Step 3 of 3 — Ad prompt</div>
         <h2 class="rev-title">Review the ad prompt</h2>
         <div class="modebar">
           <button type="button" class="modebtn" data-mode="full_ai" onclick="setMode('full_ai')">Full-AI ad</button>
@@ -282,7 +297,7 @@
       </div>
       <!-- 2b: review the generated ad -->
       <div id="revResultView" class="hidden">
-        <div class="rev-step">Step 2 of 2 — Final ad</div>
+        <div class="rev-step">Step 3 of 3 — Final ad</div>
         <h2 class="rev-title">Review the finished ad</h2>
         <div class="rev-imgwrap"><img id="revImg" alt="generated ad"></div>
         <div class="rev-status" id="revBgStatus"></div>
@@ -315,17 +330,17 @@ function applyFormat(id,scaleLayout){
   const c=$("#poster"); if(c){c.width=W;c.height=H;}
   if(current) current.format=id;
   if(scaleLayout && current && current.layout){const sx=W/ow,sy=H/oh;for(const k in current.layout){const L=current.layout[k];L.x=Math.round(L.x*sx);L.y=Math.round(L.y*sy);if(L.w)L.w=Math.round(L.w*sx);if(L.h)L.h=Math.round(L.h*sy);}}
-  document.querySelectorAll(".fmtbtn").forEach(b=>b.classList.toggle("on",b.dataset.fmt===id));
+  document.querySelectorAll(".fmtcard").forEach(b=>b.classList.toggle("on",b.dataset.fmt===id));
 }
-function renderFormats(){const el=$("#formatBar");if(!el)return;
-  el.innerHTML=FORMATS.map(f=>`<button type="button" class="fmtbtn${f.id===CUR?' on':''}" data-fmt="${f.id}" onclick="setFormat('${f.id}')">${f.label}</button>`).join("");}
-function setFormat(id){                         // user picked a format: resize + re-lay-out, keep drags
-  applyFormat(id,true);
-  const shown=$("#placeholder")&&$("#placeholder").classList.contains("hidden");
-  if(shown){renderFinal($("#poster"),current).then(()=>{if(current.mode==="layered")runQC();}).catch(()=>{});}
-  else showPlaceholderOrLast();
-  setStatus("format: "+fmt().label);
-}
+// Size step: render the selectable format cards; the chosen size drives copy + prompt.
+function renderFmtChoices(){const el=$("#fmtGrid");if(!el)return;
+  el.innerHTML=FORMATS.map(f=>{
+    const mx=44,my=44,s=Math.min(mx/f.w,my/f.h),sw=Math.round(f.w*s),sh=Math.round(f.h*s);
+    return `<div class="fmtcard${f.id===CUR?' on':''}" data-fmt="${f.id}" onclick="pickFmt('${f.id}')">`+
+      `<div class="swatch" style="width:${sw}px;height:${sh}px"></div>`+
+      `<div class="flabel">${f.label}</div><div class="fdim">${f.w}×${f.h}</div></div>`;
+  }).join("");}
+function pickFmt(id){applyFormat(id,true);renderFmtChoices();}   // resize + re-lay-out, keep any drags
 const $ = s => document.querySelector(s);
 let current = {};
 
@@ -468,7 +483,13 @@ function removeRef(i){(current.refs||[]).splice(i,1);renderRefThumbs();}
 async function generate(newSeed){
   collect();
   if(newSeed||!current.seed)current.seed=Math.floor(Math.random()*2**31);
-  openReview(); revStage('copy');
+  openReview(); revStage('format');      // Step 1: pick the size; copy + prompt follow from it
+  renderFmtChoices();
+}
+// Step 1 accepted: lock the size, then move to copy (tailored to this size).
+function reviewAcceptFormat(){revStage('copy');startCopy();}
+// Populate the copy step (headline/subhead) from the brief for the chosen size.
+async function startCopy(){
   $("#revBrief").innerHTML=briefSummaryHtml(current);
   $("#revHeadline").value=firstLine(current.headline)||"";
   $("#revSubhead").value=firstLine(current.subhead)||"";
@@ -495,7 +516,7 @@ function briefSummaryHtml(p){
 const setRev=(sel,t)=>{const e=$(sel);if(e)e.textContent=t;};
 function openReview(){$("#review").classList.remove("hidden");}
 function reviewCancel(){$("#review").classList.add("hidden");}
-function revStage(s){$("#revCopy").classList.toggle("hidden",s!=='copy');$("#revBg").classList.toggle("hidden",s!=='bg');}
+function revStage(s){$("#revFormat").classList.toggle("hidden",s!=='format');$("#revCopy").classList.toggle("hidden",s!=='copy');$("#revBg").classList.toggle("hidden",s!=='bg');}
 
 async function reviewRegenCopy(){
   const key=getTextKey();
@@ -769,8 +790,8 @@ function readFont(input){
   fr.onload=async()=>{current.font=fr.result;current.fontName=await registerFont(fr.result);setStatus(current.fontName?("font loaded: "+f.name):"font load failed");};
   fr.readAsDataURL(f);
 }
-function newProject(){CUR="poster";W=FORMATS[0].w;H=FORMATS[0].h;{const c=$("#poster");c.width=W;c.height=H;}current={seed:Math.floor(Math.random()*2**31),mode:"full_ai",format:"poster",layout:defaultLayout()};renderFormats();fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
-function openProject(id){current=Object.assign({},load().find(x=>x.id===id));if(!current.mode)current.mode="full_ai";applyFormat(current.format||"poster",false);if(!current.layout)current.layout=defaultLayout();renderFormats();if(current.font)registerFont(current.font).then(f=>current.fontName=f||current.fontName);fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
+function newProject(){CUR="poster";W=FORMATS[0].w;H=FORMATS[0].h;{const c=$("#poster");c.width=W;c.height=H;}current={seed:Math.floor(Math.random()*2**31),mode:"full_ai",format:"poster",layout:defaultLayout()};fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
+function openProject(id){current=Object.assign({},load().find(x=>x.id===id));if(!current.mode)current.mode="full_ai";applyFormat(current.format||"poster",false);if(!current.layout)current.layout=defaultLayout();if(current.font)registerFont(current.font).then(f=>current.fontName=f||current.fontName);fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
 
 /* ---------- views ---------- */
 function renderGallery(){
@@ -779,7 +800,7 @@ function renderGallery(){
   g.innerHTML=list.map(p=>`<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster||""}" alt=""><div class="card-meta"><strong>${esc(p.name||"Untitled")}</strong><span class="muted">${esc(audienceOf(p))}</span></div></div>`).join("");
 }
 function showGallery(){$("#editor").classList.add("hidden");$("#gallery").classList.remove("hidden");renderGallery();}
-function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");renderBrandKit();renderFormats();}
+function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");renderBrandKit();}
 
 /* ---------- brand kit: save & reuse a brand across projects ---------- */
 const loadBrands=()=>JSON.parse(localStorage.getItem("projectad_brands")||"[]");
