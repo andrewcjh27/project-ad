@@ -86,6 +86,9 @@
   @media (prefers-reduced-motion: reduce){.painter .arm,.painter .artist,.painter .dab,.card{animation:none}.painter .dab{opacity:.85}}
   .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
   .status{margin-top:12px;font-size:12px;min-height:16px;letter-spacing:0}
+  .formatbar{display:flex;gap:6px;margin-bottom:10px}
+  .fmtbtn{font:inherit;font-size:12px;padding:5px 12px;border:1px solid rgba(0,0,0,.16);border-radius:999px;background:#fff;color:var(--muted);cursor:pointer}
+  .fmtbtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}
   .modebar{display:flex;gap:8px;margin-bottom:14px}
   .modebtn{font:inherit;font-size:13px;padding:8px 14px;border:1px solid rgba(0,0,0,.16);border-radius:999px;background:#fff;color:var(--muted);cursor:pointer}
   .modebtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}
@@ -196,6 +199,7 @@
       </div>
 
       <div class="preview">
+        <div id="formatBar" class="formatbar"></div>
         <div class="canvas-wrap">
           <canvas id="poster" width="1080" height="1350"></canvas>
           <div id="placeholder" class="placeholder">
@@ -293,7 +297,35 @@
 </div>
 
 <script>
-const W=1080, H=1350, INK="#141110", WHITE=[250,250,248];
+const INK="#141110", WHITE=[250,250,248];
+// Output formats — one campaign, many sizes. Poster 4:5 is the default.
+const FORMATS=[
+  {id:"poster",   label:"4:5",  w:1080,h:1350,aspect:"vertical 4:5",   ratio:"4:5"},
+  {id:"square",   label:"1:1",  w:1080,h:1080,aspect:"square 1:1",     ratio:"1:1"},
+  {id:"landscape",label:"16:9", w:1920,h:1080,aspect:"landscape 16:9", ratio:"16:9"},
+  {id:"story",    label:"9:16", w:1080,h:1920,aspect:"vertical 9:16",  ratio:"9:16"}
+];
+let CUR="poster";
+let W=FORMATS[0].w, H=FORMATS[0].h;
+const fmt=()=>FORMATS.find(f=>f.id===CUR)||FORMATS[0];
+const fmtAspect=()=>fmt().aspect;
+function applyFormat(id,scaleLayout){
+  const f=FORMATS.find(x=>x.id===id);if(!f)return;
+  const ow=W,oh=H; CUR=f.id; W=f.w; H=f.h;
+  const c=$("#poster"); if(c){c.width=W;c.height=H;}
+  if(current) current.format=id;
+  if(scaleLayout && current && current.layout){const sx=W/ow,sy=H/oh;for(const k in current.layout){const L=current.layout[k];L.x=Math.round(L.x*sx);L.y=Math.round(L.y*sy);if(L.w)L.w=Math.round(L.w*sx);if(L.h)L.h=Math.round(L.h*sy);}}
+  document.querySelectorAll(".fmtbtn").forEach(b=>b.classList.toggle("on",b.dataset.fmt===id));
+}
+function renderFormats(){const el=$("#formatBar");if(!el)return;
+  el.innerHTML=FORMATS.map(f=>`<button type="button" class="fmtbtn${f.id===CUR?' on':''}" data-fmt="${f.id}" onclick="setFormat('${f.id}')">${f.label}</button>`).join("");}
+function setFormat(id){                         // user picked a format: resize + re-lay-out, keep drags
+  applyFormat(id,true);
+  const shown=$("#placeholder")&&$("#placeholder").classList.contains("hidden");
+  if(shown){renderFinal($("#poster"),current).then(()=>{if(current.mode==="layered")runQC();}).catch(()=>{});}
+  else showPlaceholderOrLast();
+  setStatus("format: "+fmt().label);
+}
 const $ = s => document.querySelector(s);
 let current = {};
 
@@ -349,7 +381,7 @@ function bgPrompt(p,hasRefs){
   // House minimal style, distilled from the reference ads (see reference/README.md):
   // monochromatic single-hue palette, one soft focal glow, a single light source,
   // generous negative space, low-to-balanced contrast, restrained and premium.
-  return `A premium, extremely minimal, flat 2D abstract poster background (vertical 4:5) in a MONOCHROMATIC scheme — two or three tones from a single hue family drawn from ${p.brand_primary||"#1f6f54"} and ${sec}${feel?`; brand feel: ${feel}`:""}. `+
+  return `A premium, extremely minimal, flat 2D abstract poster background (${fmtAspect()}) in a MONOCHROMATIC scheme — two or three tones from a single hue family drawn from ${p.brand_primary||"#1f6f54"} and ${sec}${feel?`; brand feel: ${feel}`:""}. `+
     `Composition: one calm focal glow or soft organic shape, a single gentle light source, generous empty negative space, low-to-balanced contrast, fine subtle grain. Keep uncluttered areas for text (upper-centre for a headline; lower third kept light for dark text). Restrained and elegant — no text, no logos, no objects, no people.`+
     (hasRefs?" Match the visual STYLE, palette and mood of the provided reference images — never copy their content.":"");
 }
@@ -484,7 +516,7 @@ function adPrompt(p){
   const head=firstLine(p.headline)||audienceOf(p)||p.name||"";
   const sub=firstLine(p.subhead)||"";
   const inputs=[p.product&&"the product photo",p.logo&&"the brand logo",(p.refs||[]).length&&"style reference ads"].filter(Boolean);
-  return `Design a COMPLETE, finished, ready-to-publish advertising poster (vertical 4:5) — not just a background. `+
+  return `Design a COMPLETE, finished, ready-to-publish advertising poster (${fmtAspect()}) — not just a background. `+
     `Style: minimal and premium, MONOCHROMATIC — two or three tones from a single hue family drawn from ${p.brand_primary||"#1f6f54"} and ${sec}${feel?`; brand feel: ${feel}`:""}; generous negative space, one soft light source, low-to-balanced contrast, elegant and restrained. `+
     `Typeset this text crisply, spelled EXACTLY, in a clean modern premium sans-serif with clear hierarchy and good kerning: headline "${head}"`+(sub?`, and subhead "${sub}"`:"")+`. Do not misspell, add, or alter the words. `+
     (p.product?`Feature the provided product image as the hero product, integrated naturally with a soft shadow or reflection. `:``)+
@@ -684,13 +716,13 @@ function buildSpec(p){
     ad_id:p.id||("ad_"+seed),
     brand_id:slug(p.name),
     segment_id:"seg_"+slug(audienceOf(p)||"default"),
-    output:{type:"poster",width:W,height:H,aspect_ratio:"4:5",format:"png"},
+    output:{type:"poster",width:W,height:H,aspect_ratio:fmt().ratio,format:"png"},
     mode,
     concept:{big_idea:head,copy_angle:p.identity||"",messaging_pillar:(p.values||"").split(/[,\n]/)[0].trim()},
     canvas:{
       background:{type:"color",value:p.brand_primary||"#1f6f54"},
       imagery:[{id:"img_hero",role:"hero",prompt:p._adPrompt||"",negative_prompt:"text, logos, watermark",
-                style_ref:"brand:imagery.style",seed,aspect_ratio:"4:5",placement:{x:0,y:0,w:W,h:H}}]
+                style_ref:"brand:imagery.style",seed,aspect_ratio:fmt().ratio,placement:{x:0,y:0,w:W,h:H}}]
     },
     elements,
     personalization:{segment_id:"seg_"+slug(audienceOf(p)||"default"),
@@ -737,8 +769,8 @@ function readFont(input){
   fr.onload=async()=>{current.font=fr.result;current.fontName=await registerFont(fr.result);setStatus(current.fontName?("font loaded: "+f.name):"font load failed");};
   fr.readAsDataURL(f);
 }
-function newProject(){current={seed:Math.floor(Math.random()*2**31),mode:"full_ai",layout:defaultLayout()};fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
-function openProject(id){current=Object.assign({},load().find(x=>x.id===id));if(!current.mode)current.mode="full_ai";if(!current.layout)current.layout=defaultLayout();if(current.font)registerFont(current.font).then(f=>current.fontName=f||current.fontName);fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
+function newProject(){CUR="poster";W=FORMATS[0].w;H=FORMATS[0].h;{const c=$("#poster");c.width=W;c.height=H;}current={seed:Math.floor(Math.random()*2**31),mode:"full_ai",format:"poster",layout:defaultLayout()};renderFormats();fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
+function openProject(id){current=Object.assign({},load().find(x=>x.id===id));if(!current.mode)current.mode="full_ai";applyFormat(current.format||"poster",false);if(!current.layout)current.layout=defaultLayout();renderFormats();if(current.font)registerFont(current.font).then(f=>current.fontName=f||current.fontName);fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
 
 /* ---------- views ---------- */
 function renderGallery(){
@@ -747,7 +779,7 @@ function renderGallery(){
   g.innerHTML=list.map(p=>`<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster||""}" alt=""><div class="card-meta"><strong>${esc(p.name||"Untitled")}</strong><span class="muted">${esc(audienceOf(p))}</span></div></div>`).join("");
 }
 function showGallery(){$("#editor").classList.add("hidden");$("#gallery").classList.remove("hidden");renderGallery();}
-function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");renderBrandKit();}
+function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");renderBrandKit();renderFormats();}
 
 /* ---------- brand kit: save & reuse a brand across projects ---------- */
 const loadBrands=()=>JSON.parse(localStorage.getItem("projectad_brands")||"[]");
