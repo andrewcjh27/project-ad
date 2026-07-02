@@ -50,7 +50,7 @@
   .form textarea{resize:vertical}
   .form label .muted{text-transform:none;font-weight:400;letter-spacing:0}
   .row{display:flex;gap:18px}.row label{flex:1}
-  .wizard-nav{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+  .wizard-nav{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
   .refthumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
   .refthumb{position:relative}
   .refthumb img{height:74px;border-radius:8px;border:1px solid var(--line);display:block}
@@ -205,8 +205,6 @@
           <!-- Actions replace Next on the final step, once the brief is complete. -->
           <div class="actions hidden" id="wizActions">
             <button class="btn" onclick="generate(false)">Generate</button>
-            <button class="btn ghost" onclick="generate(true)">Regenerate</button>
-            <button class="btn ghost" onclick="download()">Download</button>
             <button class="btn ghost" onclick="exportSpec()">Export spec</button>
             <button class="btn" onclick="saveProject()">Save</button>
           </div>
