@@ -170,6 +170,7 @@
             <label>Subhead <span class="muted">(optional)</span><input id="f_subhead" placeholder="AI will write one"></label>
           </div>
           <label>Logo <span class="muted">(PNG, optional)</span><input type="file" id="f_logo" accept="image/*"></label>
+          <label>Brand font <span class="muted">(TTF/OTF/WOFF, optional — used for crisp text in Layered mode)</span><input type="file" id="f_font" accept=".ttf,.otf,.woff,.woff2,font/*"></label>
         </div>
 
         <!-- ── Page 3: References (optional) ─────────────────────────── -->
@@ -374,11 +375,11 @@ async function renderPoster(canvas,p){
   if(p.product){try{drawContain(ctx,await loadImg(p.product),W*0.24,H*0.11,W*0.52,H*0.34);}catch(e){}}
   ctx.fillStyle=INK;ctx.textBaseline="top";
   const head=cap(firstLine(p.headline)||firstLine(audienceOf(p))||(p.name||"").trim());
-  ctx.font='600 74px Georgia,"Times New Roman",serif';
+  ctx.font='600 74px '+(p.fontName?('"'+p.fontName+'", '):'')+'Georgia,"Times New Roman",serif';
   let y=H*0.72;
   for(const ln of wrap(ctx,head,W-2*m)){ctx.fillText(ln,m,y);y+=74*1.12;}
   const sub=firstLine(p.subhead);
-  if(sub){ctx.font='400 34px Georgia,serif';ctx.fillText(wrap(ctx,sub,W-2*m)[0]||"",m+2,H*0.90);}
+  if(sub){ctx.font='400 34px '+(p.fontName?('"'+p.fontName+'", '):'')+'Georgia,serif';ctx.fillText(wrap(ctx,sub,W-2*m)[0]||"",m+2,H*0.90);}
 }
 
 /* ---------- form <-> state ---------- */
@@ -557,12 +558,12 @@ function drawLayered(ctx,p){
   if(_imgcache.logo){const b=L.logo;drawContain(ctx,_imgcache.logo,b.x,b.y,b.w,b.h);_hit.push({id:"logo",x:b.x,y:b.y,w:b.w,h:b.h});}
   ctx.fillStyle=INK;ctx.textBaseline="top";const m=80;
   const head=cap(firstLine(p.headline)||firstLine(audienceOf(p))||(p.name||"").trim());
-  ctx.font='600 74px Georgia,"Times New Roman",serif';
+  ctx.font='600 74px '+(p.fontName?('"'+p.fontName+'", '):'')+'Georgia,"Times New Roman",serif';
   let hy=L.headline.y, hw=0;
   for(const ln of wrap(ctx,head,W-2*m)){ctx.fillText(ln,L.headline.x,hy);hw=Math.max(hw,ctx.measureText(ln).width);hy+=74*1.12;}
   _hit.push({id:"headline",x:L.headline.x,y:L.headline.y,w:hw||300,h:(hy-L.headline.y)||80});
   const sub=firstLine(p.subhead);
-  if(sub){ctx.font='400 34px Georgia,serif';const sl=wrap(ctx,sub,W-2*m)[0]||"";ctx.fillText(sl,L.subhead.x,L.subhead.y);_hit.push({id:"subhead",x:L.subhead.x,y:L.subhead.y,w:ctx.measureText(sl).width||200,h:44});}
+  if(sub){ctx.font='400 34px '+(p.fontName?('"'+p.fontName+'", '):'')+'Georgia,serif';const sl=wrap(ctx,sub,W-2*m)[0]||"";ctx.fillText(sl,L.subhead.x,L.subhead.y);_hit.push({id:"subhead",x:L.subhead.x,y:L.subhead.y,w:ctx.measureText(sl).width||200,h:44});}
 }
 async function generateLayered(){
   const key=getImageKey();
@@ -677,9 +678,25 @@ function showStep(n){
 }
 function step(d){showStep(curStep+d);}
 
-function resetFiles(){["f_logo","f_product","f_refs"].forEach(id=>{const el=$("#"+id);if(el)el.value="";});}
+function resetFiles(){["f_logo","f_product","f_refs","f_font"].forEach(id=>{const el=$("#"+id);if(el)el.value="";});}
+/* ---------- brand font (used for crisp Layered text) ---------- */
+let _fontSeq=0;
+function registerFont(dataUrl){
+  return new Promise(res=>{
+    try{
+      const fam="BrandFont"+(++_fontSeq);
+      new FontFace(fam,`url(${dataUrl})`).load().then(f=>{document.fonts.add(f);res(fam);}).catch(()=>res(null));
+    }catch(e){res(null);}
+  });
+}
+function readFont(input){
+  const f=input.files[0];if(!f)return;
+  const fr=new FileReader();
+  fr.onload=async()=>{current.font=fr.result;current.fontName=await registerFont(fr.result);setStatus(current.fontName?("font loaded: "+f.name):"font load failed");};
+  fr.readAsDataURL(f);
+}
 function newProject(){current={seed:Math.floor(Math.random()*2**31),mode:"full_ai",layout:defaultLayout()};fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
-function openProject(id){current=Object.assign({},load().find(x=>x.id===id));if(!current.mode)current.mode="full_ai";if(!current.layout)current.layout=defaultLayout();fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
+function openProject(id){current=Object.assign({},load().find(x=>x.id===id));if(!current.mode)current.mode="full_ai";if(!current.layout)current.layout=defaultLayout();if(current.font)registerFont(current.font).then(f=>current.fontName=f||current.fontName);fill(current);resetFiles();renderRefThumbs();$("#poster").style.cursor="";$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
 
 /* ---------- views ---------- */
 function renderGallery(){
@@ -706,7 +723,7 @@ function applyBrand(id){
   $("#f_values").value=b.values||"";$("#f_identity").value=b.identity||"";
   collect();
   if(b.logo)current.logo=b.logo;
-  if(b.font){current.font=b.font;current.fontName=b.fontName;}
+  if(b.font){current.font=b.font;registerFont(b.font).then(f=>current.fontName=f||b.fontName);}
   setStatus("applied brand kit: "+b.label);
 }
 function saveBrandKit(){
@@ -726,6 +743,7 @@ function deleteBrand(id){storeBrands(loadBrands().filter(x=>x.id!==id));renderBr
 $("#f_logo").addEventListener("change",e=>readImage(e.target,"logo",700));
 $("#f_product").addEventListener("change",e=>readImage(e.target,"product",700));
 $("#f_refs").addEventListener("change",e=>readRefs(e.target));
+$("#f_font").addEventListener("change",e=>readFont(e.target));
 $("#f_textkey").value=localStorage.getItem("pa_textkey")||localStorage.getItem("pa_key")||"";
 $("#f_textkey").addEventListener("input",e=>localStorage.setItem("pa_textkey",e.target.value.trim()));
 $("#f_imagekey").value=localStorage.getItem("pa_imgkey")||"";
