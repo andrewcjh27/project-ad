@@ -131,6 +131,87 @@
   .rev-actions{display:flex;gap:10px;flex-wrap:wrap}
   .hidden{display:none!important}
   @media(max-width:820px){.editor{grid-template-columns:1fr;gap:32px}.row{flex-direction:column}.preview{position:static}main{padding:40px 6% 72px}}
+
+  /* ── Landing hero ───────────────────────────────────────────────────────── */
+  .landing{position:relative;overflow:hidden;display:flex;align-items:center;
+    min-height:calc(100vh - 61px);padding:clamp(40px,7vh,96px) 4% clamp(64px,9vh,112px)}
+  .landing::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(60% 55% at 78% 30%,rgba(31,111,84,.10),transparent 70%),
+               radial-gradient(50% 50% at 15% 80%,rgba(122,90,58,.09),transparent 70%);
+    animation:auraDrift 18s ease-in-out infinite alternate}
+  .landing-inner{position:relative;z-index:1;max-width:1120px;margin:0 auto;width:100%;
+    display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center}
+  .hero-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:22px;
+    opacity:0;animation:fadeUp .7s ease .05s forwards}
+  .hero-eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--ink);animation:pulse 2.4s ease-in-out infinite}
+  .hero-title{font-weight:600;font-size:clamp(2.6rem,6.2vw,5.2rem);line-height:.96;letter-spacing:-.045em;margin:0 0 26px}
+  .hero-title .ln{display:block;overflow:hidden;padding-bottom:.04em}
+  .hero-title .ln>span{display:block;transform:translateY(115%);animation:riseIn .95s cubic-bezier(.22,1,.36,1) forwards}
+  .hero-title .ln:nth-child(1)>span{animation-delay:.06s}
+  .hero-title .ln:nth-child(2)>span{animation-delay:.17s}
+  .hero-title .ln:nth-child(3)>span{animation-delay:.28s}
+  .hero-title em{font-style:italic;font-weight:500}
+  .hero-sub{color:var(--muted);font-size:clamp(15px,1.4vw,18px);max-width:450px;margin:0 0 34px;
+    opacity:0;animation:fadeUp .8s ease .5s forwards}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;opacity:0;animation:fadeUp .8s ease .62s forwards}
+  .hero-cta .btn{padding:13px 26px;font-size:15px}
+  /* floating poster mocks */
+  .stage{position:relative;height:min(62vh,500px)}
+  .pslot{position:absolute;opacity:0;animation:fadeIn 1s ease forwards}
+  .pmock{position:absolute;inset:0;border-radius:15px;overflow:hidden;color:#fff;padding:15px;
+    box-shadow:0 26px 64px rgba(0,0,0,.20);display:flex;flex-direction:column;justify-content:flex-end;
+    animation:floatY var(--d,7s) ease-in-out infinite;will-change:transform}
+  .pmock .tag{position:absolute;top:12px;left:14px;font-size:9px;font-weight:600;letter-spacing:.16em;
+    text-transform:uppercase;opacity:.72}
+  .pmock .prod{position:absolute;top:50%;left:50%;width:44%;aspect-ratio:1;border-radius:50%;
+    transform:translate(-50%,-58%);background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.9),rgba(255,255,255,.12));
+    box-shadow:0 10px 26px rgba(0,0,0,.25)}
+  .pmock .bar{height:9px;border-radius:3px;background:rgba(255,255,255,.94);margin-bottom:7px}
+  .pmock .bar.two{width:64%;height:7px;background:rgba(255,255,255,.5)}
+  .pmock .logo{position:absolute;top:12px;right:14px;width:12px;height:12px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.7)}
+  .p1{width:min(42%,196px);aspect-ratio:4/5;left:3%;top:3%;transform:rotate(-6deg);z-index:3;animation-delay:.15s;--d:7.5s}
+  .p1 .pmock{background:linear-gradient(155deg,#2a8466,#0c2a20)}
+  .p2{width:min(33%,150px);aspect-ratio:1;right:6%;top:0;transform:rotate(6deg);z-index:2;animation-delay:.34s;--d:6.4s}
+  .p2 .pmock{background:linear-gradient(155deg,#3d3d3d,#0a0a0a);animation-delay:-2s}
+  .p3{width:min(52%,244px);aspect-ratio:16/9;right:0;bottom:9%;transform:rotate(-3deg);z-index:4;animation-delay:.52s;--d:8s}
+  .p3 .pmock{background:linear-gradient(155deg,#8a6743,#241a10);animation-delay:-3.5s}
+  .p4{width:min(26%,120px);aspect-ratio:9/16;left:15%;bottom:1%;transform:rotate(8deg);z-index:1;animation-delay:.68s;--d:6.9s}
+  .p4 .pmock{background:linear-gradient(155deg,#3a527f,#0b1424);animation-delay:-1.2s}
+  /* scroll cue */
+  .scrollcue{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;flex-direction:column;
+    align-items:center;gap:8px;color:var(--muted);font:inherit;font-size:11px;font-weight:600;letter-spacing:.16em;
+    text-transform:uppercase;cursor:pointer;background:none;border:none;opacity:0;animation:fadeUp .8s ease 1s forwards}
+  .scrollcue:hover{color:var(--ink)}
+  .scrollcue .chev{width:14px;height:14px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+    transform:rotate(45deg);animation:bob 1.8s ease-in-out infinite}
+  /* capability marquee */
+  .marquee{position:relative;z-index:1;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    overflow:hidden;white-space:nowrap;padding:15px 0;background:#fafafa}
+  .marquee .track{display:inline-block;animation:scrollX 30s linear infinite;font-weight:600;font-size:13px;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .marquee .track span{margin:0 14px}
+  .marquee .track b{color:var(--ink);font-weight:600}
+  @keyframes riseIn{to{transform:translateY(0)}}
+  @keyframes fadeIn{to{opacity:1}}
+  @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+  @keyframes auraDrift{0%{transform:translate(0,0)}100%{transform:translate(-3%,3%)}}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+  @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0)}50%{transform:rotate(45deg) translate(3px,3px)}}
+  @keyframes scrollX{to{transform:translateX(-50%)}}
+  @media(max-width:820px){
+    .landing{min-height:auto;padding:40px 6% 56px}
+    .landing-inner{grid-template-columns:1fr;gap:36px}
+    .stage{height:44vh;min-height:280px;order:2}
+    .scrollcue{display:none}
+    .p1{width:150px}.p2{width:118px}.p3{width:190px}.p4{width:92px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .landing::before,.hero-eyebrow .dot,.pmock,.scrollcue .chev,.marquee .track{animation:none}
+    .hero-title .ln>span{transform:none;animation:none}
+    .hero-eyebrow,.hero-sub,.hero-cta,.pslot,.scrollcue{opacity:1;animation:none}
+  }
 </style>
 </head>
 <body>
@@ -140,6 +221,39 @@
     <button class="btn" onclick="newProject()">+ Add project</button>
   </div>
 </header>
+
+<!-- ═══ Animated landing hero ═════════════════════════════════════════════ -->
+<section id="landing" class="landing">
+  <div class="landing-inner">
+    <div class="hero-copy">
+      <div class="hero-eyebrow"><span class="dot"></span>PRO-AD · AI Ad Studio</div>
+      <h1 class="hero-title">
+        <span class="ln"><span>Personalized ads,</span></span>
+        <span class="ln"><span><em>on brand</em>, at scale.</span></span>
+      </h1>
+      <p class="hero-sub">Turn an audience and a brand into a finished, on-identity ad poster — copy, imagery, and layout generated for every format. Agency-quality, in minutes.</p>
+      <div class="hero-cta">
+        <button class="btn" onclick="newProject()">Start a project</button>
+        <button class="btn ghost" onclick="scrollToProjects()">View projects</button>
+      </div>
+    </div>
+    <div class="stage" aria-hidden="true">
+      <div class="pslot p1"><div class="pmock"><span class="tag">4:5</span><span class="logo"></span><span class="prod"></span><div class="bar"></div><div class="bar two"></div></div></div>
+      <div class="pslot p2"><div class="pmock"><span class="tag">1:1</span><span class="logo"></span><span class="prod"></span><div class="bar"></div><div class="bar two"></div></div></div>
+      <div class="pslot p3"><div class="pmock"><span class="tag">16:9</span><span class="logo"></span><span class="prod"></span><div class="bar"></div><div class="bar two"></div></div></div>
+      <div class="pslot p4"><div class="pmock"><span class="tag">9:16</span><span class="logo"></span><span class="prod"></span><div class="bar"></div><div class="bar two"></div></div></div>
+    </div>
+  </div>
+  <button class="scrollcue" onclick="scrollToProjects()">Your projects<span class="chev"></span></button>
+</section>
+
+<!-- capability marquee -->
+<div id="marquee" class="marquee" aria-hidden="true">
+  <div class="track">
+    <span><b>Personalized</b></span><span>✦</span><span><b>On-brand</b></span><span>✦</span><span><b>Every format</b></span><span>✦</span><span><b>AI copy &amp; imagery</b></span><span>✦</span><span><b>Figma handoff</b></span><span>✦</span><span><b>Brand-fit QC</b></span><span>✦</span><span><b>Personalized</b></span><span>✦</span><span><b>On-brand</b></span><span>✦</span><span><b>Every format</b></span><span>✦</span><span><b>AI copy &amp; imagery</b></span><span>✦</span><span><b>Figma handoff</b></span><span>✦</span><span><b>Brand-fit QC</b></span><span>✦</span>
+  </div>
+</div>
+
 <main>
   <section id="gallery">
     <h1>Projects</h1>
@@ -801,8 +915,10 @@ function renderGallery(){
   $("#empty").style.display=list.length?"none":"block";
   g.innerHTML=list.map(p=>`<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster||""}" alt=""><div class="card-meta"><strong>${esc(p.name||"Untitled")}</strong><span class="muted">${esc(audienceOf(p))}</span></div></div>`).join("");
 }
-function showGallery(){$("#editor").classList.add("hidden");$("#gallery").classList.remove("hidden");renderGallery();}
-function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");renderBrandKit();}
+function setHome(show){["#landing","#marquee"].forEach(s=>{const e=$(s);if(e)e.classList.toggle("hidden",!show);});}
+function scrollToProjects(){const g=$("#gallery");if(g)g.scrollIntoView({behavior:"smooth",block:"start"});}
+function showGallery(){$("#editor").classList.add("hidden");$("#gallery").classList.remove("hidden");setHome(true);renderGallery();}
+function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");setHome(false);renderBrandKit();}
 
 /* ---------- brand kit: save & reuse a brand across projects ---------- */
 const loadBrands=()=>JSON.parse(localStorage.getItem("projectad_brands")||"[]");
