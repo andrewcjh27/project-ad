@@ -94,6 +94,13 @@
   .brandkit .bk .sw{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.12)}
   .brandkit .bk.save{color:var(--muted);border-style:dashed}
   .brandkit .bk .del{color:var(--muted);font-size:15px;line-height:1}
+  .qc{margin-top:12px;display:none;flex-direction:column;gap:7px}
+  .qc.show{display:flex}
+  .qc-score{font-size:13px;font-weight:600;letter-spacing:0}
+  .qc-gates{display:flex;flex-wrap:wrap;gap:6px}
+  .qc-gate{font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);letter-spacing:0}
+  .qc-gate.pass{background:#f1f7f1;color:#256a29;border-color:#cfe6d0}
+  .qc-gate.fail{background:#fbf1f1;color:#9a2b2b;border-color:#eccccc}
   /* review overlay */
   .review-overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.42);backdrop-filter:blur(4px)}
   .review-card{position:relative;background:#fff;border-radius:18px;border:1px solid var(--line);width:min(560px,100%);max-height:90vh;overflow:auto;padding:34px 34px 28px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
@@ -227,6 +234,7 @@
           <button class="btn" onclick="saveProject()">Save</button>
         </div>
         <div id="status" class="status muted"></div>
+        <div id="qc" class="qc"></div>
       </div>
     </div>
   </section>
@@ -576,9 +584,42 @@ async function generateLayered(){
   if(!current.layout)current.layout=defaultLayout();
   await cacheLayeredImages(current);
   drawLayered($("#poster").getContext("2d"),current);
-  showResult(); $("#poster").style.cursor="grab";
+  showResult(); $("#poster").style.cursor="grab"; runQC();
 }
 function canvasXY(e){const c=$("#poster"),r=c.getBoundingClientRect();return {x:(e.clientX-r.left)*(W/r.width),y:(e.clientY-r.top)*(H/r.height)};}
+
+/* ---------- brand-fit QC (client-side: is it on-brand, and why) ---------- */
+function _lum(r,g,b){const f=c=>{c/=255;return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);};return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b);}
+function scoreAd(canvas,p){
+  const ctx=canvas.getContext("2d"),d=ctx.getImageData(0,0,W,H).data;
+  const accent=hexToRgb(p.brand_primary||"#1f6f54"),deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
+  const near=(r,g,b,c)=>(Math.abs(r-c[0])+Math.abs(g-c[1])+Math.abs(b-c[2]))<110;
+  const hy0=(p.layout?p.layout.headline.y:Math.round(H*0.72)), b0=hy0, b1=Math.min(H,hy0+220);
+  let brand=0,total=0,bl=0,bn=0; const buckets={};
+  for(let y=0;y<H;y+=9)for(let x=0;x<W;x+=9){
+    const i=(y*W+x)*4,r=d[i],g=d[i+1],bb=d[i+2];total++;
+    if(near(r,g,bb,accent)||near(r,g,bb,deep))brand++;
+    const key=(r>>6)+","+(g>>6)+","+(bb>>6);buckets[key]=(buckets[key]||0)+1;
+    if(y>=b0&&y<=b1){bl+=_lum(r,g,bb);bn++;}
+  }
+  const brandFrac=brand/total, bgL=bn?bl/bn:1, txtL=_lum(20,17,15);
+  const ratio=(Math.max(bgL,txtL)+0.05)/(Math.min(bgL,txtL)+0.05);
+  const dom=Object.values(buckets).filter(v=>v/total>=0.06).length;
+  const gates=[
+    {name:"brand colour present",pass:brandFrac>=0.06,detail:Math.round(brandFrac*100)+"% of the ad"},
+    {name:"headline contrast (AA large)",pass:ratio>=3.0,detail:ratio.toFixed(1)+":1"},
+    {name:"limited palette",pass:dom<=5,detail:dom+" dominant tones"}
+  ];
+  return {score:gates.filter(g=>g.pass).length/gates.length,gates};
+}
+function renderQC(res){
+  const el=$("#qc");if(!el)return;
+  if(!res){el.className="qc";el.innerHTML="";return;}
+  el.className="qc show";
+  el.innerHTML=`<div class="qc-score">Brand-fit ${Math.round(res.score*100)}%</div><div class="qc-gates">`+
+    res.gates.map(g=>`<span class="qc-gate ${g.pass?'pass':'fail'}">${g.pass?'✓':'✕'} ${esc(g.name)} · ${esc(g.detail)}</span>`).join("")+`</div>`;
+}
+function runQC(){try{renderQC(scoreAd($("#poster"),current));}catch(e){}}
 async function renderFinal(canvas,p){
   const ctx=canvas.getContext("2d");
   if(p.mode!=="layered" && p._adImage){try{ctx.drawImage(await loadImg(p._adImage),0,0,W,H);return;}catch(e){}}
@@ -588,7 +629,7 @@ async function reviewFinish(){                 // full-AI "Finish & place"
   $("#review").classList.add("hidden"); showLoading();
   try{await renderFinal($("#poster"),current);}finally{showResult();}
   $("#poster").style.cursor="";                // the full-AI image isn't draggable
-  setStatus(current._adImage?"Done · complete AI ad":"Done · composed locally");
+  setStatus(current._adImage?"Done · complete AI ad":"Done · composed locally"); runQC();
 }
 const cwrap=()=>$(".canvas-wrap");
 function showLoading(){const ph=$("#placeholder");if(!ph)return;ph.classList.remove("hidden");ph.classList.add("busy");cwrap()&&cwrap().classList.remove("framed");const c=$("#phCap");if(c)c.textContent="Painting your ad…";}
@@ -600,6 +641,7 @@ function showPlaceholderOrLast(){
   const c=$("#phCap"); if(c) c.textContent="";                 // idle: just the looping animation
   if(current.poster){ph.classList.add("hidden");cwrap()&&cwrap().classList.add("framed");loadImg(current.poster).then(img=>ctx.drawImage(img,0,0,W,H)).catch(()=>{});}
   else {ph.classList.remove("hidden");cwrap()&&cwrap().classList.remove("framed");}
+  renderQC(null);
 }
 function makeThumb(canvas){const c=document.createElement("canvas");c.width=400;c.height=500;c.getContext("2d").drawImage(canvas,0,0,400,500);return c.toDataURL("image/png");}
 function saveProject(){
@@ -760,7 +802,7 @@ $("#f_imagekey").addEventListener("input",e=>localStorage.setItem("pa_imgkey",e.
     L.x=Math.round(x-_drag.dx);L.y=Math.round(y-_drag.dy);
     drawLayered(c.getContext("2d"),current);
   });
-  const end=()=>{if(_drag){_drag=null;c.style.cursor="grab";}};
+  const end=()=>{if(_drag){_drag=null;c.style.cursor="grab";runQC();}};
   c.addEventListener("pointerup",end);c.addEventListener("pointercancel",end);
 })();
 showGallery();
