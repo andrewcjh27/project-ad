@@ -239,7 +239,7 @@
 
     <!-- Stage 1: copy -->
     <div id="revCopy">
-      <div class="rev-step">Step 1 of 3 — Copy</div>
+      <div class="rev-step">Step 1 of 2 — Copy</div>
       <h2 class="rev-title">Review the headline</h2>
       <div class="rev-brief" id="revBrief"></div>
       <label class="rev-label">Headline<input id="revHeadline" placeholder="Gemini will write one"></label>
@@ -251,35 +251,22 @@
       </div>
     </div>
 
-    <!-- Stage 2: background -->
+    <!-- Stage 2: the complete ad (AI renders the whole thing; local composite fallback) -->
     <div id="revBg" class="hidden">
-      <div class="rev-step">Step 2 of 3 — Background</div>
-      <h2 class="rev-title">Review the background</h2>
-      <div class="rev-imgwrap"><img id="revImg" alt="generated background"></div>
+      <div class="rev-step">Step 2 of 2 — Final ad</div>
+      <h2 class="rev-title">Review the finished ad</h2>
+      <div class="rev-imgwrap"><img id="revImg" alt="generated ad"></div>
       <div class="rev-status" id="revBgStatus"></div>
       <div class="rev-actions">
-        <button class="btn ghost" onclick="reviewRegenBg()">Regenerate</button>
+        <button class="btn ghost" onclick="reviewRegenAd()">Regenerate</button>
         <button class="btn ghost" onclick="togglePrompt()">View prompt</button>
-        <button class="btn" onclick="reviewAcceptBg()">Use this &rarr;</button>
+        <button class="btn" onclick="reviewFinish()">Finish &amp; place</button>
       </div>
       <div id="promptBox" class="hidden">
-        <label class="rev-label">Image prompt<textarea id="revPrompt" rows="6"></textarea></label>
+        <label class="rev-label">Ad prompt<textarea id="revPrompt" rows="7"></textarea></label>
         <div class="rev-actions">
           <button class="btn ghost" onclick="reviewUseEditedPrompt()">Use edited prompt</button>
         </div>
-      </div>
-    </div>
-
-    <!-- Stage 3: compose the finished ad -->
-    <div id="revCompose" class="hidden">
-      <div class="rev-step">Step 3 of 3 — Compose</div>
-      <h2 class="rev-title">Review the finished ad</h2>
-      <div class="rev-imgwrap"><img id="composeImg" alt="composed ad"></div>
-      <div class="rev-status" id="revComposeStatus"></div>
-      <div class="rev-actions">
-        <button class="btn ghost" onclick="revStage('bg')">&larr; Background</button>
-        <button class="btn ghost" onclick="reviewRegenLayout()">Shuffle layout</button>
-        <button class="btn" onclick="reviewFinish()">Finish &amp; place</button>
       </div>
     </div>
   </div>
@@ -447,7 +434,7 @@ function briefSummaryHtml(p){
 const setRev=(sel,t)=>{const e=$(sel);if(e)e.textContent=t;};
 function openReview(){$("#review").classList.remove("hidden");}
 function reviewCancel(){$("#review").classList.add("hidden");}
-function revStage(s){$("#revCopy").classList.toggle("hidden",s!=='copy');$("#revBg").classList.toggle("hidden",s!=='bg');$("#revCompose").classList.toggle("hidden",s!=='compose');}
+function revStage(s){$("#revCopy").classList.toggle("hidden",s!=='copy');$("#revBg").classList.toggle("hidden",s!=='bg');}
 
 async function reviewRegenCopy(){
   const key=getKey();
@@ -460,64 +447,68 @@ async function reviewRegenCopy(){
     setRev("#revCopyStatus","Written by Gemini — edit if you like.");
   }catch(e){setRev("#revCopyStatus","Copy error ("+e.message+") — type one below.");}
 }
+// Prompt for the WHOLE finished ad — background style + exact text + product/logo
+// placement — so the image model composes the complete poster in one shot.
+function adPrompt(p){
+  const sec=p.brand_secondary||"a darker shade";
+  const feel=[p.values,p.identity].filter(Boolean).join(", ");
+  const head=firstLine(p.headline)||audienceOf(p)||p.name||"";
+  const sub=firstLine(p.subhead)||"";
+  const inputs=[p.product&&"the product photo",p.logo&&"the brand logo",(p.refs||[]).length&&"style reference ads"].filter(Boolean);
+  return `Design a COMPLETE, finished, ready-to-publish advertising poster (vertical 4:5) — not just a background. `+
+    `Style: minimal and premium, MONOCHROMATIC — two or three tones from a single hue family drawn from ${p.brand_primary||"#1f6f54"} and ${sec}${feel?`; brand feel: ${feel}`:""}; generous negative space, one soft light source, low-to-balanced contrast, elegant and restrained. `+
+    `Typeset this text crisply, spelled EXACTLY, in a clean modern premium sans-serif with clear hierarchy and good kerning: headline "${head}"`+(sub?`, and subhead "${sub}"`:"")+`. Do not misspell, add, or alter the words. `+
+    (p.product?`Feature the provided product image as the hero product, integrated naturally with a soft shadow or reflection. `:``)+
+    (p.logo?`Place the provided brand logo small and tasteful in a corner. `:``)+
+    (inputs.length?`Provided images, in order: ${inputs.join(", ")}. `:``)+
+    `A balanced, editorial, agency-quality composition. No placeholder/lorem text, no words beyond the headline and subhead, no watermarks.`;
+}
 async function reviewAcceptCopy(){
   current.headline=$("#revHeadline").value.trim();
   current.subhead=$("#revSubhead").value.trim();
   $("#f_headline").value=current.headline;$("#f_subhead").value=current.subhead;
   revStage('bg'); $("#promptBox").classList.add("hidden");
-  current._imgPrompt=bgPrompt(current,(current.refs||[]).length>0);
-  $("#revPrompt").value=current._imgPrompt;
-  await genBgIntoReview();
+  current._adPrompt=adPrompt(current);
+  $("#revPrompt").value=current._adPrompt;
+  await genAdIntoReview();
 }
-function presetDataUrl(p){
-  const c=document.createElement("canvas");c.width=W;c.height=H;
-  const accent=hexToRgb(p.brand_primary||"#1f6f54"),deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
-  drawBackground(c.getContext("2d"),mulberry32((p.seed||1)>>>0),accent,deep,p.preset);
-  return c.toDataURL("image/png");
-}
-async function genBgIntoReview(){
+async function genAdIntoReview(){
   const key=getKey();
   $("#revImg").classList.add("loadingimg");
-  setRev("#revBgStatus","Generating background…");
-  current._bgImage=null;
+  setRev("#revBgStatus","Generating the complete ad…");
+  current._adImage=null;
   if(key){
     try{
-      const refs=(current.refs||[]).slice(0,4);
-      current._bgImage=await geminiImage(current._imgPrompt,key,refs);
-      $("#revImg").src=current._bgImage;
-      setRev("#revBgStatus","Generated by Gemini"+(refs.length?" · guided by your references":"")+".");
+      // Pass the product cutout, logo and any style references as image inputs
+      // so the model composes them into the finished ad.
+      const imgs=[current.product,current.logo].concat(current.refs||[]).filter(Boolean).slice(0,6);
+      current._adImage=await geminiImage(current._adPrompt,key,imgs);
+      $("#revImg").src=current._adImage;
+      const used=[current.product&&"product",current.logo&&"logo",(current.refs||[]).length&&"references"].filter(Boolean).join(", ");
+      setRev("#revBgStatus","Generated by Gemini as a complete ad"+(used?" (using your "+used+")":"")+".");
       $("#revImg").classList.remove("loadingimg");return;
-    }catch(e){setRev("#revBgStatus","AI unavailable ("+e.message+") — showing a preset background.");}
-  }else{setRev("#revBgStatus","No API key — showing a preset background.");}
-  current._bgImage=null;
-  $("#revImg").src=presetDataUrl(current);
+    }catch(e){setRev("#revBgStatus","AI unavailable ("+e.message+") — composing the ad locally instead.");}
+  }else{setRev("#revBgStatus","No API key — composing the ad locally (preset background + your text / product / logo).");}
+  // Fallback: composite the ad locally (preset background + text + product + logo).
+  if(!current._layoutSeed) current._layoutSeed=Math.floor(Math.random()*2**31);
+  const c=document.createElement("canvas");c.width=W;c.height=H;
+  await renderPoster(c,current);
+  $("#revImg").src=c.toDataURL("image/png");
   $("#revImg").classList.remove("loadingimg");
 }
-async function reviewRegenBg(){current.seed=Math.floor(Math.random()*2**31);await genBgIntoReview();}
-function togglePrompt(){const b=$("#promptBox");b.classList.toggle("hidden");if(!b.classList.contains("hidden"))$("#revPrompt").value=current._imgPrompt||"";}
-async function reviewUseEditedPrompt(){current._imgPrompt=$("#revPrompt").value.trim();await genBgIntoReview();}
-async function reviewAcceptBg(){ revStage('compose'); await composeIntoReview(); }
-async function composeIntoReview(){
-  if(!current._layoutSeed) current._layoutSeed=Math.floor(Math.random()*2**31);
-  setRev("#revComposeStatus","Composing the ad…");
-  $("#composeImg").classList.add("loadingimg");
-  const c=document.createElement("canvas");c.width=W;c.height=H;
-  await renderPoster(c,current);                 // background + product + logo + text
-  $("#composeImg").src=c.toDataURL("image/png");
-  $("#composeImg").classList.remove("loadingimg");
-  const parts=[];
-  if(firstLine(current.headline))parts.push("headline");
-  if(firstLine(current.subhead))parts.push("subhead");
-  if(current.product)parts.push("product");
-  if(current.logo)parts.push("logo");
-  setRev("#revComposeStatus","Includes: "+(parts.join(" · ")||"background only")+". Shuffle the layout or finish.");
+async function reviewRegenAd(){current.seed=Math.floor(Math.random()*2**31);current._layoutSeed=Math.floor(Math.random()*2**31);await genAdIntoReview();}
+function togglePrompt(){const b=$("#promptBox");b.classList.toggle("hidden");if(!b.classList.contains("hidden"))$("#revPrompt").value=current._adPrompt||"";}
+async function reviewUseEditedPrompt(){current._adPrompt=$("#revPrompt").value.trim();await genAdIntoReview();}
+async function renderFinal(canvas,p){
+  const ctx=canvas.getContext("2d");
+  if(p._adImage){try{ctx.drawImage(await loadImg(p._adImage),0,0,W,H);return;}catch(e){}}
+  await renderPoster(canvas,p);   // local composite fallback
 }
-function reviewRegenLayout(){current._layoutSeed=Math.floor(Math.random()*2**31);composeIntoReview();}
 async function reviewFinish(){
   $("#review").classList.add("hidden");
   showLoading();
-  try{await renderPoster($("#poster"),current);}finally{showResult();}
-  setStatus(current._bgImage?"Done · AI background":"Done · preset background");
+  try{await renderFinal($("#poster"),current);}finally{showResult();}
+  setStatus(current._adImage?"Done · complete AI ad":"Done · composed locally");
 }
 const cwrap=()=>$(".canvas-wrap");
 function showLoading(){const ph=$("#placeholder");if(!ph)return;ph.classList.remove("hidden");ph.classList.add("busy");cwrap()&&cwrap().classList.remove("framed");const c=$("#phCap");if(c)c.textContent="Painting your ad…";}
@@ -536,7 +527,7 @@ function saveProject(){
   const list=load();
   current.poster=makeThumb($("#poster"));
   current.id=current.id||("p"+Date.now());
-  const rec=Object.assign({},current); delete rec._bgImage;   // keep storage light — don't persist the full AI image
+  const rec=Object.assign({},current); delete rec._bgImage; delete rec._adImage;   // keep storage light — don't persist full AI images
   const i=list.findIndex(x=>x.id===rec.id);
   if(i>=0)list[i]=rec;else list.unshift(rec);
   try{store(list);}catch(e){alert("Storage full — remove some projects or use smaller / fewer reference images.");return;}
