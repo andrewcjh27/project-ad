@@ -54,8 +54,8 @@
   .refthumb{position:relative}
   .refthumb img{height:74px;border-radius:8px;border:1px solid var(--line);display:block}
   .refthumb button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--ink);color:#fff;cursor:pointer;font-size:12px;line-height:1}
-  .header-right{display:flex;align-items:center;gap:14px}
-  .keyfield{font:inherit;font-size:13px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);width:190px}
+  .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .keyfield{font:inherit;font-size:13px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);width:150px}
   .keyfield:focus{outline:none;border-color:#000}
   .preview{position:sticky;top:100px}
   .preview canvas{width:100%;border:1px solid transparent;border-radius:var(--radius);display:block;background:#fff}
@@ -117,15 +117,17 @@
 <header>
   <div class="brand" onclick="showGallery()">PRO-AD</div>
   <div class="header-right">
-    <input id="f_apikey" type="password" class="keyfield" placeholder="Gemini API key" autocomplete="off"
-           title="Used for AI copy + image generation. A free-tier key works for copy. Stored only in this browser; requests go straight to Google.">
+    <input id="f_textkey" type="password" class="keyfield" placeholder="Text key (free)" autocomplete="off"
+           title="Gemini free-tier key for AI copy (gemini-2.5-flash). Text is free — with this key, headline/subhead are always AI-written. Stored only in this browser.">
+    <input id="f_imagekey" type="password" class="keyfield" placeholder="Image key (billed)" autocomplete="off"
+           title="Gemini billed key for image generation (gemini-2.5-flash-image). Without it, the ad is composed locally. Stored only in this browser.">
     <button class="btn" onclick="newProject()">+ Add project</button>
   </div>
 </header>
 <main>
   <section id="gallery">
     <h1>Projects</h1>
-    <p class="lead">On-brand, personalized ad posters. Add your Gemini key in the top bar and it generates with AI by default; if the key is missing or the API fails, it falls back to a built-in preset.</p>
+    <p class="lead">On-brand, personalized ad posters. Add a free Gemini <em>text</em> key for AI copy; add a billed <em>image</em> key for full AI ad generation. Without an image key, the ad is composed locally.</p>
     <div id="empty" class="empty"><p>No projects yet.</p><button class="btn" onclick="newProject()">+ Add your first project</button></div>
     <div id="cards" class="grid"></div>
   </section>
@@ -303,7 +305,8 @@ const firstLine=s=>(s||"").split("\n")[0].trim();
 
 /* ---------- Gemini API (online-first; offline fallback on any error) ---------- */
 const API = "https://generativelanguage.googleapis.com/v1beta/models";
-const getKey = () => (($("#f_apikey") && $("#f_apikey").value) || localStorage.getItem("pa_key") || "").trim();
+const getTextKey = () => (($("#f_textkey")&&$("#f_textkey").value)||localStorage.getItem("pa_textkey")||localStorage.getItem("pa_key")||"").trim();
+const getImageKey = () => (($("#f_imagekey")&&$("#f_imagekey").value)||localStorage.getItem("pa_imgkey")||"").trim();
 const setStatus = t => { const s=$("#status"); if(s) s.textContent=t; };
 function extractJson(t){t=t.trim();if(t.startsWith("```")){t=t.replace(/^```(json)?/i,"").replace(/```$/,"");}const i=t.indexOf("{"),j=t.lastIndexOf("}");if(i>=0&&j>i)t=t.slice(i,j+1);return JSON.parse(t);}
 function dataUrlPart(d){const m=/^data:(.*?);base64,(.*)$/.exec(d||"");return m?{inline_data:{mime_type:m[1],data:m[2]}}:null;}
@@ -429,7 +432,7 @@ async function generate(newSeed){
   $("#revBrief").innerHTML=briefSummaryHtml(current);
   $("#revHeadline").value=firstLine(current.headline)||"";
   $("#revSubhead").value=firstLine(current.subhead)||"";
-  if(!$("#revSubhead").value && !getKey()) $("#revSubhead").value=fallbackSubhead(current);  // offline: derive a subhead
+  if(!$("#revSubhead").value && !getTextKey()) $("#revSubhead").value=fallbackSubhead(current);  // no text key: derive a subhead
   if($("#revHeadline").value) setRev("#revCopyStatus","Your headline — edit it or regenerate.");
   else await reviewRegenCopy();          // no headline yet -> write one with Gemini
 }
@@ -455,8 +458,8 @@ function reviewCancel(){$("#review").classList.add("hidden");}
 function revStage(s){$("#revCopy").classList.toggle("hidden",s!=='copy');$("#revBg").classList.toggle("hidden",s!=='bg');}
 
 async function reviewRegenCopy(){
-  const key=getKey();
-  if(!key){$("#revHeadline").value=(audienceOf(current)||current.name||"").trim();if(!$("#revSubhead").value.trim())$("#revSubhead").value=fallbackSubhead(current);setRev("#revCopyStatus","No API key — headline from your audience, subhead from your brief.");return;}
+  const key=getTextKey();
+  if(!key){$("#revHeadline").value=(audienceOf(current)||current.name||"").trim();if(!$("#revSubhead").value.trim())$("#revSubhead").value=fallbackSubhead(current);setRev("#revCopyStatus","No text key — add a free Gemini text key for AI copy; using your brief for now.");return;}
   setRev("#revCopyStatus","Writing copy…");
   try{
     const j=extractJson(await geminiText(COPY_SYS,JSON.stringify(briefOf(current)),key));
@@ -494,7 +497,7 @@ function showPromptView(){$("#revPromptView").classList.remove("hidden");$("#rev
 function showResultView(){$("#revPromptView").classList.add("hidden");$("#revResultView").classList.remove("hidden");}
 async function reviewGenerateAd(){current._adPrompt=$("#revPrompt").value.trim();showResultView();await genAdIntoReview();}
 async function genAdIntoReview(){
-  const key=getKey();
+  const key=getImageKey();
   $("#revImg").classList.add("loadingimg");
   setRev("#revBgStatus","Generating the complete ad…");
   current._adImage=null;
@@ -508,8 +511,8 @@ async function genAdIntoReview(){
       const used=[current.product&&"product",current.logo&&"logo",(current.refs||[]).length&&"references"].filter(Boolean).join(", ");
       setRev("#revBgStatus","Generated by Gemini as a complete ad"+(used?" (using your "+used+")":"")+".");
       $("#revImg").classList.remove("loadingimg");return;
-    }catch(e){setRev("#revBgStatus","AI unavailable ("+e.message+") — composing the ad locally instead.");}
-  }else{setRev("#revBgStatus","No API key — composing the ad locally (preset background + your text / product / logo).");}
+    }catch(e){setRev("#revBgStatus","Image API unavailable ("+e.message+") — composing the ad locally instead.");}
+  }else{setRev("#revBgStatus","No image key — composing the ad locally (background + your text / product / logo). Add a billed image key for full AI generation.");}
   // Fallback: composite the ad locally (preset background + text + product + logo).
   if(!current._layoutSeed) current._layoutSeed=Math.floor(Math.random()*2**31);
   const c=document.createElement("canvas");c.width=W;c.height=H;
@@ -587,8 +590,10 @@ function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classLi
 $("#f_logo").addEventListener("change",e=>readImage(e.target,"logo",700));
 $("#f_product").addEventListener("change",e=>readImage(e.target,"product",700));
 $("#f_refs").addEventListener("change",e=>readRefs(e.target));
-$("#f_apikey").value=localStorage.getItem("pa_key")||"";
-$("#f_apikey").addEventListener("input",e=>localStorage.setItem("pa_key",e.target.value.trim()));
+$("#f_textkey").value=localStorage.getItem("pa_textkey")||localStorage.getItem("pa_key")||"";
+$("#f_textkey").addEventListener("input",e=>localStorage.setItem("pa_textkey",e.target.value.trim()));
+$("#f_imagekey").value=localStorage.getItem("pa_imgkey")||"";
+$("#f_imagekey").addEventListener("input",e=>localStorage.setItem("pa_imgkey",e.target.value.trim()));
 showGallery();
 </script>
 </body>
