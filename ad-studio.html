@@ -85,6 +85,7 @@
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
   @media (prefers-reduced-motion: reduce){.painter .arm,.painter .artist,.painter .dab,.card{animation:none}.painter .dab{opacity:.85}}
   .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  #wizActions{margin-top:0;justify-content:flex-end}
   .status{margin-top:12px;font-size:12px;min-height:16px;letter-spacing:0}
   .fmtgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
   .fmtcard{border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;padding:16px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:9px;transition:border-color .12s,box-shadow .12s}
@@ -200,6 +201,14 @@
         <div class="wizard-nav">
           <button class="btn ghost" id="btnBack" onclick="step(-1)" style="visibility:hidden">Back</button>
           <button class="btn" id="btnNext" onclick="step(1)">Next</button>
+          <!-- Actions replace Next on the final step, once the brief is complete. -->
+          <div class="actions hidden" id="wizActions">
+            <button class="btn" onclick="generate(false)">Generate</button>
+            <button class="btn ghost" onclick="generate(true)">Regenerate</button>
+            <button class="btn ghost" onclick="download()">Download</button>
+            <button class="btn ghost" onclick="exportSpec()">Export spec</button>
+            <button class="btn" onclick="saveProject()">Save</button>
+          </div>
         </div>
       </div>
 
@@ -233,13 +242,6 @@
               <div class="painter-cap" id="phCap"></div>
             </div>
           </div>
-        </div>
-        <div class="actions">
-          <button class="btn" onclick="generate(false)">Generate</button>
-          <button class="btn ghost" onclick="generate(true)">Regenerate</button>
-          <button class="btn ghost" onclick="download()">Download</button>
-          <button class="btn ghost" onclick="exportSpec()">Export spec</button>
-          <button class="btn" onclick="saveProject()">Save</button>
         </div>
         <div id="status" class="status muted"></div>
         <div id="qc" class="qc"></div>
@@ -770,6 +772,7 @@ function showStep(n){
   document.querySelectorAll(".step").forEach(s=>s.classList.toggle("active",+s.dataset.step===curStep));
   $("#btnBack").style.visibility=curStep===1?"hidden":"visible";
   $("#btnNext").classList.toggle("hidden",curStep===3);
+  $("#wizActions").classList.toggle("hidden",curStep!==3);   // actions only on the final step
 }
 function step(d){showStep(curStep+d);}
 
