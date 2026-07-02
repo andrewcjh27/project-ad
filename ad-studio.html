@@ -86,9 +86,6 @@
   @media (prefers-reduced-motion: reduce){.painter .arm,.painter .artist,.painter .dab,.card{animation:none}.painter .dab{opacity:.85}}
   .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
   .status{margin-top:12px;font-size:12px;min-height:16px;letter-spacing:0}
-  .presets{margin-top:14px}
-  .preset-btns{display:flex;gap:8px;flex-wrap:wrap}
-  .preset-btns .btn{padding:8px 16px;font-size:13px}
   /* review overlay */
   .review-overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.42);backdrop-filter:blur(4px)}
   .review-card{position:relative;background:#fff;border-radius:18px;border:1px solid var(--line);width:min(560px,100%);max-height:90vh;overflow:auto;padding:34px 34px 28px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
@@ -216,18 +213,10 @@
           <button class="btn" onclick="generate(false)">Generate</button>
           <button class="btn ghost" onclick="generate(true)">Regenerate</button>
           <button class="btn ghost" onclick="download()">Download</button>
+          <button class="btn ghost" onclick="exportSpec()">Export spec</button>
           <button class="btn" onclick="saveProject()">Save</button>
         </div>
         <div id="status" class="status muted"></div>
-        <div id="presetBar" class="presets hidden">
-          <div class="tiny muted" style="margin-bottom:6px">AI background unavailable — pick a preset instead:</div>
-          <div class="preset-btns">
-            <button class="btn ghost" onclick="usePreset('gradient')">Gradient</button>
-            <button class="btn ghost" onclick="usePreset('vignette')">Vignette</button>
-            <button class="btn ghost" onclick="usePreset('flat')">Flat</button>
-            <button class="btn ghost" onclick="usePreset('circle')">Wash</button>
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -364,11 +353,9 @@ async function renderPoster(canvas,p){
   const deep=p.brand_secondary?hexToRgb(p.brand_secondary):darken(accent);
   const rng=mulberry32((p.seed||1)>>>0);                       // background variation
   const lrng=mulberry32(((p._layoutSeed||p.seed)||1)>>>0);      // layout/placement variation (decoupled)
-  // Background: draw the generated AI image if we have one; else a preset.
-  // (This function never calls the API — generation happens in generate().)
-  let drew=false;
-  if(p._bgImage){try{ctx.drawImage(await loadImg(p._bgImage),0,0,W,H);drew=true;}catch(e){}}
-  if(!drew) drawBackground(ctx,rng,accent,deep,p.preset);
+  // Local composite (layered): procedural background + product + logo + text.
+  // The full-AI ad image is drawn directly by renderFinal(), not here.
+  drawBackground(ctx,rng,accent,deep,p.preset);
   const m=80, sz=150;
   if(p.logo){try{const img=await loadImg(p.logo);const corners=[[m,70],[W-m-sz,70],[W-m-sz,H-70-sz]];const c=corners[Math.floor(lrng()*corners.length)];drawContain(ctx,img,c[0],c[1],sz,sz);}catch(e){}}
   if(p.product){try{drawContain(ctx,await loadImg(p.product),W*0.24,H*0.11,W*0.52,H*0.34);}catch(e){}}
@@ -427,7 +414,6 @@ function removeRef(i){(current.refs||[]).splice(i,1);renderRefThumbs();}
 async function generate(newSeed){
   collect();
   if(newSeed||!current.seed)current.seed=Math.floor(Math.random()*2**31);
-  hidePresets();
   openReview(); revStage('copy');
   $("#revBrief").innerHTML=briefSummaryHtml(current);
   $("#revHeadline").value=firstLine(current.headline)||"";
@@ -549,7 +535,7 @@ function saveProject(){
   const list=load();
   current.poster=makeThumb($("#poster"));
   current.id=current.id||("p"+Date.now());
-  const rec=Object.assign({},current); delete rec._bgImage; delete rec._adImage;   // keep storage light — don't persist full AI images
+  const rec=Object.assign({},current); delete rec._adImage;   // keep storage light — don't persist full AI images
   const i=list.findIndex(x=>x.id===rec.id);
   if(i>=0)list[i]=rec;else list.unshift(rec);
   try{store(list);}catch(e){alert("Storage full — remove some projects or use smaller / fewer reference images.");return;}
@@ -558,9 +544,56 @@ function saveProject(){
 function download(){const a=document.createElement("a");a.download=(current.name||"ad")+".png";a.href=$("#poster").toDataURL("image/png");a.click();}
 
 /* ---------- presets (fallback background when AI is unavailable) ---------- */
-function showPresets(){$("#presetBar").classList.remove("hidden");}
-function hidePresets(){$("#presetBar").classList.add("hidden");}
-function usePreset(style){collect();current._bgImage=null;current.preset=style;renderPoster($("#poster"),current);showResult();setStatus("bg: preset ("+style+")");}
+/* ---------- ad-spec (v0.2) — the studio's canonical model + export ---------- */
+const slug=s=>(s||"brand").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"brand";
+// Build a v0.2 ad-spec from the current project (see Ad-Spec-Schema.md).
+function buildSpec(p){
+  const seed=(p.seed||1)>>>0;
+  const head=firstLine(p.headline)||audienceOf(p)||p.name||"";
+  const sub=firstLine(p.subhead)||"";
+  const mode=p._adImage?"full_ai":"layered";
+  const textKey=getTextKey(), imgKey=getImageKey();
+  const elements=[
+    {id:"el_headline",type:"text",z:10,role:"headline",content:head,
+     box:{x:80,y:Math.round(H*0.72),w:W-160,h:200,anchor:"top-left"},
+     copy:{source:firstLine(p.headline)?"manual":"generated",author:firstLine(p.headline)?"user":"system",locked:!!firstLine(p.headline)}}
+  ];
+  if(sub)elements.push({id:"el_subhead",type:"text",z:10,role:"subhead",content:sub,
+     box:{x:82,y:Math.round(H*0.90),w:W-160,h:60,anchor:"top-left"},
+     copy:{source:"generated",author:"system",locked:false}});
+  if(p.product)elements.push({id:"el_product",type:"image",z:5,asset:"product_cutout",
+     box:{x:Math.round(W*0.24),y:Math.round(H*0.11),w:Math.round(W*0.52),h:Math.round(H*0.34),anchor:"top-left"}});
+  if(p.logo)elements.push({id:"el_logo",type:"logo",z:20,variant:"as-provided",
+     box:{x:80,y:70,w:150,h:150,anchor:"top-left"},respect_clear_space:true});
+  return {
+    spec_version:"0.2",
+    ad_id:p.id||("ad_"+seed),
+    brand_id:slug(p.name),
+    segment_id:"seg_"+slug(audienceOf(p)||"default"),
+    output:{type:"poster",width:W,height:H,aspect_ratio:"4:5",format:"png"},
+    mode,
+    concept:{big_idea:head,copy_angle:p.identity||"",messaging_pillar:(p.values||"").split(/[,\n]/)[0].trim()},
+    canvas:{
+      background:{type:"color",value:p.brand_primary||"#1f6f54"},
+      imagery:[{id:"img_hero",role:"hero",prompt:p._adPrompt||"",negative_prompt:"text, logos, watermark",
+                style_ref:"brand:imagery.style",seed,aspect_ratio:"4:5"}]
+    },
+    elements,
+    personalization:{segment_id:"seg_"+slug(audienceOf(p)||"default"),
+      signals_used:[audienceOf(p)].filter(Boolean),inference:p.description||"",literalness:"inferential",pii_used:false},
+    provenance:{art_director_model:textKey?"gemini-2.5-flash":"deterministic-fallback",
+      image_models:[{id:"img_hero",model:imgKey?"gemini-2.5-flash-image":"local-composite",seed}],
+      created_by:"system",created_at:new Date().toISOString()}
+  };
+}
+function exportSpec(){
+  collect();
+  const spec=buildSpec(current);
+  const blob=new Blob([JSON.stringify(spec,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.download=slug(current.name)+".spec.json";
+  a.href=URL.createObjectURL(blob);a.click();URL.revokeObjectURL(a.href);
+  setStatus("exported "+a.download);
+}
 
 /* ---------- wizard navigation ---------- */
 let curStep=1;
@@ -574,8 +607,8 @@ function showStep(n){
 function step(d){showStep(curStep+d);}
 
 function resetFiles(){["f_logo","f_product","f_refs"].forEach(id=>{const el=$("#"+id);if(el)el.value="";});}
-function newProject(){current={seed:Math.floor(Math.random()*2**31)};fill(current);resetFiles();renderRefThumbs();hidePresets();$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
-function openProject(id){current=Object.assign({},load().find(x=>x.id===id));fill(current);resetFiles();renderRefThumbs();hidePresets();$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
+function newProject(){current={seed:Math.floor(Math.random()*2**31)};fill(current);resetFiles();renderRefThumbs();$("#editorTitle").textContent="Add project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
+function openProject(id){current=Object.assign({},load().find(x=>x.id===id));fill(current);resetFiles();renderRefThumbs();$("#editorTitle").textContent=current.name||"Project";showEditor();showStep(1);setStatus("");showPlaceholderOrLast();}
 
 /* ---------- views ---------- */
 function renderGallery(){
