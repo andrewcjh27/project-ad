@@ -668,11 +668,11 @@ function buildSpec(p){
   const L=p.layout||defaultLayout();
   const textKey=getTextKey(), imgKey=getImageKey();
   const elements=[
-    {id:"el_headline",type:"text",z:10,role:"headline",content:head,
+    {id:"el_headline",type:"text",z:10,role:"headline",content:head,size_px:74,color:"#141110",font:p.fontName?("uploaded:"+p.fontName):"brand:typography.fonts.heading",
      box:{x:L.headline.x,y:L.headline.y,w:W-160,h:200,anchor:"top-left"},
      copy:{source:firstLine(p.headline)?"manual":"generated",author:firstLine(p.headline)?"user":"system",locked:!!firstLine(p.headline)}}
   ];
-  if(sub)elements.push({id:"el_subhead",type:"text",z:10,role:"subhead",content:sub,
+  if(sub)elements.push({id:"el_subhead",type:"text",z:10,role:"subhead",content:sub,size_px:34,color:"#141110",font:p.fontName?("uploaded:"+p.fontName):"brand:typography.fonts.body",
      box:{x:L.subhead.x,y:L.subhead.y,w:W-160,h:60,anchor:"top-left"},
      copy:{source:"generated",author:"system",locked:false}});
   if(p.product)elements.push({id:"el_product",type:"image",z:5,asset:"product_cutout",
@@ -690,7 +690,7 @@ function buildSpec(p){
     canvas:{
       background:{type:"color",value:p.brand_primary||"#1f6f54"},
       imagery:[{id:"img_hero",role:"hero",prompt:p._adPrompt||"",negative_prompt:"text, logos, watermark",
-                style_ref:"brand:imagery.style",seed,aspect_ratio:"4:5"}]
+                style_ref:"brand:imagery.style",seed,aspect_ratio:"4:5",placement:{x:0,y:0,w:W,h:H}}]
     },
     elements,
     personalization:{segment_id:"seg_"+slug(audienceOf(p)||"default"),
