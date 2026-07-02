@@ -89,6 +89,11 @@
   .modebar{display:flex;gap:8px;margin-bottom:14px}
   .modebtn{font:inherit;font-size:13px;padding:8px 14px;border:1px solid rgba(0,0,0,.16);border-radius:999px;background:#fff;color:var(--muted);cursor:pointer}
   .modebtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}
+  .brandkit{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .brandkit .bk{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer;text-transform:none;font-weight:400;letter-spacing:0}
+  .brandkit .bk .sw{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.12)}
+  .brandkit .bk.save{color:var(--muted);border-style:dashed}
+  .brandkit .bk .del{color:var(--muted);font-size:15px;line-height:1}
   /* review overlay */
   .review-overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.42);backdrop-filter:blur(4px)}
   .review-card{position:relative;background:#fff;border-radius:18px;border:1px solid var(--line);width:min(560px,100%);max-height:90vh;overflow:auto;padding:34px 34px 28px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
@@ -152,6 +157,7 @@
 
         <!-- ── Page 2: Brand identity ────────────────────────────────── -->
         <div class="page hidden" data-page="2">
+          <div id="brandKit" class="brandkit"></div>
           <div class="row">
             <label>Brand primary color<input type="color" id="f_primary" value="#1f6f54"></label>
             <label>Secondary <span class="muted">(optional)</span><input type="color" id="f_secondary" value="#14251b"></label>
@@ -682,7 +688,39 @@ function renderGallery(){
   g.innerHTML=list.map(p=>`<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster||""}" alt=""><div class="card-meta"><strong>${esc(p.name||"Untitled")}</strong><span class="muted">${esc(audienceOf(p))}</span></div></div>`).join("");
 }
 function showGallery(){$("#editor").classList.add("hidden");$("#gallery").classList.remove("hidden");renderGallery();}
-function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");}
+function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");renderBrandKit();}
+
+/* ---------- brand kit: save & reuse a brand across projects ---------- */
+const loadBrands=()=>JSON.parse(localStorage.getItem("projectad_brands")||"[]");
+const storeBrands=b=>localStorage.setItem("projectad_brands",JSON.stringify(b));
+function renderBrandKit(){
+  const el=$("#brandKit");if(!el)return;
+  el.innerHTML=loadBrands().map(b=>
+    `<span class="bk" onclick="applyBrand('${b.id}')" title="Apply ${esc(b.label)}"><span class="sw" style="background:${esc(b.brand_primary||'#ccc')}"></span>${esc(b.label)}<span class="del" title="delete" onclick="event.stopPropagation();deleteBrand('${b.id}')">&times;</span></span>`
+  ).join("") + `<span class="bk save" onclick="saveBrandKit()">+ Save as brand kit</span>`;
+}
+function applyBrand(id){
+  const b=loadBrands().find(x=>x.id===id);if(!b)return;
+  if(b.brand_primary)$("#f_primary").value=b.brand_primary;
+  if(b.brand_secondary)$("#f_secondary").value=b.brand_secondary;
+  $("#f_values").value=b.values||"";$("#f_identity").value=b.identity||"";
+  collect();
+  if(b.logo)current.logo=b.logo;
+  if(b.font){current.font=b.font;current.fontName=b.fontName;}
+  setStatus("applied brand kit: "+b.label);
+}
+function saveBrandKit(){
+  collect();
+  const label=((current.name||current.values||"Brand").trim().slice(0,40))||"Brand";
+  const brand={id:"b"+Date.now(),label,brand_primary:current.brand_primary,brand_secondary:current.brand_secondary,
+    values:current.values,identity:current.identity,logo:current.logo||null,font:current.font||null,fontName:current.fontName||null};
+  const brands=loadBrands();
+  const i=brands.findIndex(x=>x.label.toLowerCase()===label.toLowerCase());
+  if(i>=0)brands[i]=Object.assign({},brands[i],brand,{id:brands[i].id});else brands.unshift(brand);
+  try{storeBrands(brands);}catch(e){alert("Storage full — remove a brand kit or some projects.");return;}
+  renderBrandKit();setStatus("saved brand kit: "+label);
+}
+function deleteBrand(id){storeBrands(loadBrands().filter(x=>x.id!==id));renderBrandKit();}
 
 /* ---------- init ---------- */
 $("#f_logo").addEventListener("change",e=>readImage(e.target,"logo",700));
