@@ -429,8 +429,19 @@ async function generate(newSeed){
   $("#revBrief").innerHTML=briefSummaryHtml(current);
   $("#revHeadline").value=firstLine(current.headline)||"";
   $("#revSubhead").value=firstLine(current.subhead)||"";
+  if(!$("#revSubhead").value && !getKey()) $("#revSubhead").value=fallbackSubhead(current);  // offline: derive a subhead
   if($("#revHeadline").value) setRev("#revCopyStatus","Your headline — edit it or regenerate.");
   else await reviewRegenCopy();          // no headline yet -> write one with Gemini
+}
+// Deterministic subhead from the brief when no LLM is available (offline).
+function fallbackSubhead(p){
+  const src=(p.agenda||p.description||"").trim();
+  if(src){
+    let s=(src.split(/[.\n;]/).map(x=>x.trim()).filter(Boolean)[0])||"";
+    if(s){s=s[0].toUpperCase()+s.slice(1); return s.length>64?s.slice(0,61).trim()+"…":s;}
+  }
+  const prod=(p.products||"").split(/[,\n]/)[0].trim();
+  return prod?(prod[0].toUpperCase()+prod.slice(1)+"."):"";
 }
 function briefSummaryHtml(p){
   const rows=[["Brand",p.name],["Description",p.description],["Audience",audienceOf(p)],
@@ -445,7 +456,7 @@ function revStage(s){$("#revCopy").classList.toggle("hidden",s!=='copy');$("#rev
 
 async function reviewRegenCopy(){
   const key=getKey();
-  if(!key){$("#revHeadline").value=(audienceOf(current)||current.name||"").trim();setRev("#revCopyStatus","No API key — using your audience as the headline.");return;}
+  if(!key){$("#revHeadline").value=(audienceOf(current)||current.name||"").trim();if(!$("#revSubhead").value.trim())$("#revSubhead").value=fallbackSubhead(current);setRev("#revCopyStatus","No API key — headline from your audience, subhead from your brief.");return;}
   setRev("#revCopyStatus","Writing copy…");
   try{
     const j=extractJson(await geminiText(COPY_SYS,JSON.stringify(briefOf(current)),key));
