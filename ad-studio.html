@@ -56,6 +56,14 @@
   .refthumb img{height:74px;border-radius:8px;border:1px solid var(--line);display:block}
   .refthumb button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--ink);color:#fff;cursor:pointer;font-size:12px;line-height:1}
   .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .nav{display:flex;align-items:center;gap:6px}
+  .navlink{font:inherit;font-size:14px;letter-spacing:0;color:var(--muted);background:none;border:none;cursor:pointer;
+    padding:9px 16px;border-radius:999px;transition:color .2s,background .2s,opacity .2s}
+  .navlink:hover{color:var(--ink)}
+  .navlink.on{color:var(--ink);font-weight:600}
+  .navcreate{background:var(--ink);color:#fff;font-weight:500}
+  .navcreate:hover{color:#fff;opacity:.9}
+  .navcreate.on{color:#fff;font-weight:500}
   .preview{position:sticky;top:100px}
   /* canvas fits INSIDE a constant-size frame (letterboxed) so the container never
      changes size when a different ad format is chosen */
@@ -221,9 +229,10 @@
 <body>
 <header>
   <div class="brand" onclick="showGallery()">PRO-AD</div>
-  <div class="header-right">
-    <button class="btn" onclick="newProject()">+ Add project</button>
-  </div>
+  <nav class="nav">
+    <button class="navlink" data-nav="home" onclick="showGallery()">Projects</button>
+    <button class="navlink navcreate" data-nav="create" onclick="newProject()">+ New project</button>
+  </nav>
 </header>
 
 <!-- ═══ Animated landing hero ═════════════════════════════════════════════ -->
@@ -262,7 +271,7 @@
   <section id="gallery">
     <h1>Past projects</h1>
     <p class="lead">Your generated ads. Open one to edit, regenerate, or hand it off to Figma — or start a new project any time.</p>
-    <div id="empty" class="empty"><p>No projects yet.</p><button class="btn" onclick="newProject()">+ Add your first project</button></div>
+    <div id="empty" class="empty"><p>No work yet — your finished ads will live here.</p><button class="btn" onclick="newProject()">Start one now</button></div>
     <div id="cards" class="grid"></div>
   </section>
 
@@ -921,8 +930,9 @@ function renderGallery(){
 }
 function setHome(show){["#landing","#marquee"].forEach(s=>{const e=$(s);if(e)e.classList.toggle("hidden",!show);});}
 function scrollToProjects(){const g=$("#gallery");if(g)g.scrollIntoView({behavior:"smooth",block:"start"});}
-function showGallery(){$("#editor").classList.add("hidden");$("#gallery").classList.remove("hidden");setHome(true);renderGallery();}
-function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");setHome(false);renderBrandKit();}
+function navActive(page){document.querySelectorAll(".navlink").forEach(a=>a.classList.toggle("on",a.dataset.nav===page));}
+function showGallery(){$("#editor").classList.add("hidden");$("#gallery").classList.remove("hidden");setHome(true);navActive("home");if(location.hash!=="#projects")location.hash="#projects";renderGallery();}
+function showEditor(){$("#gallery").classList.add("hidden");$("#editor").classList.remove("hidden");setHome(false);navActive("create");if(location.hash!=="#create")location.hash="#create";renderBrandKit();}
 
 /* ---------- brand kit: save & reuse a brand across projects ---------- */
 const loadBrands=()=>JSON.parse(localStorage.getItem("projectad_brands")||"[]");
@@ -976,7 +986,14 @@ $("#f_font").addEventListener("change",e=>readFont(e.target));
   const end=()=>{if(_drag){_drag=null;c.style.cursor="grab";runQC();}};
   c.addEventListener("pointerup",end);c.addEventListener("pointercancel",end);
 })();
-showGallery();
+// Hash-based pages: #projects (home + past work) and #create (dedicated create page).
+// Back/forward navigate between them; the guard keeps view switches idempotent.
+window.addEventListener("hashchange",()=>{
+  const wantCreate=location.hash==="#create", onCreate=!$("#editor").classList.contains("hidden");
+  if(wantCreate&&!onCreate)newProject();
+  else if(!wantCreate&&onCreate)showGallery();
+});
+if(location.hash==="#create")newProject();else showGallery();
 </script>
 </body>
 </html>
