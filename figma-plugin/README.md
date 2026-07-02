@@ -12,15 +12,20 @@ Turns a generated ad-spec + its hero image into **editable Figma layers** so a d
 2. Select `figma-plugin/manifest.json`.
 3. Run it from **Plugins → Development → Project AD — Ad Importer**.
 
-## Use
-1. Run the generation pipeline to get `*.spec.json` and the hero PNG (`generation_pipeline.py`).
-2. Open the plugin, **paste the contents of `sbux_psl_ad.spec.json`** into the JSON box.
-3. **Choose `sbux_psl_ad.png`** as the hero image.
-4. Click **Build in Figma** — an editable frame appears on the canvas:
-   - headline / subhead → real **TextNodes** (reword, restyle freely)
+## Use — from the Ad Studio (recommended)
+1. In the **Ad Studio** (`ad-studio.html`): generate an ad, then click **Export spec** (downloads `<brand>.spec.json`) and **Download** (the PNG).
+2. Open the plugin, **paste the `.spec.json`** into the JSON box.
+3. **Choose the downloaded PNG** as the hero image (for full-AI ads this is the whole ad; for layered ads it's the composed poster).
+4. Click **Build in Figma** — an editable frame appears:
+   - headline / subhead → real **TextNodes** at their spec `box` (reword, restyle freely; `size_px`/`color` honored)
    - hero → image fill (swap/replace/mask)
-   - scrim → rectangle with gradient (adjust opacity/color)
-   - logo → placeholder ellipse
+   - shapes/scrims → rectangles; logo → placeholder ellipse
+
+The studio exports **raw hex** colors and per-element `size_px`/`box`; `code.js`'s `resolveColor` now reads raw hex directly, so the studio's spec builds without a brand palette. (Alternatively, run the Python pipeline for `brand:`-referenced specs.)
+
+## Use — from the Python pipeline
+1. Run `generation_pipeline.py` to get `*.spec.json` + the hero PNG.
+2. Paste the spec, choose the PNG, **Build in Figma**.
 
 ## Production notes
 - **Fonts:** the plugin defaults to Inter so it never fails on a missing font. Upload your brand fonts (e.g. Starbucks Sodo Sans / Lander / Pike) to your Figma org and switch `fontFor()` in `code.js` to use them.

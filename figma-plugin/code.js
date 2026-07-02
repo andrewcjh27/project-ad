@@ -18,6 +18,13 @@ const PALETTES = {
 };
 
 function resolveColor(brandId, ref) {
+  // Raw hex (as the Ad Studio exports, e.g. "#1f6f54") — parse directly.
+  if (typeof ref === "string" && ref[0] === "#") {
+    let h = ref.slice(1);
+    if (h.length === 3) h = h.split("").map(c => c + c).join("");
+    return { r: parseInt(h.slice(0, 2), 16) / 255, g: parseInt(h.slice(2, 4), 16) / 255, b: parseInt(h.slice(4, 6), 16) / 255 };
+  }
+  // brand: reference — resolve against the brand palette.
   const pal = PALETTES[brandId] || PALETTES.starbucks;
   if (typeof ref === "string" && pal[ref]) return pal[ref];
   return { r: 1, g: 1, b: 1 };
