@@ -57,9 +57,11 @@
   .refthumb button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--ink);color:#fff;cursor:pointer;font-size:12px;line-height:1}
   .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
   .preview{position:sticky;top:100px}
-  .preview canvas{width:100%;border:1px solid transparent;border-radius:var(--radius);display:block;background:#fff}
+  /* canvas fits INSIDE a constant-size frame (letterboxed) so the container never
+     changes size when a different ad format is chosen */
+  .preview canvas{max-width:100%;max-height:100%;width:auto;height:auto;border:1px solid transparent;border-radius:var(--radius);display:block;background:#fff}
   .canvas-wrap.framed canvas{border-color:var(--line)}
-  .canvas-wrap{position:relative}
+  .canvas-wrap{position:relative;width:100%;aspect-ratio:4/5;display:flex;align-items:center;justify-content:center}
   .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px;color:var(--muted);font-size:14px;background:transparent}
   .painter{display:flex;flex-direction:column;align-items:center;gap:12px}
   .painter svg{width:180px;height:150px;overflow:visible}
@@ -182,7 +184,7 @@
   /* scroll cue */
   .scrollcue{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;flex-direction:column;
     align-items:center;gap:8px;color:var(--muted);font:inherit;font-size:11px;font-weight:600;letter-spacing:.16em;
-    text-transform:uppercase;cursor:pointer;background:none;border:none;opacity:0;animation:fadeUp .8s ease 1s forwards}
+    text-transform:uppercase;cursor:pointer;background:none;border:none;opacity:0;animation:cueIn .8s ease 1s forwards}
   .scrollcue:hover{color:var(--ink)}
   .scrollcue .chev{width:14px;height:14px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;
     transform:rotate(45deg);animation:bob 1.8s ease-in-out infinite}
@@ -195,6 +197,8 @@
   .marquee .track b{color:var(--ink);font-weight:600}
   @keyframes riseIn{to{transform:translateY(0)}}
   @keyframes fadeIn{to{opacity:1}}
+  /* keeps translateX(-50%) so the cue stays horizontally centered after entrance */
+  @keyframes cueIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
   @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
   @keyframes auraDrift{0%{transform:translate(0,0)}100%{transform:translate(-3%,3%)}}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
@@ -256,8 +260,8 @@
 
 <main>
   <section id="gallery">
-    <h1>Projects</h1>
-    <p class="lead">On-brand, personalized ad posters. Copy and imagery are generated with Gemini using the configured API key; without an image key, the ad is composed locally.</p>
+    <h1>Past projects</h1>
+    <p class="lead">Your generated ads. Open one to edit, regenerate, or hand it off to Figma — or start a new project any time.</p>
     <div id="empty" class="empty"><p>No projects yet.</p><button class="btn" onclick="newProject()">+ Add your first project</button></div>
     <div id="cards" class="grid"></div>
   </section>
