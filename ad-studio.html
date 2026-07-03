@@ -585,6 +585,22 @@
         margin-top: 16px;
         flex-wrap: wrap;
       }
+      .editbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fafafa;
+      }
+      .editbar-hint {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
       #wizActions {
         margin-top: 0;
         justify-content: flex-end;
@@ -1720,6 +1736,10 @@
                 </div>
               </div>
             </div>
+            <div id="editBar" class="editbar hidden">
+              <span class="editbar-hint">Drag to move · drag a corner handle to resize</span>
+              <button class="btn" onclick="finishLayeredAd()">Finish &amp; save</button>
+            </div>
             <div id="status" class="status muted"></div>
             <div id="qc" class="qc"></div>
           </div>
@@ -1783,16 +1803,17 @@
               <button class="btn" onclick="reviewGenerateAd()">Generate &rarr;</button>
             </div>
           </div>
-          <!-- 2b: review the generated ad -->
+          <!-- 2b: review the generated ad / background -->
           <div id="revResultView" class="hidden">
             <div class="rev-step">Step 3 of 3 — Final ad</div>
-            <h2 class="rev-title">Review the finished ad</h2>
+            <h2 class="rev-title" id="revResultTitle">Review the finished ad</h2>
             <div class="rev-imgwrap"><img id="revImg" alt="generated ad" /></div>
             <div class="rev-status" id="revBgStatus"></div>
             <div class="rev-actions">
               <button class="btn ghost" onclick="showPromptView()">&larr; Edit prompt</button>
               <button class="btn ghost" onclick="reviewRegenAd()">Regenerate</button>
-              <button class="btn" onclick="reviewFinish()">Finish &amp; place</button>
+              <button class="btn hidden" id="revRenderBtn" onclick="renderLayeredAd()">Render &rarr;</button>
+              <button class="btn" id="revFinishBtn" onclick="reviewFinish()">Finish &amp; place</button>
             </div>
           </div>
         </div>
@@ -2579,7 +2600,7 @@
         setRev(
           "#revModeNote",
           m === "layered"
-            ? "Layered: AI makes only the background; your headline, subhead, product and logo are composited crisply — drag to place them on the canvas after generating."
+            ? "Layered: generate a background first, then Render adds your headline, subhead, product and logo — drag, move and resize them on the canvas, then Finish & save."
             : "Full-AI: the model composes the entire ad (background + text + product + logo) in one image.",
         );
       }
@@ -2623,6 +2644,7 @@
       function showResultView() {
         $("#revPromptView").classList.add("hidden");
         $("#revResultView").classList.remove("hidden");
+        updateResultButtons();
       }
       async function reviewGenerateAd() {
         current._adPrompt = $("#revPrompt").value.trim();
@@ -2689,8 +2711,8 @@
       /* ---------- layered mode: AI/preset background + draggable crisp elements ---------- */
       function defaultLayout() {
         return {
-          headline: { x: 80, y: Math.round(H * 0.72) },
-          subhead: { x: 82, y: Math.round(H * 0.9) },
+          headline: { x: 80, y: Math.round(H * 0.72), size: 74 },
+          subhead: { x: 82, y: Math.round(H * 0.9), size: 34 },
           product: {
             x: Math.round(W * 0.24),
             y: Math.round(H * 0.11),
@@ -2702,7 +2724,9 @@
       }
       let _imgcache = {},
         _hit = [],
-        _drag = null;
+        _drag = null,
+        _resize = null,
+        _editing = false;
       async function cacheLayeredImages(p) {
         _imgcache = {};
         for (const [k, src] of [
@@ -2716,8 +2740,12 @@
             } catch (e) {}
           }
       }
-      function drawLayered(ctx, p) {
+      // Composite the layered ad. When `edit` is true, draw selection outlines and
+      // corner resize handles so the user can drag/move/resize each element.
+      function drawLayered(ctx, p, edit) {
         const L = p.layout || (p.layout = defaultLayout());
+        if (L.headline && L.headline.size == null) L.headline.size = 74; // migrate older saves
+        if (L.subhead && L.subhead.size == null) L.subhead.size = 34;
         const accent = hexToRgb(p.brand_primary || "#1f6f54"),
           deep = p.brand_secondary ? hexToRgb(p.brand_secondary) : darken(accent);
         if (_imgcache.bg) ctx.drawImage(_imgcache.bg, 0, 0, W, H);
@@ -2738,46 +2766,73 @@
         ctx.fillStyle = INK;
         ctx.textBaseline = "top";
         const m = 80;
+        const font = (wt, sz) => wt + " " + sz + 'px ' + (p.fontName ? '"' + p.fontName + '", ' : "") + 'Georgia,"Times New Roman",serif';
         const head = cap(firstLine(p.headline) || firstLine(audienceOf(p)) || (p.name || "").trim());
-        ctx.font = "600 74px " + (p.fontName ? '"' + p.fontName + '", ' : "") + 'Georgia,"Times New Roman",serif';
+        const hsz = (L.headline && L.headline.size) || 74;
+        ctx.font = font("600", hsz);
         let hy = L.headline.y,
           hw = 0;
         for (const ln of wrap(ctx, head, W - 2 * m)) {
           ctx.fillText(ln, L.headline.x, hy);
           hw = Math.max(hw, ctx.measureText(ln).width);
-          hy += 74 * 1.12;
+          hy += hsz * 1.12;
         }
         _hit.push({ id: "headline", x: L.headline.x, y: L.headline.y, w: hw || 300, h: hy - L.headline.y || 80 });
         const sub = firstLine(p.subhead);
         if (sub) {
-          ctx.font = "400 34px " + (p.fontName ? '"' + p.fontName + '", ' : "") + "Georgia,serif";
+          const ssz = (L.subhead && L.subhead.size) || 34;
+          ctx.font = font("400", ssz);
           const sl = wrap(ctx, sub, W - 2 * m)[0] || "";
           ctx.fillText(sl, L.subhead.x, L.subhead.y);
-          _hit.push({ id: "subhead", x: L.subhead.x, y: L.subhead.y, w: ctx.measureText(sl).width || 200, h: 44 });
+          _hit.push({ id: "subhead", x: L.subhead.x, y: L.subhead.y, w: ctx.measureText(sl).width || 200, h: ssz * 1.12 });
         }
+        if (edit) drawEditHandles(ctx);
       }
-      // Layered: compose background + your headline, subhead, product and logo into a
-      // finished preview shown in the review (like full-AI), then Finish & place drops it
-      // onto the editable canvas to drag.
+      const HANDLE = () => Math.max(26, Math.round(W * 0.03));
+      const isTextEl = (id) => id === "headline" || id === "subhead";
+      function drawEditHandles(ctx) {
+        const HS = HANDLE(),
+          lw = Math.max(2, Math.round(W * 0.002));
+        ctx.save();
+        for (const b of _hit) {
+          ctx.strokeStyle = "rgba(20,17,16,.5)";
+          ctx.lineWidth = lw;
+          ctx.setLineDash([Math.max(7, W * 0.01), Math.max(5, W * 0.008)]);
+          ctx.strokeRect(b.x - 6, b.y - 6, b.w + 12, b.h + 12);
+          ctx.setLineDash([]);
+          const hx = b.x + b.w + 6,
+            hy = b.y + b.h + 6;
+          ctx.fillStyle = "#fff";
+          ctx.strokeStyle = INK;
+          ctx.lineWidth = lw;
+          ctx.beginPath();
+          ctx.rect(hx - HS / 2, hy - HS / 2, HS, HS);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      // Layered step 1 — generate ONLY the background (AI or preset) and preview it.
+      // The next step (Render) adds the editable text, product and logo.
       async function generateLayered() {
         const key = getImageKey();
         showResultView();
         $("#revImg").classList.add("loadingimg");
-        setRev("#revBgStatus", "Composing your ad…");
+        setRev("#revBgStatus", "Generating the background…");
         current._adImage = null;
         current._bgImage = null;
         if (key) {
           try {
             const refs = (current.refs || []).slice(0, 4);
             current._bgImage = await geminiImage(current._adPrompt, key, refs);
-            setRev("#revBgStatus", "AI background with your headline, subhead, product and logo composited on top.");
+            setRev("#revBgStatus", "AI background ready — click Render to add your text, product and logo.");
           } catch (e) {
-            setRev("#revBgStatus", "Image API unavailable (" + e.message + ") — preset background with your text, product and logo.");
+            setRev("#revBgStatus", "Image API unavailable (" + e.message + ") — using a preset background. Click Render to add your text, product and logo.");
           }
         } else {
           setRev(
             "#revBgStatus",
-            "Preset background with your headline, subhead, product and logo composited. Add an image key for an AI background.",
+            "Preset background ready — click Render to add your headline, subhead, product and logo. Add an image key for an AI background.",
           );
         }
         if (!current.layout) current.layout = defaultLayout();
@@ -2785,9 +2840,59 @@
         const c = document.createElement("canvas");
         c.width = W;
         c.height = H;
-        drawLayered(c.getContext("2d"), current);
+        const ctx = c.getContext("2d");
+        if (_imgcache.bg) ctx.drawImage(_imgcache.bg, 0, 0, W, H);
+        else {
+          const accent = hexToRgb(current.brand_primary || "#1f6f54"),
+            deep = current.brand_secondary ? hexToRgb(current.brand_secondary) : darken(accent);
+          drawBackground(ctx, mulberry32((current.seed || 1) >>> 0), accent, deep, current.preset);
+        }
         $("#revImg").src = c.toDataURL("image/png");
         $("#revImg").classList.remove("loadingimg");
+        updateResultButtons();
+      }
+      // Show/label the right primary button in the result view for the current mode.
+      function updateResultButtons() {
+        const layered = current.mode === "layered";
+        const title = $("#revResultTitle");
+        if (title) title.textContent = layered ? "Review the background" : "Review the finished ad";
+        const render = $("#revRenderBtn"),
+          finish = $("#revFinishBtn");
+        if (render) render.classList.toggle("hidden", !layered);
+        if (finish) finish.classList.toggle("hidden", layered);
+      }
+      // Layered step 2 — Render: composite the editable text, product and logo onto the
+      // approved background and hand it to the canvas for drag / move / resize.
+      async function renderLayeredAd() {
+        $("#review").classList.add("hidden");
+        showLoading();
+        _editing = true;
+        try {
+          if (!current.layout) current.layout = defaultLayout();
+          await cacheLayeredImages(current);
+          drawLayered($("#poster").getContext("2d"), current, true);
+        } finally {
+          showResult();
+        }
+        $("#poster").style.cursor = "grab";
+        showEditBar(true);
+        setStatus("Drag to move · drag a corner handle to resize · then Finish & save");
+        runQC();
+      }
+      // Layered step 3 — Finish & save (drops the handles, saves the project).
+      function finishLayeredAd() {
+        _editing = false;
+        try {
+          drawLayered($("#poster").getContext("2d"), current, false);
+        } catch (e) {}
+        showEditBar(false);
+        $("#poster").style.cursor = "";
+        setStatus("Saved.");
+        saveProject();
+      }
+      function showEditBar(on) {
+        const e = $("#editBar");
+        if (e) e.classList.toggle("hidden", !on);
       }
       function canvasXY(e) {
         const c = $("#poster"),
@@ -2920,6 +3025,8 @@
         cwrap() && cwrap().classList.add("framed");
       }
       function showPlaceholderOrLast() {
+        _editing = false;
+        showEditBar(false);
         const ph = $("#placeholder"),
           ctx = $("#poster").getContext("2d");
         ctx.clearRect(0, 0, W, H);
@@ -2947,6 +3054,14 @@
       }
       function saveProject() {
         collect();
+        // never bake edit handles into the saved thumbnail
+        if (_editing && current.mode === "layered") {
+          _editing = false;
+          showEditBar(false);
+          try {
+            drawLayered($("#poster").getContext("2d"), current, false);
+          } catch (e) {}
+        }
         const list = load();
         current.poster = makeThumb($("#poster"));
         current.id = current.id || "p" + Date.now();
@@ -2992,7 +3107,7 @@
             z: 10,
             role: "headline",
             content: head,
-            size_px: 74,
+            size_px: (L.headline && L.headline.size) || 74,
             color: "#141110",
             font: p.fontName ? "uploaded:" + p.fontName : "brand:typography.fonts.heading",
             box: { x: L.headline.x, y: L.headline.y, w: W - 160, h: 200, anchor: "top-left" },
@@ -3010,7 +3125,7 @@
             z: 10,
             role: "subhead",
             content: sub,
-            size_px: 34,
+            size_px: (L.subhead && L.subhead.size) || 34,
             color: "#141110",
             font: p.fontName ? "uploaded:" + p.fontName : "brand:typography.fonts.body",
             box: { x: L.subhead.x, y: L.subhead.y, w: W - 160, h: 60, anchor: "top-left" },
@@ -3217,6 +3332,8 @@
         document.querySelectorAll(".navlink").forEach((a) => a.classList.toggle("on", a.dataset.nav === page));
       }
       function showGallery() {
+        _editing = false;
+        showEditBar(false);
         $("#editor").classList.add("hidden");
         $("#gallery").classList.remove("hidden");
         setHome(true);
@@ -3320,14 +3437,37 @@
           if (f) handleCustomerFile(f);
         });
       })();
-      /* drag-to-place (layered mode only) */
+      /* drag / move / resize (layered edit step only) */
       (function () {
         const c = $("#poster");
+        const onHandle = (b, x, y) => {
+          const g = HANDLE() * 0.9,
+            hx = b.x + b.w + 6,
+            hy = b.y + b.h + 6;
+          return Math.abs(x - hx) <= g && Math.abs(y - hy) <= g;
+        };
         c.addEventListener("pointerdown", (e) => {
-          if (current.mode !== "layered" || !current.layout) return;
+          if (!_editing || current.mode !== "layered" || !current.layout) return;
           const { x, y } = canvasXY(e);
           for (let i = _hit.length - 1; i >= 0; i--) {
             const b = _hit[i];
+            if (onHandle(b, x, y)) {
+              const L = current.layout[b.id];
+              _resize = {
+                id: b.id,
+                ax: b.x,
+                startW: Math.max(20, b.w),
+                startSize: L.size || 40,
+                startBW: L.w || b.w,
+                startBH: L.h || b.h,
+                isText: isTextEl(b.id),
+              };
+              try {
+                c.setPointerCapture(e.pointerId);
+              } catch (_) {}
+              c.style.cursor = "nwse-resize";
+              break;
+            }
             if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
               _drag = { id: b.id, dx: x - b.x, dy: y - b.y };
               try {
@@ -3339,16 +3479,29 @@
           }
         });
         c.addEventListener("pointermove", (e) => {
-          if (!_drag) return;
+          if (!_drag && !_resize) return;
           const { x, y } = canvasXY(e);
-          const L = current.layout[_drag.id];
-          L.x = Math.round(x - _drag.dx);
-          L.y = Math.round(y - _drag.dy);
-          drawLayered(c.getContext("2d"), current);
+          if (_resize) {
+            const L = current.layout[_resize.id];
+            const scale = Math.max(0.25, (x - _resize.ax) / _resize.startW);
+            if (_resize.isText) {
+              L.size = Math.round(Math.min(320, Math.max(18, _resize.startSize * scale)));
+            } else {
+              const nw = Math.round(Math.min(W * 1.3, Math.max(40, _resize.startW * scale)));
+              L.h = Math.round(nw * (_resize.startBH / (_resize.startBW || nw)));
+              L.w = nw;
+            }
+          } else {
+            const L = current.layout[_drag.id];
+            L.x = Math.round(x - _drag.dx);
+            L.y = Math.round(y - _drag.dy);
+          }
+          drawLayered(c.getContext("2d"), current, true);
         });
         const end = () => {
-          if (_drag) {
+          if (_drag || _resize) {
             _drag = null;
+            _resize = null;
             c.style.cursor = "grab";
             runQC();
           }
