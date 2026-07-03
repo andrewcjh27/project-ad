@@ -211,7 +211,7 @@
         display: grid;
         grid-template-columns: 1fr 400px;
         gap: 48px;
-        align-items: start;
+        align-items: stretch;
         margin-top: 14px;
       }
       .form {
@@ -366,10 +366,16 @@
       .preview {
         position: sticky;
         top: 100px;
+        display: flex;
+        flex-direction: column;
       }
       /* canvas fits INSIDE a constant-size frame (letterboxed) so the container never
      changes size when a different ad format is chosen */
       .preview canvas {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         max-width: 100%;
         max-height: 100%;
         width: auto;
@@ -385,7 +391,8 @@
       .canvas-wrap {
         position: relative;
         width: 100%;
-        aspect-ratio: 4/5;
+        flex: 1;
+        min-height: 0;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1042,6 +1049,11 @@
         }
         .preview {
           position: static;
+          display: block;
+        }
+        .canvas-wrap {
+          flex: none;
+          aspect-ratio: 4/5;
         }
         main {
           padding: 40px 6% 72px;
