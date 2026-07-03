@@ -803,6 +803,57 @@
       .filenote.attached {
         color: var(--ink);
       }
+      .segments {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 2px 0 2px;
+      }
+      .seg-lead {
+        font-size: 12px;
+        font-weight: 600;
+        color: #555;
+        letter-spacing: 0.02em;
+      }
+      .segcard {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 10px;
+        text-align: left;
+        font: inherit;
+        padding: 10px 13px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: #fff;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .segcard:hover {
+        border-color: #000;
+      }
+      .segcard.on {
+        border-color: var(--ink);
+        box-shadow: 0 0 0 1.5px var(--ink) inset;
+      }
+      .seg-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .seg-pct {
+        justify-self: end;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .seg-sum {
+        grid-column: 1 / -1;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.35;
+      }
       .linklike {
         align-self: flex-start;
         background: none;
@@ -1584,6 +1635,7 @@
                 <span class="dropbox-sub">CSV, Excel (.xlsx / .xls) or database (.db / .sqlite) — click or drop a file</span>
               </label>
               <div class="filenote muted" id="customerDataNote"></div>
+              <div id="segmentPanel" class="segments hidden"></div>
               <button type="button" class="linklike" id="noDataToggle" onclick="toggleAudienceManual()">
                 Got no customer data?
               </button>
@@ -2320,16 +2372,24 @@
         }
         const fr = new FileReader();
         fr.onload = () => {
-          let summary = "";
+          let parsed = null,
+            summary = "";
           try {
-            summary = summarizeRows(ext === "json" ? parseJsonRows(fr.result) : parseDelimited(fr.result));
+            parsed = ext === "json" ? parseJsonRows(fr.result) : parseDelimited(fr.result);
+            summary = summarizeRows(parsed);
           } catch (e) {
             summary = "";
           }
+          current.targetSegment = null;
           if (summary) {
             $("#f_audience").value = summary; // feeds generation through collect()
             setNote("✓ " + name + " — " + summary);
+            _customerRows = parsed;
+            current.segments = segmentRows(parsed.headers, parsed.rows) || [];
+            renderSegments(current.segments);
           } else {
+            current.segments = [];
+            renderSegments(null);
             setNote("📎 " + name + " — couldn't read audience columns; describe your audience below.");
             if ($("#audienceManual").classList.contains("hidden")) toggleAudienceManual();
           }
@@ -2403,6 +2463,171 @@
         if (intH) parts.push("interests: " + top(intH, 3).map((x) => x.v).join(", "));
         if (!parts.length) return n + " customers · columns: " + headers.slice(0, 6).join(", ");
         return n + " customers — " + parts.join("; ") + ".";
+      }
+
+      /* ---------- client-side audience segmentation (k-means on the CSV rows) ---------- */
+      let _customerRows = null; // in memory only — raw rows are never persisted
+      const ROLE_RE = {
+        age: /\bage\b|dob|birth/i,
+        gender: /gender|sex/i,
+        location: /city|country|location|region|state|province|zip|postcode|postal/i,
+        interest: /interest|hobby|category|segment|preference|style|taste/i,
+      };
+      const topCats = (rows, h, k) => {
+        const c = {};
+        rows.forEach((r) => {
+          const v = r[h] == null ? "" : String(r[h]).trim().toLowerCase();
+          if (v) c[v] = (c[v] || 0) + 1;
+        });
+        return Object.entries(c)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, k)
+          .map(([v]) => v);
+      };
+      // Turn rows into standardized numeric feature vectors (numerics z-scored + one-hot cats).
+      function buildFeatures(headers, rows) {
+        const numCols = headers.filter((h) => rows.map((r) => Number(r[h])).filter((x) => !isNaN(x)).length >= rows.length * 0.6);
+        const roles = {};
+        for (const [role, re] of Object.entries(ROLE_RE)) roles[role] = headers.find((h) => re.test(h)) || null;
+        const catCols = [roles.gender, roles.location, roles.interest].filter(Boolean);
+        const cats = {};
+        catCols.forEach((h) => (cats[h] = topCats(rows, h, 5)));
+        const stats = {};
+        numCols.forEach((h) => {
+          const vs = rows.map((r) => Number(r[h])).filter((x) => !isNaN(x));
+          const mean = vs.reduce((a, b) => a + b, 0) / (vs.length || 1);
+          const sd = Math.sqrt(vs.reduce((a, b) => a + (b - mean) ** 2, 0) / (vs.length || 1)) || 1;
+          stats[h] = { mean, sd };
+        });
+        const vecs = rows.map((r) => {
+          const v = [];
+          numCols.forEach((h) => {
+            const x = Number(r[h]);
+            v.push(isNaN(x) ? 0 : (x - stats[h].mean) / stats[h].sd);
+          });
+          catCols.forEach((h) => {
+            const rv = r[h] == null ? "" : String(r[h]).trim().toLowerCase();
+            cats[h].forEach((cv) => v.push(rv === cv ? 1 : 0));
+          });
+          return v;
+        });
+        return { vecs, dims: (vecs[0] || []).length };
+      }
+      function kmeans(vecs, k, seed) {
+        const n = vecs.length,
+          dim = vecs[0].length,
+          rng = mulberry32(seed >>> 0);
+        const dist = (a, b) => {
+          let s = 0;
+          for (let i = 0; i < dim; i++) s += (a[i] - b[i]) ** 2;
+          return s;
+        };
+        const idx = [];
+        while (idx.length < k) {
+          const j = Math.floor(rng() * n);
+          if (!idx.includes(j)) idx.push(j);
+        }
+        let cent = idx.map((j) => vecs[j].slice());
+        const assign = new Array(n).fill(0);
+        for (let it = 0; it < 25; it++) {
+          let changed = false;
+          for (let p = 0; p < n; p++) {
+            let bi = 0,
+              bd = Infinity;
+            for (let c = 0; c < k; c++) {
+              const d = dist(vecs[p], cent[c]);
+              if (d < bd) {
+                bd = d;
+                bi = c;
+              }
+            }
+            if (assign[p] !== bi) {
+              assign[p] = bi;
+              changed = true;
+            }
+          }
+          const sums = Array.from({ length: k }, () => new Array(dim).fill(0)),
+            cnts = new Array(k).fill(0);
+          for (let p = 0; p < n; p++) {
+            cnts[assign[p]]++;
+            const v = vecs[p],
+              s = sums[assign[p]];
+            for (let i = 0; i < dim; i++) s[i] += v[i];
+          }
+          for (let c = 0; c < k; c++) if (cnts[c]) for (let i = 0; i < dim; i++) cent[c][i] = sums[c][i] / cnts[c];
+          if (!changed) break;
+        }
+        let inertia = 0;
+        for (let p = 0; p < n; p++) inertia += dist(vecs[p], cent[assign[p]]);
+        return { assign, inertia };
+      }
+      // A coarse signature (dominant gender · top interest · age band) used to merge
+      // near-identical clusters so we don't over-segment.
+      function segSignature(headers, rows) {
+        const find = (re) => headers.find((h) => re.test(h));
+        const top1 = (h) => (h ? topCats(rows, h, 1)[0] || "" : "");
+        const ageH = find(ROLE_RE.age);
+        let band = "";
+        if (ageH) {
+          const nums = rows.map((r) => Number(r[ageH])).filter((x) => !isNaN(x));
+          if (nums.length) band = Math.round(nums.reduce((a, b) => a + b, 0) / nums.length / 10);
+        }
+        return top1(find(ROLE_RE.gender)) + "|" + top1(find(ROLE_RE.interest)) + "|" + band;
+      }
+      // Cluster the rows into up-to-4 audience segments, each with a readable profile.
+      function segmentRows(headers, rows, k) {
+        const n = rows.length;
+        if (n < 8) return null; // too few to segment meaningfully
+        k = Math.max(2, Math.min(k || Math.min(4, Math.floor(n / 6)), 4));
+        const { vecs, dims } = buildFeatures(headers, rows);
+        if (!dims) return null;
+        let best = null;
+        for (let r = 0; r < 5; r++) {
+          const res = kmeans(vecs, k, 1234 + r * 97);
+          if (!best || res.inertia < best.inertia) best = res;
+        }
+        const groups = Array.from({ length: k }, () => []);
+        best.assign.forEach((c, i) => groups[c].push(rows[i]));
+        // merge clusters with the same coarse signature
+        const merged = {};
+        groups
+          .filter((g) => g.length)
+          .forEach((g) => {
+            const sig = segSignature(headers, g);
+            (merged[sig] = merged[sig] || []).push(...g);
+          });
+        return Object.values(merged)
+          .map((g) => ({ size: g.length, pct: Math.round((100 * g.length) / n), summary: summarizeRows({ headers, rows: g }) }))
+          .sort((a, b) => b.size - a.size);
+      }
+      function renderSegments(segs) {
+        const el = $("#segmentPanel");
+        if (!el) return;
+        if (!segs || !segs.length) {
+          el.classList.add("hidden");
+          el.innerHTML = "";
+          return;
+        }
+        el.classList.remove("hidden");
+        el.innerHTML =
+          `<div class="seg-lead">Detected ${segs.length} audience segments — target one:</div>` +
+          segs
+            .map(
+              (s, i) =>
+                `<button type="button" class="segcard${current.targetSegment === i ? " on" : ""}" data-seg="${i}" onclick="useSegment(${i})">` +
+                `<span class="seg-name">Segment ${i + 1}</span><span class="seg-pct">${s.pct}%</span>` +
+                `<span class="seg-sum">${esc((s.summary || "").replace(/^\d+ customers — /, ""))}</span></button>`,
+            )
+            .join("");
+      }
+      function useSegment(i) {
+        const s = (current.segments || [])[i];
+        if (!s) return;
+        current.targetSegment = i;
+        $("#f_audience").value = s.summary;
+        document.querySelectorAll("#segmentPanel .segcard").forEach((c) => c.classList.toggle("on", +c.dataset.seg === i));
+        const note = $("#customerDataNote");
+        if (note) note.textContent = "Targeting Segment " + (i + 1) + " (" + s.pct + "%) · " + s.summary;
       }
       // Guided audience input for businesses without a customer database:
       // clicking a hint scaffolds a labelled line for them to fill in.
@@ -3243,6 +3468,8 @@
           tog = $("#noDataToggle");
         if (man) man.classList.add("hidden");
         if (tog) tog.textContent = "Got no customer data?";
+        _customerRows = null;
+        renderSegments(current && current.segments && current.segments.length ? current.segments : null);
       }
       /* ---------- brand font (used for crisp Layered text) ---------- */
       let _fontSeq = 0;
