@@ -2477,7 +2477,8 @@
       async function reviewRegenAd() {
         current.seed = Math.floor(Math.random() * 2 ** 31);
         current._layoutSeed = Math.floor(Math.random() * 2 ** 31);
-        await genAdIntoReview();
+        if (current.mode === "layered") await generateLayered();
+        else await genAdIntoReview();
       }
 
       /* ---------- layered mode: AI/preset background + draggable crisp elements ---------- */
@@ -2550,29 +2551,38 @@
           _hit.push({ id: "subhead", x: L.subhead.x, y: L.subhead.y, w: ctx.measureText(sl).width || 200, h: 44 });
         }
       }
+      // Layered: compose background + your headline, subhead, product and logo into a
+      // finished preview shown in the review (like full-AI), then Finish & place drops it
+      // onto the editable canvas to drag.
       async function generateLayered() {
         const key = getImageKey();
-        $("#review").classList.add("hidden");
-        showLoading();
+        showResultView();
+        $("#revImg").classList.add("loadingimg");
+        setRev("#revBgStatus", "Composing your ad…");
         current._adImage = null;
         current._bgImage = null;
         if (key) {
           try {
             const refs = (current.refs || []).slice(0, 4);
             current._bgImage = await geminiImage(current._adPrompt, key, refs);
-            setStatus("Layered · AI background — drag elements to place");
+            setRev("#revBgStatus", "AI background with your headline, subhead, product and logo composited on top.");
           } catch (e) {
-            setStatus("Layered · preset background (image API " + e.message + ") — drag to place");
+            setRev("#revBgStatus", "Image API unavailable (" + e.message + ") — preset background with your text, product and logo.");
           }
         } else {
-          setStatus("Layered · preset background (no image key) — drag elements to place");
+          setRev(
+            "#revBgStatus",
+            "Preset background with your headline, subhead, product and logo composited. Add an image key for an AI background.",
+          );
         }
         if (!current.layout) current.layout = defaultLayout();
         await cacheLayeredImages(current);
-        drawLayered($("#poster").getContext("2d"), current);
-        showResult();
-        $("#poster").style.cursor = "grab";
-        runQC();
+        const c = document.createElement("canvas");
+        c.width = W;
+        c.height = H;
+        drawLayered(c.getContext("2d"), current);
+        $("#revImg").src = c.toDataURL("image/png");
+        $("#revImg").classList.remove("loadingimg");
       }
       function canvasXY(e) {
         const c = $("#poster"),
@@ -2669,7 +2679,7 @@
         drawLayered(ctx, p);
       }
       async function reviewFinish() {
-        // full-AI "Finish & place"
+        // "Finish & place" — put the reviewed ad onto the canvas
         $("#review").classList.add("hidden");
         showLoading();
         try {
@@ -2677,8 +2687,13 @@
         } finally {
           showResult();
         }
-        $("#poster").style.cursor = ""; // the full-AI image isn't draggable
-        setStatus(current._adImage ? "Done · complete AI ad" : "Done · composed locally");
+        if (current.mode === "layered") {
+          $("#poster").style.cursor = "grab"; // layered elements stay draggable
+          setStatus("Done · layered — drag the headline, subhead, product or logo to reposition");
+        } else {
+          $("#poster").style.cursor = ""; // the full-AI image isn't draggable
+          setStatus(current._adImage ? "Done · complete AI ad" : "Done · composed locally");
+        }
         runQC();
       }
       const cwrap = () => $(".canvas-wrap");
