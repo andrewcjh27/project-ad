@@ -695,6 +695,40 @@
         border-color: var(--ink);
         font-weight: 500;
       }
+      .hintrow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+        margin: -8px 0 2px;
+      }
+      .hintlead {
+        font-size: 12px;
+        color: var(--muted);
+        margin-right: 2px;
+      }
+      .hintchip {
+        font: inherit;
+        font-size: 12px;
+        padding: 5px 12px;
+        border: 1px dashed rgba(0, 0, 0, 0.24);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--muted);
+        cursor: pointer;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+      }
+      .hintchip::before {
+        content: "+ ";
+        opacity: 0.6;
+      }
+      .hintchip:hover {
+        color: var(--ink);
+        border-color: #000;
+        border-style: solid;
+      }
       .brandkit {
         display: flex;
         flex-wrap: wrap;
@@ -1443,12 +1477,25 @@
                 ></textarea>
               </label>
               <label
-                >Customer / audience data<textarea
+                >Customer / audience data
+                <span class="muted">— no database needed, just describe them</span>
+                <textarea
                   id="f_audience"
                   rows="3"
-                  placeholder="Who this targets: interests, moment, mindset (e.g. cozy autumn ritual, weekday commuters)."
+                  placeholder="Describe who you're targeting — age, gender, interests, style, the moment or mindset. e.g. Women 25–35, urban, minimalist taste, cozy autumn ritual, weekday commuters."
                 ></textarea>
               </label>
+              <div class="hintrow" id="audienceHints">
+                <span class="hintlead">Add a detail:</span>
+                <button type="button" class="hintchip" onclick="addAudienceHint('Age')">Age</button>
+                <button type="button" class="hintchip" onclick="addAudienceHint('Gender')">Gender</button>
+                <button type="button" class="hintchip" onclick="addAudienceHint('Location')">Location</button>
+                <button type="button" class="hintchip" onclick="addAudienceHint('Interests')">Interests</button>
+                <button type="button" class="hintchip" onclick="addAudienceHint('Style / aesthetic')">Style</button>
+                <button type="button" class="hintchip" onclick="addAudienceHint('Occasion / moment')">Occasion</button>
+                <button type="button" class="hintchip" onclick="addAudienceHint('Mindset')">Mindset</button>
+                <button type="button" class="hintchip" onclick="addAudienceHint('Lifestyle')">Lifestyle</button>
+              </div>
               <label
                 >Brand product data <span class="muted">(optional)</span
                 ><textarea id="f_products" rows="2" placeholder="seasonal latte, cold brew, ..."></textarea>
@@ -2118,6 +2165,18 @@
           el.value = p[k] != null && p[k] !== "" ? p[k] : el.type === "color" ? el.value : "";
         }
         if (p.audience == null && p.target_interest) $("#f_audience").value = p.target_interest;
+      }
+      // Guided audience input for businesses without a customer database:
+      // clicking a hint scaffolds a labelled line for them to fill in.
+      function addAudienceHint(label) {
+        const t = $("#f_audience");
+        if (!t) return;
+        const v = t.value.replace(/[ \t]+$/, "");
+        if (!new RegExp("(^|\\n)\\s*" + label.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&") + "\\s*:", "i").test(v)) {
+          t.value = (v ? v.replace(/\n+$/, "") + "\n" : "") + label + ": ";
+        }
+        t.focus();
+        t.setSelectionRange(t.value.length, t.value.length);
       }
 
       function readImage(input, key, max) {
