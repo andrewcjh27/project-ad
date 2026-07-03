@@ -854,6 +854,64 @@
         color: var(--muted);
         line-height: 1.35;
       }
+      /* persona picker inside the generate review */
+      .personas {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .persona-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: #fff;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .persona-card.on {
+        border-color: var(--ink);
+        box-shadow: 0 0 0 1.5px var(--ink) inset;
+      }
+      .persona-head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .persona-head input {
+        accent-color: var(--ink);
+        width: 16px;
+        height: 16px;
+      }
+      .persona-pct {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .persona-edit {
+        width: 100%;
+        margin-top: 9px;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.4;
+        color: var(--ink);
+        background: #fafafa;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 9px 11px;
+        resize: vertical;
+      }
+      .persona-edit:focus {
+        outline: none;
+        border-color: #000;
+        background: #fff;
+      }
       .linklike {
         align-self: flex-start;
         background: none;
@@ -1816,20 +1874,32 @@
       <div class="review-card">
         <button class="review-close" onclick="reviewCancel()" title="Cancel">&times;</button>
 
+        <!-- Stage 0: persona (only when customer data produced segments) -->
+        <div id="revPersona" class="hidden">
+          <div class="rev-step" id="revPersonaStep">Step 1 of 4 — Persona</div>
+          <h2 class="rev-title">Pick the persona to design for</h2>
+          <p class="rev-status">Grouped from your customer data — edit any, then choose one. The copy and image prompt build from it.</p>
+          <div id="personaList" class="personas"></div>
+          <div class="rev-actions">
+            <button class="btn" onclick="reviewAcceptPersona()">Continue &rarr;</button>
+          </div>
+        </div>
+
         <!-- Stage 1: format / size -->
-        <div id="revFormat">
-          <div class="rev-step">Step 1 of 3 — Size</div>
+        <div id="revFormat" class="hidden">
+          <div class="rev-step" id="revFormatStep">Step 1 of 3 — Size</div>
           <h2 class="rev-title">Choose the ad size</h2>
           <p class="rev-status" id="revFmtNote">The copy and image prompt are tailored to this size.</p>
           <div class="fmtgrid" id="fmtGrid"></div>
           <div class="rev-actions">
+            <button class="btn ghost hidden" id="revFmtBack" onclick="revStage('persona')">&larr; Persona</button>
             <button class="btn" onclick="reviewAcceptFormat()">Continue &rarr;</button>
           </div>
         </div>
 
         <!-- Stage 2: copy -->
         <div id="revCopy" class="hidden">
-          <div class="rev-step">Step 2 of 3 — Copy</div>
+          <div class="rev-step" id="revCopyStep">Step 2 of 3 — Copy</div>
           <h2 class="rev-title">Review the headline</h2>
           <div class="rev-brief" id="revBrief"></div>
           <label class="rev-label">Headline<input id="revHeadline" placeholder="Gemini will write one" /></label>
@@ -1847,7 +1917,7 @@
         <div id="revBg" class="hidden">
           <!-- 2a: review / edit the ad prompt (no image yet) -->
           <div id="revPromptView">
-            <div class="rev-step">Step 3 of 3 — Ad prompt</div>
+            <div class="rev-step" id="revPromptStep">Step 3 of 3 — Ad prompt</div>
             <h2 class="rev-title">Review the ad prompt</h2>
             <div class="modebar">
               <button type="button" class="modebtn" data-mode="full_ai" onclick="setMode('full_ai')">Full-AI ad</button>
@@ -1869,7 +1939,7 @@
           </div>
           <!-- 2b: review the generated ad / background -->
           <div id="revResultView" class="hidden">
-            <div class="rev-step">Step 3 of 3 — Final ad</div>
+            <div class="rev-step" id="revResultStep">Step 3 of 3 — Final ad</div>
             <h2 class="rev-title" id="revResultTitle">Review the finished ad</h2>
             <div class="rev-imgwrap"><img id="revImg" alt="generated ad" /></div>
             <div class="rev-status" id="revBgStatus"></div>
@@ -2707,7 +2777,64 @@
         collect();
         if (newSeed || !current.seed) current.seed = Math.floor(Math.random() * 2 ** 31);
         openReview();
-        revStage("format"); // Step 1: pick the size; copy + prompt follow from it
+        updateStepLabels();
+        // If customer data produced personas, choose one first — it drives copy + prompt.
+        if ((current.segments || []).length) {
+          revStage("persona");
+          renderPersonaChoices();
+        } else {
+          revStage("format");
+          renderFmtChoices();
+        }
+      }
+      // Number the review steps 3 or 4 depending on whether a persona step is shown.
+      function updateStepLabels() {
+        const hasP = (current.segments || []).length > 0;
+        const tot = hasP ? 4 : 3;
+        const lbl = (i, name) => "Step " + i + " of " + tot + " — " + name;
+        if (hasP) setRev("#revPersonaStep", lbl(1, "Persona"));
+        setRev("#revFormatStep", lbl(hasP ? 2 : 1, "Size"));
+        setRev("#revCopyStep", lbl(hasP ? 3 : 2, "Copy"));
+        setRev("#revPromptStep", lbl(hasP ? 4 : 3, "Ad prompt"));
+        setRev("#revResultStep", lbl(hasP ? 4 : 3, "Final ad"));
+        const back = $("#revFmtBack");
+        if (back) back.classList.toggle("hidden", !hasP);
+      }
+      // Persona step: editable segment cards; the chosen one becomes the audience.
+      function renderPersonaChoices() {
+        const el = $("#personaList");
+        if (!el) return;
+        const segs = current.segments || [];
+        if (current.personaPick == null) current.personaPick = current.targetSegment || 0;
+        el.innerHTML = segs
+          .map((s, i) => {
+            const desc = (s.summary || "").replace(/^\d+ customers — /, "");
+            return (
+              `<div class="persona-card${current.personaPick === i ? " on" : ""}" data-p="${i}">` +
+              `<label class="persona-head"><input type="radio" name="persona"${current.personaPick === i ? " checked" : ""} onchange="pickPersona(${i})">` +
+              `<span>Persona ${i + 1}</span><span class="persona-pct">${s.pct}% of customers</span></label>` +
+              `<textarea class="persona-edit" rows="2" oninput="editPersona(${i}, this.value)">${esc(desc)}</textarea></div>`
+            );
+          })
+          .join("");
+      }
+      function pickPersona(i) {
+        current.personaPick = i;
+        document.querySelectorAll("#personaList .persona-card").forEach((c) => c.classList.toggle("on", +c.dataset.p === i));
+      }
+      function editPersona(i, val) {
+        const s = (current.segments || [])[i];
+        if (s) s.summary = val.trim(); // store the edited profile (drives audience on accept)
+      }
+      // Persona accepted → its profile becomes the audience that copy + prompt build from.
+      function reviewAcceptPersona() {
+        const i = current.personaPick || 0;
+        const s = (current.segments || [])[i];
+        if (s) {
+          current.audience = s.summary;
+          if ($("#f_audience")) $("#f_audience").value = s.summary;
+        }
+        revStage("format");
         renderFmtChoices();
       }
       // Step 1 accepted: lock the size, then move to copy (tailored to this size).
@@ -2768,6 +2895,7 @@
         $("#review").classList.add("hidden");
       }
       function revStage(s) {
+        $("#revPersona").classList.toggle("hidden", s !== "persona");
         $("#revFormat").classList.toggle("hidden", s !== "format");
         $("#revCopy").classList.toggle("hidden", s !== "copy");
         $("#revBg").classList.toggle("hidden", s !== "bg");
