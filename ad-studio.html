@@ -718,12 +718,19 @@
         border-color: var(--ink);
         font-weight: 500;
       }
+      #audienceManual {
+        flex-direction: column;
+        gap: 12px;
+      }
+      #audienceManual:not(.hidden) {
+        display: flex;
+      }
       .hintrow {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
         align-items: center;
-        margin: -8px 0 2px;
+        margin: 0;
       }
       .hintlead {
         font-size: 12px;
@@ -802,57 +809,6 @@
       }
       .filenote.attached {
         color: var(--ink);
-      }
-      .segments {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin: 2px 0 2px;
-      }
-      .seg-lead {
-        font-size: 12px;
-        font-weight: 600;
-        color: #555;
-        letter-spacing: 0.02em;
-      }
-      .segcard {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 2px 10px;
-        text-align: left;
-        font: inherit;
-        padding: 10px 13px;
-        border: 1px solid var(--line);
-        border-radius: 11px;
-        background: #fff;
-        cursor: pointer;
-        transition:
-          border-color 0.15s,
-          box-shadow 0.15s;
-      }
-      .segcard:hover {
-        border-color: #000;
-      }
-      .segcard.on {
-        border-color: var(--ink);
-        box-shadow: 0 0 0 1.5px var(--ink) inset;
-      }
-      .seg-name {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--ink);
-      }
-      .seg-pct {
-        justify-self: end;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--muted);
-      }
-      .seg-sum {
-        grid-column: 1 / -1;
-        font-size: 12px;
-        color: var(--muted);
-        line-height: 1.35;
       }
       /* persona picker inside the generate review */
       .personas {
@@ -1693,7 +1649,6 @@
                 <span class="dropbox-sub">CSV, Excel (.xlsx / .xls) or database (.db / .sqlite) — click or drop a file</span>
               </label>
               <div class="filenote muted" id="customerDataNote"></div>
-              <div id="segmentPanel" class="segments hidden"></div>
               <button type="button" class="linklike" id="noDataToggle" onclick="toggleAudienceManual()">
                 Got no customer data?
               </button>
@@ -1797,9 +1752,9 @@
               <button class="btn" id="btnNext" onclick="step(1)">Next</button>
               <!-- Actions replace Next on the final step, once the brief is complete. -->
               <div class="actions hidden" id="wizActions">
-                <button class="btn" onclick="generate(false)">Generate</button>
+                <button class="btn ghost" onclick="saveProject()">Save</button>
                 <button class="btn ghost" onclick="exportSpec()">Export spec</button>
-                <button class="btn" onclick="saveProject()">Save</button>
+                <button class="btn" onclick="generate(false)">Generate</button>
               </div>
             </div>
           </div>
@@ -2451,15 +2406,15 @@
             summary = "";
           }
           current.targetSegment = null;
+          current.personaPick = null;
           if (summary) {
             $("#f_audience").value = summary; // feeds generation through collect()
-            setNote("✓ " + name + " — " + summary);
             _customerRows = parsed;
             current.segments = segmentRows(parsed.headers, parsed.rows) || [];
-            renderSegments(current.segments);
+            const n = current.segments.length;
+            setNote("✓ " + name + " — " + summary + (n ? " · " + n + " personas found — pick one when you Generate." : ""));
           } else {
             current.segments = [];
-            renderSegments(null);
             setNote("📎 " + name + " — couldn't read audience columns; describe your audience below.");
             if ($("#audienceManual").classList.contains("hidden")) toggleAudienceManual();
           }
@@ -2669,35 +2624,6 @@
         return Object.values(merged)
           .map((g) => ({ size: g.length, pct: Math.round((100 * g.length) / n), summary: summarizeRows({ headers, rows: g }) }))
           .sort((a, b) => b.size - a.size);
-      }
-      function renderSegments(segs) {
-        const el = $("#segmentPanel");
-        if (!el) return;
-        if (!segs || !segs.length) {
-          el.classList.add("hidden");
-          el.innerHTML = "";
-          return;
-        }
-        el.classList.remove("hidden");
-        el.innerHTML =
-          `<div class="seg-lead">Detected ${segs.length} audience segments — target one:</div>` +
-          segs
-            .map(
-              (s, i) =>
-                `<button type="button" class="segcard${current.targetSegment === i ? " on" : ""}" data-seg="${i}" onclick="useSegment(${i})">` +
-                `<span class="seg-name">Segment ${i + 1}</span><span class="seg-pct">${s.pct}%</span>` +
-                `<span class="seg-sum">${esc((s.summary || "").replace(/^\d+ customers — /, ""))}</span></button>`,
-            )
-            .join("");
-      }
-      function useSegment(i) {
-        const s = (current.segments || [])[i];
-        if (!s) return;
-        current.targetSegment = i;
-        $("#f_audience").value = s.summary;
-        document.querySelectorAll("#segmentPanel .segcard").forEach((c) => c.classList.toggle("on", +c.dataset.seg === i));
-        const note = $("#customerDataNote");
-        if (note) note.textContent = "Targeting Segment " + (i + 1) + " (" + s.pct + "%) · " + s.summary;
       }
       // Guided audience input for businesses without a customer database:
       // clicking a hint scaffolds a labelled line for them to fill in.
@@ -3597,7 +3523,6 @@
         if (man) man.classList.add("hidden");
         if (tog) tog.textContent = "Got no customer data?";
         _customerRows = null;
-        renderSegments(current && current.segments && current.segments.length ? current.segments : null);
       }
       /* ---------- brand font (used for crisp Layered text) ---------- */
       let _fontSeq = 0;
