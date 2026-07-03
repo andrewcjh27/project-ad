@@ -665,6 +665,36 @@
         border-color: var(--ink);
         font-weight: 500;
       }
+      .stylebar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-bottom: 18px;
+      }
+      .stylechip {
+        font: inherit;
+        font-size: 12.5px;
+        padding: 7px 13px;
+        border: 1px solid rgba(0, 0, 0, 0.16);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--muted);
+        cursor: pointer;
+        transition:
+          color 0.2s,
+          background 0.2s,
+          border-color 0.2s;
+      }
+      .stylechip:hover {
+        color: var(--ink);
+        border-color: #000;
+      }
+      .stylechip.on {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+        font-weight: 500;
+      }
       .brandkit {
         display: flex;
         flex-wrap: wrap;
@@ -1612,6 +1642,11 @@
             </div>
             <p class="rev-status" id="revModeNote"></p>
             <label class="rev-label">Prompt<textarea id="revPrompt" rows="9"></textarea></label>
+            <div class="rev-label" style="margin-bottom: 10px">
+              Background style
+              <span class="muted">— used when the ad is composed locally (no image key)</span>
+            </div>
+            <div class="stylebar" id="styleBar"></div>
             <div class="rev-actions">
               <button class="btn ghost" onclick="revStage('copy')">&larr; Copy</button>
               <button class="btn" onclick="reviewGenerateAd()">Generate &rarr;</button>
@@ -1847,53 +1882,168 @@
       }
 
       /* ---------- offline procedural background (the preset fallback) ---------- */
+      // Curated minimal-premium styles built from a harmonised, deterministic brand palette.
+      const STYLES = ["wash", "aurora", "spotlight", "arc", "split"];
+      const clamp8 = (v) => (v < 0 ? 0 : v > 255 ? 255 : Math.round(v));
+      const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t].map(clamp8);
+      function rgb2hsl([r, g, b]) {
+        r /= 255;
+        g /= 255;
+        b /= 255;
+        const mx = Math.max(r, g, b),
+          mn = Math.min(r, g, b),
+          d = mx - mn;
+        let h = 0;
+        const l = (mx + mn) / 2;
+        const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+        if (d) {
+          h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+          h *= 60;
+          if (h < 0) h += 360;
+        }
+        return [h, s, l];
+      }
+      function hsl2rgb([h, s, l]) {
+        const c = (1 - Math.abs(2 * l - 1)) * s,
+          x = c * (1 - Math.abs(((h / 60) % 2) - 1)),
+          m = l - c / 2;
+        let r = 0,
+          g = 0,
+          b = 0;
+        if (h < 60) [r, g] = [c, x];
+        else if (h < 120) [r, g] = [x, c];
+        else if (h < 180) [g, b] = [c, x];
+        else if (h < 240) [g, b] = [x, c];
+        else if (h < 300) [r, b] = [x, c];
+        else [r, b] = [c, x];
+        return [(r + m) * 255, (g + m) * 255, (b + m) * 255].map(clamp8);
+      }
+      // Harmonised tones derived from the brand colours (tints/shades of one hue family).
+      function brandPalette(accent, deep) {
+        const [h, s] = rgb2hsl(accent);
+        return {
+          paper: mix(WHITE, accent, 0.05), // near-white with a faint brand warmth
+          soft: hsl2rgb([h, Math.min(0.5, s * 0.7), 0.9]), // light brand tint
+          mid: accent, // the brand colour itself
+          deep: deep && deep.length ? deep : darken(accent, 0.45),
+          accent,
+        };
+      }
       function drawBackground(ctx, rng, accent, deep, forceStyle) {
-        const styles = ["gradient", "vignette", "flat", "circle"];
-        const style =
-          forceStyle && styles.includes(forceStyle) ? forceStyle : styles[Math.floor(rng() * styles.length)];
-        const tone = rng() < 0.7 ? accent : accent.map((c, i) => Math.round(0.6 * c + 0.4 * deep[i]));
-        if (style === "flat") {
-          const t = tone.map((c, i) => Math.round(0.45 * c + 0.55 * WHITE[i]));
-          ctx.fillStyle = rgb(t);
+        const P = brandPalette(accent, deep);
+        const style = forceStyle && STYLES.includes(forceStyle) ? forceStyle : STYLES[Math.floor(rng() * STYLES.length)];
+        ctx.fillStyle = rgb(P.paper);
+        ctx.fillRect(0, 0, W, H);
+        if (style === "wash") {
+          // brand-heavy at the top, easing to light paper at the bottom (text zone)
+          const ang = 0.12 + rng() * 0.28;
+          const g = ctx.createLinearGradient(0, 0, ang * W, H);
+          g.addColorStop(0, rgb(P.deep));
+          g.addColorStop(0.32, rgb(P.mid));
+          g.addColorStop(0.62, rgb(P.soft));
+          g.addColorStop(1, rgb(P.paper));
+          ctx.fillStyle = g;
           ctx.fillRect(0, 0, W, H);
-        } else if (style === "circle") {
-          ctx.fillStyle = rgb(WHITE);
+        } else if (style === "aurora") {
+          // flat brand field with a single soft light source; the text scrim lights the base
+          ctx.fillStyle = rgb(P.mid);
           ctx.fillRect(0, 0, W, H);
-          const cx = W * (0.42 + rng() * 0.16),
-            cy = H * (0.26 + rng() * 0.14),
-            r = H * (0.22 + rng() * 0.08);
+          const cx = W * (0.3 + rng() * 0.14),
+            cy = H * (0.24 + rng() * 0.06),
+            r = Math.max(W, H) * (0.32 + rng() * 0.06);
+          const glow = mix(P.mid, WHITE, 0.5); // gentle lift — keeps the tonal ramp tight
+          const gg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+          gg.addColorStop(0, rgb(glow, 0.7));
+          gg.addColorStop(1, rgb(glow, 0));
+          ctx.fillStyle = gg;
+          ctx.fillRect(0, 0, W, H);
+        } else if (style === "spotlight") {
+          const base = ctx.createLinearGradient(0, 0, 0, H);
+          base.addColorStop(0, rgb(P.soft));
+          base.addColorStop(1, rgb(P.paper));
+          ctx.fillStyle = base;
+          ctx.fillRect(0, 0, W, H);
+          const cx = W * (0.4 + rng() * 0.2),
+            cy = H * (0.3 + rng() * 0.1),
+            r = Math.max(W, H) * (0.36 + rng() * 0.1);
+          const gg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+          gg.addColorStop(0, rgb(P.mid, 0.98));
+          gg.addColorStop(0.68, rgb(P.mid, 0.55));
+          gg.addColorStop(1, rgb(P.mid, 0));
+          ctx.fillStyle = gg;
+          ctx.fillRect(0, 0, W, H);
+        } else if (style === "arc") {
+          const cx = W * (0.9 + rng() * 0.18),
+            cy = H * (0.12 + rng() * 0.12),
+            r = Math.max(W, H) * (0.42 + rng() * 0.1);
+          for (let k = 3; k >= 1; k--) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, r * (1 + k * 0.22), 0, Math.PI * 2);
+            ctx.fillStyle = rgb(mix(P.mid, P.paper, 1 - k * 0.22));
+            ctx.fill();
+          }
           ctx.beginPath();
           ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.fillStyle = rgb(tone);
+          ctx.fillStyle = rgb(P.mid);
           ctx.fill();
-        } else if (style === "vignette") {
-          ctx.fillStyle = rgb(WHITE);
-          ctx.fillRect(0, 0, W, H);
-          const ox = W * (0.35 + rng() * 0.3),
-            oy = H * (0.85 + rng() * 0.2),
-            rad = Math.max(W, H) * (0.7 + rng() * 0.25);
-          const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, rad);
-          g.addColorStop(0, rgb(tone, 0.95));
-          g.addColorStop(1, rgb(WHITE, 0));
-          ctx.fillStyle = g;
-          ctx.fillRect(0, 0, W, H);
         } else {
-          const d = rng() * 0.4;
-          const g = ctx.createLinearGradient(0, 0, d * W, H);
-          g.addColorStop(0, rgb(WHITE));
-          g.addColorStop(1, rgb(tone));
+          // split: a clean brand field on one side, paper on the other
+          const left = rng() < 0.5;
+          const cut = W * (0.34 + rng() * 0.12);
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, rgb(P.mid));
+          g.addColorStop(1, rgb(P.deep));
           ctx.fillStyle = g;
-          ctx.fillRect(0, 0, W, H);
+          ctx.fillRect(left ? 0 : W - cut, 0, cut, H);
         }
+        finishBackground(ctx, rng);
+      }
+      // Shared finish: soft vignette + fine monochrome grain (kept subtle so QC's palette gate holds).
+      function finishBackground(ctx, rng) {
+        const v = ctx.createRadialGradient(W / 2, H * 0.42, Math.min(W, H) * 0.25, W / 2, H * 0.5, Math.max(W, H) * 0.75);
+        v.addColorStop(0, "rgba(0,0,0,0)");
+        v.addColorStop(1, "rgba(20,17,16,0.1)");
+        ctx.fillStyle = v;
+        ctx.fillRect(0, 0, W, H);
         const im = ctx.getImageData(0, 0, W, H),
           d = im.data;
         for (let i = 0; i < d.length; i += 4) {
-          const n = (rng() * 2 - 1) * 6;
+          const n = (rng() * 2 - 1) * 5;
           d[i] += n;
           d[i + 1] += n;
           d[i + 2] += n;
         }
         ctx.putImageData(im, 0, 0);
+      }
+      // Soft light scrim behind the headline zone so dark text always reads (AA large).
+      function drawTextScrim(ctx, p) {
+        const L = p.layout || defaultLayout();
+        const ty = L && L.headline ? L.headline.y : Math.round(H * 0.72);
+        const top = Math.max(0, ty - H * 0.06);
+        const g = ctx.createLinearGradient(0, top, 0, H);
+        g.addColorStop(0, rgb(WHITE, 0));
+        g.addColorStop(0.28, rgb(WHITE, 0.72));
+        g.addColorStop(1, rgb(WHITE, 0.93));
+        ctx.fillStyle = g;
+        ctx.fillRect(0, top, W, H - top);
+      }
+      // Soft contact shadow so the product reads as placed, not pasted.
+      function drawProductShadow(ctx, b) {
+        const cx = b.x + b.w / 2,
+          cy = b.y + b.h * 0.95,
+          rx = b.w * 0.42,
+          ry = Math.max(6, b.h * 0.09);
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+        g.addColorStop(0, "rgba(20,17,16,0.22)");
+        g.addColorStop(1, "rgba(20,17,16,0)");
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(1, ry / rx);
+        ctx.beginPath();
+        ctx.arc(0, 0, rx, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.restore();
       }
 
       /* ---------- render ---------- */
@@ -1906,6 +2056,7 @@
         // Local composite (layered): procedural background + product + logo + text.
         // The full-AI ad image is drawn directly by renderFinal(), not here.
         drawBackground(ctx, rng, accent, deep, p.preset);
+        drawTextScrim(ctx, p);
         const m = 80,
           sz = 150;
         if (p.logo) {
@@ -1922,7 +2073,10 @@
         }
         if (p.product) {
           try {
-            drawContain(ctx, await loadImg(p.product), W * 0.24, H * 0.11, W * 0.52, H * 0.34);
+            const pi = await loadImg(p.product);
+            const b = { x: W * 0.24, y: H * 0.11, w: W * 0.52, h: H * 0.34 };
+            drawProductShadow(ctx, b);
+            drawContain(ctx, pi, b.x, b.y, b.w, b.h);
           } catch (e) {}
         }
         ctx.fillStyle = INK;
@@ -2168,6 +2322,39 @@
       function showPromptView() {
         $("#revPromptView").classList.remove("hidden");
         $("#revResultView").classList.add("hidden");
+        renderStyleChips();
+      }
+      // Background-style picker for the offline/local composite (Auto = seed decides).
+      const STYLE_CHIPS = [
+        ["", "Auto"],
+        ["wash", "Wash"],
+        ["aurora", "Aurora"],
+        ["spotlight", "Spotlight"],
+        ["arc", "Arc"],
+        ["split", "Split"],
+      ];
+      function renderStyleChips() {
+        const el = $("#styleBar");
+        if (!el) return;
+        const cur = current.preset || "";
+        el.innerHTML = STYLE_CHIPS.map(
+          ([id, label]) =>
+            `<button type="button" class="stylechip${id === cur ? " on" : ""}" onclick="pickStyle('${id}')">${label}</button>`,
+        ).join("");
+      }
+      function pickStyle(id) {
+        current.preset = id || null;
+        renderStyleChips();
+        // if a local-composite layered result is already on the canvas, update it live
+        if (
+          current.mode === "layered" &&
+          !_imgcache.bg &&
+          $("#placeholder") &&
+          $("#placeholder").classList.contains("hidden")
+        ) {
+          drawLayered($("#poster").getContext("2d"), current);
+          runQC();
+        }
       }
       function showResultView() {
         $("#revPromptView").classList.add("hidden");
@@ -2270,9 +2457,11 @@
           deep = p.brand_secondary ? hexToRgb(p.brand_secondary) : darken(accent);
         if (_imgcache.bg) ctx.drawImage(_imgcache.bg, 0, 0, W, H);
         else drawBackground(ctx, mulberry32((p.seed || 1) >>> 0), accent, deep, p.preset);
+        drawTextScrim(ctx, p);
         _hit = [];
         if (_imgcache.product) {
           const b = L.product;
+          drawProductShadow(ctx, b);
           drawContain(ctx, _imgcache.product, b.x, b.y, b.w, b.h);
           _hit.push({ id: "product", x: b.x, y: b.y, w: b.w, h: b.h });
         }
