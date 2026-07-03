@@ -729,6 +729,73 @@
         border-color: #000;
         border-style: solid;
       }
+      .fieldcap {
+        font-size: 12px;
+        font-weight: 600;
+        color: #555;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        margin-bottom: -8px;
+      }
+      .fieldcap .muted {
+        text-transform: none;
+        font-weight: 400;
+        letter-spacing: 0;
+      }
+      .dropbox {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        text-align: center;
+        padding: 22px 18px;
+        border: 1.5px dashed rgba(0, 0, 0, 0.22);
+        border-radius: 12px;
+        background: #fafafa;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+      .dropbox:hover,
+      .dropbox.dragover {
+        border-color: #000;
+        border-style: solid;
+        background: #f4f4f2;
+      }
+      .dropbox-cta {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .dropbox-sub {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .filenote {
+        font-size: 12.5px;
+        margin: -8px 0 0;
+        min-height: 1px;
+      }
+      .filenote.attached {
+        color: var(--ink);
+      }
+      .linklike {
+        align-self: flex-start;
+        background: none;
+        border: none;
+        padding: 0;
+        margin: -6px 0 0;
+        font: inherit;
+        font-size: 13px;
+        color: var(--muted);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        cursor: pointer;
+      }
+      .linklike:hover {
+        color: var(--ink);
+      }
       .brandkit {
         display: flex;
         flex-wrap: wrap;
@@ -1476,25 +1543,42 @@
                   placeholder="What the brand is, the campaign, and what this ad is for."
                 ></textarea>
               </label>
-              <label
-                >Customer / audience data
-                <span class="muted">— no database needed, just describe them</span>
-                <textarea
-                  id="f_audience"
-                  rows="3"
-                  placeholder="Describe who you're targeting — age, gender, interests, style, the moment or mindset. e.g. Women 25–35, urban, minimalist taste, cozy autumn ritual, weekday commuters."
-                ></textarea>
+              <div class="fieldcap">Customer data <span class="muted">(CSV, Excel, or database)</span></div>
+              <label class="dropbox" id="customerDrop" for="f_customerFile">
+                <input
+                  type="file"
+                  id="f_customerFile"
+                  accept=".csv,.tsv,.txt,.json,.xlsx,.xls,.db,.sqlite,.sqlite3"
+                  onchange="readCustomerData(this)"
+                  hidden
+                />
+                <span class="dropbox-cta">Upload customer data</span>
+                <span class="dropbox-sub">CSV, Excel (.xlsx / .xls) or database (.db / .sqlite) — click or drop a file</span>
               </label>
-              <div class="hintrow" id="audienceHints">
-                <span class="hintlead">Add a detail:</span>
-                <button type="button" class="hintchip" onclick="addAudienceHint('Age')">Age</button>
-                <button type="button" class="hintchip" onclick="addAudienceHint('Gender')">Gender</button>
-                <button type="button" class="hintchip" onclick="addAudienceHint('Location')">Location</button>
-                <button type="button" class="hintchip" onclick="addAudienceHint('Interests')">Interests</button>
-                <button type="button" class="hintchip" onclick="addAudienceHint('Style / aesthetic')">Style</button>
-                <button type="button" class="hintchip" onclick="addAudienceHint('Occasion / moment')">Occasion</button>
-                <button type="button" class="hintchip" onclick="addAudienceHint('Mindset')">Mindset</button>
-                <button type="button" class="hintchip" onclick="addAudienceHint('Lifestyle')">Lifestyle</button>
+              <div class="filenote muted" id="customerDataNote"></div>
+              <button type="button" class="linklike" id="noDataToggle" onclick="toggleAudienceManual()">
+                Got no customer data?
+              </button>
+              <div id="audienceManual" class="hidden">
+                <label
+                  >Describe your target audience
+                  <textarea
+                    id="f_audience"
+                    rows="3"
+                    placeholder="Describe who you're targeting — age, gender, interests, style, the moment or mindset. e.g. Women 25–35, urban, minimalist taste, cozy autumn ritual, weekday commuters."
+                  ></textarea>
+                </label>
+                <div class="hintrow" id="audienceHints">
+                  <span class="hintlead">Add a detail:</span>
+                  <button type="button" class="hintchip" onclick="addAudienceHint('Age')">Age</button>
+                  <button type="button" class="hintchip" onclick="addAudienceHint('Gender')">Gender</button>
+                  <button type="button" class="hintchip" onclick="addAudienceHint('Location')">Location</button>
+                  <button type="button" class="hintchip" onclick="addAudienceHint('Interests')">Interests</button>
+                  <button type="button" class="hintchip" onclick="addAudienceHint('Style / aesthetic')">Style</button>
+                  <button type="button" class="hintchip" onclick="addAudienceHint('Occasion / moment')">Occasion</button>
+                  <button type="button" class="hintchip" onclick="addAudienceHint('Mindset')">Mindset</button>
+                  <button type="button" class="hintchip" onclick="addAudienceHint('Lifestyle')">Lifestyle</button>
+                </div>
               </div>
               <label
                 >Brand product data <span class="muted">(optional)</span
@@ -2165,6 +2249,127 @@
           el.value = p[k] != null && p[k] !== "" ? p[k] : el.type === "color" ? el.value : "";
         }
         if (p.audience == null && p.target_interest) $("#f_audience").value = p.target_interest;
+      }
+      // Show/hide the "no customer data" guided description box.
+      function toggleAudienceManual() {
+        const m = $("#audienceManual"),
+          t = $("#noDataToggle");
+        if (!m) return;
+        const open = !m.classList.toggle("hidden");
+        if (t) t.textContent = open ? "Hide manual description" : "Got no customer data?";
+        if (open) {
+          const ta = $("#f_audience");
+          if (ta) ta.focus();
+        }
+      }
+      // Customer data upload: parse CSV/TSV/JSON in-browser into a compact audience
+      // summary that feeds copy/prompt generation. Excel/DB are accepted and noted.
+      function readCustomerData(input) {
+        const f = input.files && input.files[0];
+        if (f) handleCustomerFile(f);
+      }
+      function handleCustomerFile(f) {
+        const name = f.name,
+          ext = (name.split(".").pop() || "").toLowerCase();
+        current.customerFile = name;
+        const note = $("#customerDataNote");
+        const setNote = (t) => {
+          if (note) {
+            note.className = "filenote attached";
+            note.textContent = t;
+          }
+        };
+        if (!["csv", "tsv", "txt", "json"].includes(ext)) {
+          // Excel / database — not parseable in-browser here
+          setNote("📎 " + name + " attached — Excel/database summaries run in the pipeline. Add a short description below if you like.");
+          if ($("#audienceManual").classList.contains("hidden")) toggleAudienceManual();
+          return;
+        }
+        const fr = new FileReader();
+        fr.onload = () => {
+          let summary = "";
+          try {
+            summary = summarizeRows(ext === "json" ? parseJsonRows(fr.result) : parseDelimited(fr.result));
+          } catch (e) {
+            summary = "";
+          }
+          if (summary) {
+            $("#f_audience").value = summary; // feeds generation through collect()
+            setNote("✓ " + name + " — " + summary);
+          } else {
+            setNote("📎 " + name + " — couldn't read audience columns; describe your audience below.");
+            if ($("#audienceManual").classList.contains("hidden")) toggleAudienceManual();
+          }
+        };
+        fr.readAsText(f);
+      }
+      function parseDelimited(text) {
+        const lines = text.replace(/\r/g, "").split("\n").filter((l) => l.trim() !== "");
+        if (!lines.length) return { headers: [], rows: [] };
+        const delim = (lines[0].match(/\t/g) || []).length > (lines[0].match(/,/g) || []).length ? "\t" : ",";
+        const split = (line) => {
+          const out = [];
+          let cur = "",
+            q = false;
+          for (let i = 0; i < line.length; i++) {
+            const c = line[i];
+            if (q) {
+              if (c === '"' && line[i + 1] === '"') {
+                cur += '"';
+                i++;
+              } else if (c === '"') q = false;
+              else cur += c;
+            } else if (c === '"') q = true;
+            else if (c === delim) {
+              out.push(cur);
+              cur = "";
+            } else cur += c;
+          }
+          out.push(cur);
+          return out.map((s) => s.trim());
+        };
+        const headers = split(lines[0]);
+        const rows = lines.slice(1).map(split).map((r) => {
+          const o = {};
+          headers.forEach((h, i) => (o[h] = r[i]));
+          return o;
+        });
+        return { headers, rows };
+      }
+      function parseJsonRows(text) {
+        const j = JSON.parse(text);
+        const arr = Array.isArray(j) ? j : Array.isArray(j.rows) ? j.rows : Array.isArray(j.data) ? j.data : [];
+        return { headers: arr.length ? Object.keys(arr[0]) : [], rows: arr };
+      }
+      // Build a short, human-readable audience profile from parsed rows.
+      function summarizeRows({ headers, rows }) {
+        if (!rows || !rows.length) return "";
+        const n = rows.length;
+        const find = (re) => headers.find((h) => re.test(h));
+        const vals = (h) => rows.map((r) => (r[h] == null ? "" : String(r[h]).trim())).filter(Boolean);
+        const top = (h, k) => {
+          const c = {};
+          vals(h).forEach((v) => (c[v.toLowerCase()] = (c[v.toLowerCase()] || 0) + 1));
+          return Object.entries(c)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, k)
+            .map(([v, ct]) => ({ v, pct: Math.round((100 * ct) / n) }));
+        };
+        const parts = [];
+        const ageH = find(/\bage\b|dob|birth/i);
+        if (ageH) {
+          const nums = vals(ageH).map(Number).filter((x) => !isNaN(x) && x > 0 && x < 120);
+          if (nums.length)
+            parts.push("age " + Math.min(...nums) + "–" + Math.max(...nums) + " (avg " + Math.round(nums.reduce((a, b) => a + b, 0) / nums.length) + ")");
+        }
+        const genH = find(/gender|sex/i);
+        if (genH) parts.push(top(genH, 2).map((x) => x.v + " " + x.pct + "%").join(", "));
+        const locH = find(/city|country|location|region|state|province|zip|postcode|postal/i);
+        if (locH) parts.push("mostly " + top(locH, 3).map((x) => x.v).join(", "));
+        const intH = find(/interest|hobby|category|segment|preference|style|taste/i);
+        if (intH) parts.push("interests: " + top(intH, 3).map((x) => x.v).join(", "));
+        if (!parts.length) return n + " customers · columns: " + headers.slice(0, 6).join(", ");
+        return n + " customers — " + parts.join("; ") + ".";
       }
       // Guided audience input for businesses without a customer database:
       // clicking a hint scaffolds a labelled line for them to fill in.
@@ -2898,10 +3103,19 @@
       }
 
       function resetFiles() {
-        ["f_logo", "f_product", "f_refs", "f_font"].forEach((id) => {
+        ["f_logo", "f_product", "f_refs", "f_font", "f_customerFile"].forEach((id) => {
           const el = $("#" + id);
           if (el) el.value = "";
         });
+        const note = $("#customerDataNote");
+        if (note) {
+          note.className = "filenote muted";
+          note.textContent = "";
+        }
+        const man = $("#audienceManual"),
+          tog = $("#noDataToggle");
+        if (man) man.classList.add("hidden");
+        if (tog) tog.textContent = "Got no customer data?";
       }
       /* ---------- brand font (used for crisp Layered text) ---------- */
       let _fontSeq = 0;
@@ -3085,6 +3299,27 @@
       $("#f_product").addEventListener("change", (e) => readImage(e.target, "product", 700));
       $("#f_refs").addEventListener("change", (e) => readRefs(e.target));
       $("#f_font").addEventListener("change", (e) => readFont(e.target));
+      /* drag & drop onto the customer-data box */
+      (function () {
+        const dz = $("#customerDrop");
+        if (!dz) return;
+        ["dragenter", "dragover"].forEach((ev) =>
+          dz.addEventListener(ev, (e) => {
+            e.preventDefault();
+            dz.classList.add("dragover");
+          }),
+        );
+        ["dragleave", "drop"].forEach((ev) =>
+          dz.addEventListener(ev, (e) => {
+            e.preventDefault();
+            dz.classList.remove("dragover");
+          }),
+        );
+        dz.addEventListener("drop", (e) => {
+          const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) handleCustomerFile(f);
+        });
+      })();
       /* drag-to-place (layered mode only) */
       (function () {
         const c = $("#poster");
