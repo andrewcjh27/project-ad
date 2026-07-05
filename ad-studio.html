@@ -1562,10 +1562,20 @@
         padding: 6px 13px;
         border: 1px solid var(--line);
         border-radius: 999px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        letter-spacing: inherit;
+        text-transform: inherit;
+        cursor: pointer;
         transition:
           background 0.25s,
           color 0.25s,
           border-color 0.25s;
+      }
+      .demo-pipe [data-pipe]:hover {
+        color: var(--ink);
+        border-color: rgba(0, 0, 0, 0.28);
       }
       .demo-pipe [data-pipe].on {
         background: var(--ink);
@@ -2387,10 +2397,12 @@
           <strong>Solstice Coffee</strong>.
         </p>
         <div class="demo-pipe" id="demoPipe">
-          <span data-pipe="0">Brief</span><span class="pipe-arrow">→</span><span data-pipe="1">Personas</span
-          ><span class="pipe-arrow">→</span><span data-pipe="2">Size</span><span class="pipe-arrow">→</span
-          ><span data-pipe="3">Copy</span><span class="pipe-arrow">→</span><span data-pipe="4">Image prompt</span
-          ><span class="pipe-arrow">→</span><span data-pipe="5">Final ad</span>
+          <button type="button" data-pipe="0" onclick="demoJump(0)">Brief</button><span class="pipe-arrow">→</span
+          ><button type="button" data-pipe="1" onclick="demoJump(1)">Personas</button><span class="pipe-arrow">→</span
+          ><button type="button" data-pipe="2" onclick="demoJump(2)">Size</button><span class="pipe-arrow">→</span
+          ><button type="button" data-pipe="3" onclick="demoJump(3)">Copy</button><span class="pipe-arrow">→</span
+          ><button type="button" data-pipe="4" onclick="demoJump(4)">Image prompt</button><span class="pipe-arrow">→</span
+          ><button type="button" data-pipe="5" onclick="demoJump(5)">Final ad</button>
         </div>
 
         <div class="demo-stage">
@@ -5160,6 +5172,10 @@
       }
       function demoNav(d) {
         demoGo(_demoStep + d);
+        demoRearm();
+      }
+      function demoJump(i) {
+        demoGo(i);
         demoRearm();
       }
       function demoPlay() {
