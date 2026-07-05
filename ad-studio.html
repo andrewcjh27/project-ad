@@ -182,8 +182,6 @@
       .card img {
         width: 100%;
         display: block;
-        aspect-ratio: 4/5;
-        object-fit: cover;
         background: #f2f2f2;
       }
       .card-meta {
@@ -199,6 +197,86 @@
       }
       .card-meta .muted {
         font-size: 13px;
+      }
+      .card-ratio {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--ink);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      .card-folder {
+        margin-top: 7px;
+        font: inherit;
+        font-size: 12px;
+        color: var(--muted);
+        padding: 6px 9px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fafafa;
+        max-width: 100%;
+      }
+      .card-folder:focus {
+        outline: none;
+        border-color: #000;
+      }
+      /* folder bar above the project grid */
+      .folderbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-top: 26px;
+      }
+      .folderchip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font: inherit;
+        font-size: 13px;
+        padding: 8px 15px;
+        border: 1px solid rgba(0, 0, 0, 0.16);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--muted);
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          border-color 0.2s;
+      }
+      .folderchip:hover {
+        color: var(--ink);
+        border-color: #000;
+      }
+      .folderchip.on {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+        font-weight: 500;
+      }
+      .folderchip b {
+        font-weight: 600;
+        font-size: 11px;
+        opacity: 0.65;
+      }
+      .folderchip .fdel {
+        margin-left: 2px;
+        opacity: 0.6;
+        font-size: 14px;
+        line-height: 1;
+      }
+      .folderchip .fdel:hover {
+        opacity: 1;
+      }
+      .folderchip.new {
+        border-style: dashed;
       }
       .empty {
         text-align: center;
@@ -1225,21 +1303,25 @@
         resize: vertical;
         line-height: 1.5;
       }
+      /* shows the ad at its TRUE aspect ratio — the frame adapts to the chosen size */
       .rev-imgwrap {
         border: 1px solid var(--line);
         border-radius: 12px;
         overflow: hidden;
         background: #fafafa;
-        aspect-ratio: 4/5;
+        min-height: 180px;
+        max-height: 52vh;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-bottom: 14px;
       }
       .rev-imgwrap img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+        max-width: 100%;
+        max-height: 52vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
         display: block;
         transition: opacity 0.2s;
       }
@@ -2111,6 +2193,7 @@
           <p>No work yet — your finished ads will live here.</p>
           <button class="btn" onclick="newProject()">Start one now</button>
         </div>
+        <div id="folderBar" class="folderbar hidden"></div>
         <div id="cards" class="grid"></div>
       </section>
 
@@ -4088,11 +4171,14 @@
         }
         renderQC(null);
       }
+      // Thumbnail keeps the ad's true aspect ratio so each project's chosen size shows.
       function makeThumb(canvas) {
+        const tw = 400,
+          th = Math.max(1, Math.round((tw * canvas.height) / canvas.width));
         const c = document.createElement("canvas");
-        c.width = 400;
-        c.height = 500;
-        c.getContext("2d").drawImage(canvas, 0, 0, 400, 500);
+        c.width = tw;
+        c.height = th;
+        c.getContext("2d").drawImage(canvas, 0, 0, tw, th);
         return c.toDataURL("image/png");
       }
       function saveProject() {
@@ -4351,24 +4437,105 @@
       }
 
       /* ---------- views ---------- */
+      /* ---------- folders: group projects (e.g. one folder per brand) ---------- */
+      const loadFolders = () => JSON.parse(localStorage.getItem("projectad_folders") || "[]");
+      const storeFolders = (f) => localStorage.setItem("projectad_folders", JSON.stringify(f));
+      let _folderFilter = "all";
+      function newFolder(returnId) {
+        const name = (prompt("Folder name (e.g. the brand):") || "").trim().slice(0, 40);
+        if (!name) return null;
+        const f = { id: "f" + Date.now(), name };
+        storeFolders([...loadFolders(), f]);
+        if (!returnId) renderGallery();
+        return f.id;
+      }
+      function deleteFolder(fid) {
+        const f = loadFolders().find((x) => x.id === fid);
+        if (!confirm('Delete folder "' + ((f && f.name) || "") + '"? Projects stay — they just leave the folder.')) return;
+        storeFolders(loadFolders().filter((x) => x.id !== fid));
+        const list = load();
+        list.forEach((p) => {
+          if (p.folder === fid) p.folder = null;
+        });
+        store(list);
+        if (_folderFilter === fid) _folderFilter = "all";
+        renderGallery();
+      }
+      function setFolderFilter(fid) {
+        _folderFilter = fid;
+        renderGallery();
+      }
+      // Manually add a project to / remove it from a folder (via the card's dropdown).
+      function assignFolder(pid, val) {
+        let fid = val;
+        if (val === "__new") fid = newFolder(true);
+        const list = load(),
+          p = list.find((x) => x.id === pid);
+        if (p) {
+          p.folder = fid || null;
+          store(list);
+        }
+        renderGallery();
+      }
+      function renderFolderBar(list) {
+        const el = $("#folderBar");
+        if (!el) return;
+        const folders = loadFolders();
+        if (!list.length && !folders.length) {
+          el.classList.add("hidden");
+          el.innerHTML = "";
+          return;
+        }
+        el.classList.remove("hidden");
+        const count = (fid) => list.filter((p) => (fid === "all" ? true : p.folder === fid)).length;
+        const chip = (id, name, del) =>
+          `<button type="button" class="folderchip${_folderFilter === id ? " on" : ""}" onclick="setFolderFilter('${id}')">` +
+          `${esc(name)} <b>${count(id)}</b>` +
+          (del ? `<span class="fdel" title="Delete folder" onclick="event.stopPropagation();deleteFolder('${id}')">&times;</span>` : "") +
+          `</button>`;
+        el.innerHTML =
+          chip("all", "All projects") +
+          folders.map((f) => chip(f.id, f.name, true)).join("") +
+          `<button type="button" class="folderchip new" onclick="newFolder()">+ New folder</button>`;
+      }
+      const fmtLabel = (id) => {
+        const f = FORMATS.find((x) => x.id === id);
+        return f ? f.label : "4:5";
+      };
+      function folderSelectHtml(p) {
+        const folders = loadFolders();
+        return (
+          `<select class="card-folder" onclick="event.stopPropagation()" onchange="assignFolder('${p.id}', this.value)">` +
+          `<option value=""${!p.folder ? " selected" : ""}>No folder</option>` +
+          folders.map((f) => `<option value="${f.id}"${p.folder === f.id ? " selected" : ""}>${esc(f.name)}</option>`).join("") +
+          `<option value="__new">+ New folder…</option></select>`
+        );
+      }
       function renderGallery() {
         const list = load(),
           g = $("#cards");
+        renderFolderBar(list);
         $("#empty").style.display = list.length ? "none" : "block";
-        g.innerHTML = list
-          .map(
-            (p) =>
-              `<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster || ""}" alt="">` +
-              `<div class="card-actions">` +
-              (p.mode === "layered"
-                ? `<button type="button" title="Edit placements, sizes, texts and colours" onclick="editProjectDesign('${p.id}', event)">Edit</button>`
-                : "") +
-              `<button type="button" title="Build another size from this ad" onclick="duplicateForSize('${p.id}', event)">New size</button>` +
-              `<button type="button" title="Delete project" onclick="deleteProject('${p.id}', event)">Delete</button>` +
-              `</div>` +
-              `<div class="card-meta"><strong>${esc(p.name || "Untitled")}</strong><span class="muted">${esc(audienceOf(p))}</span></div></div>`,
-          )
-          .join("");
+        const shown = _folderFilter === "all" ? list : list.filter((p) => p.folder === _folderFilter);
+        g.innerHTML =
+          shown
+            .map(
+              (p) =>
+                `<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster || ""}" alt="">` +
+                `<span class="card-ratio">${fmtLabel(p.format)}</span>` +
+                `<div class="card-actions">` +
+                (p.mode === "layered"
+                  ? `<button type="button" title="Edit placements, sizes, texts and colours" onclick="editProjectDesign('${p.id}', event)">Edit</button>`
+                  : "") +
+                `<button type="button" title="Build another size from this ad" onclick="duplicateForSize('${p.id}', event)">New size</button>` +
+                `<button type="button" title="Delete project" onclick="deleteProject('${p.id}', event)">Delete</button>` +
+                `</div>` +
+                `<div class="card-meta"><strong>${esc(p.name || "Untitled")}</strong><span class="muted">${esc(audienceOf(p))}</span>${folderSelectHtml(p)}</div></div>`,
+            )
+            .join("") ||
+          (list.length
+            ? '<p class="muted" style="grid-column:1/-1">Nothing in this folder yet — use a card’s folder menu to add projects.</p>'
+            : "");
       }
       // Edit a saved project's design directly — placements, sizes, texts, colours —
       // without going back through the input wizard.
