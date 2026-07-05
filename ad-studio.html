@@ -1282,6 +1282,345 @@
         }
       }
 
+      /* ── Demo / how it works ────────────────────────────────────────────────── */
+      .demo-pipe {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 26px;
+      }
+      .demo-pipe [data-pipe] {
+        padding: 6px 13px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        transition:
+          background 0.25s,
+          color 0.25s,
+          border-color 0.25s;
+      }
+      .demo-pipe [data-pipe].on {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+      .pipe-arrow {
+        color: rgba(0, 0, 0, 0.25);
+      }
+      .demo-stage {
+        position: relative;
+        min-height: 420px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fafaf8;
+        overflow: hidden;
+      }
+      .demo-scene {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 34px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.45s ease;
+      }
+      .demo-scene.on {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .demo-panel {
+        width: min(560px, 100%);
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 22px 26px;
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+      }
+      .demo-kv {
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+        font-size: 14.5px;
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      .demo-scene.on .demo-kv {
+        animation: demoIn 0.5s ease forwards;
+      }
+      .demo-scene.on .demo-kv:nth-child(1) { animation-delay: 0.1s; }
+      .demo-scene.on .demo-kv:nth-child(2) { animation-delay: 0.5s; }
+      .demo-scene.on .demo-kv:nth-child(3) { animation-delay: 0.9s; }
+      .demo-scene.on .demo-kv:nth-child(4) { animation-delay: 1.3s; }
+      .demo-scene.on .demo-kv:nth-child(5) { animation-delay: 1.7s; }
+      .demo-kv span {
+        flex: 0 0 118px;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .demo-sw {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border-radius: 4px;
+        margin-right: 5px;
+        vertical-align: -2px;
+      }
+      .demo-personas {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: min(520px, 100%);
+      }
+      .demo-persona {
+        position: relative;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        padding: 14px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      .demo-scene.on .demo-persona {
+        animation: demoIn 0.5s ease forwards;
+      }
+      .demo-scene.on .demo-persona:nth-child(1) { animation-delay: 0.15s; }
+      .demo-scene.on .demo-persona:nth-child(2) { animation-delay: 0.45s; }
+      .demo-scene.on .demo-persona:nth-child(3) { animation-delay: 0.75s; }
+      .demo-persona strong {
+        font-size: 14px;
+      }
+      .demo-persona em {
+        font-style: normal;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .demo-chosen {
+        position: absolute;
+        top: 12px;
+        right: 14px;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--ink);
+        border-radius: 999px;
+        padding: 4px 10px;
+        opacity: 0;
+      }
+      .demo-scene.on .pick {
+        animation:
+          demoIn 0.5s ease 0.15s forwards,
+          demoRing 0.6s ease 1.5s forwards;
+      }
+      .demo-scene.on .pick .demo-chosen {
+        animation: demoIn 0.4s ease 1.7s forwards;
+      }
+      .demo-sizes {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .demo-size {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        padding: 20px 26px 15px;
+        font-size: 15px;
+        font-weight: 600;
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      .demo-scene.on .demo-size {
+        animation: demoIn 0.45s ease forwards;
+      }
+      .demo-scene.on .demo-size:nth-child(1) { animation-delay: 0.1s; }
+      .demo-scene.on .demo-size:nth-child(2) { animation-delay: 0.3s; }
+      .demo-scene.on .demo-size:nth-child(3) { animation-delay: 0.5s; }
+      .demo-scene.on .demo-size:nth-child(4) { animation-delay: 0.7s; }
+      .demo-scene.on .demo-sizes .pick {
+        animation:
+          demoIn 0.45s ease 0.1s forwards,
+          demoRing 0.6s ease 1.6s forwards;
+      }
+      .demo-size i {
+        display: block;
+        background: #eceae6;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 4px;
+      }
+      .demo-size.pick i {
+        background: var(--ink);
+      }
+      .demo-size b {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+      .demo-copy {
+        text-align: left;
+        width: min(620px, 100%);
+      }
+      .demo-copyhead {
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 600;
+        font-size: clamp(1.9rem, 4.6vw, 3.1rem);
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        min-height: 1.2em;
+      }
+      .demo-caret {
+        display: inline-block;
+        width: 3px;
+        height: 0.95em;
+        background: var(--ink);
+        margin-left: 4px;
+        vertical-align: -0.12em;
+        animation: pulse 0.9s steps(2) infinite;
+      }
+      .demo-copysub {
+        margin-top: 16px;
+        font-size: 17px;
+        color: var(--muted);
+        opacity: 0;
+      }
+      .demo-copysub.show {
+        animation: demoIn 0.6s ease forwards;
+      }
+      .demo-prompt {
+        width: min(640px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .demo-prompt pre {
+        margin: 0;
+        width: 100%;
+        max-height: 300px;
+        overflow: auto;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12.5px;
+        line-height: 1.55;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        padding: 18px 20px;
+        opacity: 0;
+      }
+      .demo-scene.on .demo-prompt pre {
+        animation: demoIn 0.5s ease 0.15s forwards;
+      }
+      .demo-final {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .demo-final img {
+        max-height: 100%;
+        max-width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 20px 55px rgba(0, 0, 0, 0.18);
+      }
+      .demo-final-ph {
+        width: min(280px, 80%);
+        aspect-ratio: 4/5;
+        border: 1.5px dashed rgba(0, 0, 0, 0.22);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-align: center;
+        padding: 22px;
+        color: var(--muted);
+        font-size: 13px;
+        background: #fff;
+      }
+      .demo-final-ph strong {
+        color: var(--ink);
+        font-size: 14px;
+      }
+      .demo-caption {
+        margin: 18px 2px 0;
+        font-size: 14.5px;
+        color: var(--muted);
+        min-height: 22px;
+      }
+      .demo-caption strong {
+        color: var(--ink);
+      }
+      .demo-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .demo-dots {
+        display: flex;
+        gap: 7px;
+        margin-left: 8px;
+      }
+      .demo-dots i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.16);
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .demo-dots i.on {
+        background: var(--ink);
+      }
+      @keyframes demoIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes demoRing {
+        to {
+          border-color: var(--ink);
+          box-shadow: 0 0 0 2px var(--ink) inset;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .demo-scene.on .demo-kv,
+        .demo-scene.on .demo-persona,
+        .demo-scene.on .demo-size,
+        .demo-scene.on .demo-prompt pre,
+        .demo-copysub {
+          animation: none;
+          opacity: 1;
+          transform: none;
+        }
+      }
+
       /* ── Landing hero ───────────────────────────────────────────────────────── */
       .landing {
         position: relative;
@@ -1683,6 +2022,7 @@
       <div class="brand" onclick="showGallery()">PRO-AD</div>
       <nav class="nav">
         <button class="navlink" data-nav="home" onclick="showGallery()">Projects</button>
+        <button class="navlink" data-nav="demo" onclick="showDemo()">How it works</button>
         <button class="navlink navcreate" data-nav="create" onclick="newProject()">+ New project</button>
       </nav>
     </header>
@@ -1704,6 +2044,7 @@
           </p>
           <div class="hero-cta">
             <button class="btn" onclick="newProject()">Start a project</button>
+            <button class="btn ghost" onclick="showDemo()">See how it works</button>
             <button class="btn ghost" onclick="scrollToProjects()">View projects</button>
           </div>
         </div>
@@ -1771,6 +2112,102 @@
           <button class="btn" onclick="newProject()">Start one now</button>
         </div>
         <div id="cards" class="grid"></div>
+      </section>
+
+      <!-- ═══ Demo: how a project becomes an ad, step by step ═════════════════ -->
+      <section id="demo" class="demo hidden">
+        <h1>How it works</h1>
+        <p class="lead">
+          A sample project, end to end — from raw inputs and customer data to the finished ad. Synthetic brand:
+          <strong>Solstice Coffee</strong>.
+        </p>
+        <div class="demo-pipe" id="demoPipe">
+          <span data-pipe="0">Brief</span><span class="pipe-arrow">→</span><span data-pipe="1">Personas</span
+          ><span class="pipe-arrow">→</span><span data-pipe="2">Size</span><span class="pipe-arrow">→</span
+          ><span data-pipe="3">Copy</span><span class="pipe-arrow">→</span><span data-pipe="4">Image prompt</span
+          ><span class="pipe-arrow">→</span><span data-pipe="5">Final ad</span>
+        </div>
+
+        <div class="demo-stage">
+          <!-- Scene 0: brief + data in -->
+          <div class="demo-scene" data-scene="0">
+            <div class="demo-panel">
+              <div class="demo-kv"><span>Brand</span>Solstice Coffee</div>
+              <div class="demo-kv"><span>Description</span>Small-batch roastery — seasonal, single-origin coffee</div>
+              <div class="demo-kv"><span>Goal</span>Launch the autumn blend “Ember Roast”</div>
+              <div class="demo-kv">
+                <span>Colours</span>
+                <i class="demo-sw" style="background: #7a3b2e"></i><i class="demo-sw" style="background: #2a1510"></i>
+                warm roast &amp; deep umber
+              </div>
+              <div class="demo-kv"><span>Customer data</span>✓ customers.csv — 24 rows uploaded</div>
+            </div>
+          </div>
+
+          <!-- Scene 1: personas -->
+          <div class="demo-scene" data-scene="1">
+            <div class="demo-personas">
+              <div class="demo-persona pick">
+                <strong>Persona 1 · 42%</strong>
+                <em>Women 25–34 · urban · specialty coffee, cozy rituals</em>
+                <b class="demo-chosen">designing for this one</b>
+              </div>
+              <div class="demo-persona">
+                <strong>Persona 2 · 33%</strong>
+                <em>Men 35–50 · home-office espresso upgraders</em>
+              </div>
+              <div class="demo-persona">
+                <strong>Persona 3 · 25%</strong>
+                <em>Students 18–24 · iced drinks, study cafés</em>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 2: size -->
+          <div class="demo-scene" data-scene="2">
+            <div class="demo-sizes">
+              <div class="demo-size pick"><i style="width: 44px; height: 55px"></i>4:5<b>poster</b></div>
+              <div class="demo-size"><i style="width: 44px; height: 44px"></i>1:1<b>feed</b></div>
+              <div class="demo-size"><i style="width: 55px; height: 31px"></i>16:9<b>banner</b></div>
+              <div class="demo-size"><i style="width: 31px; height: 55px"></i>9:16<b>story</b></div>
+            </div>
+          </div>
+
+          <!-- Scene 3: copy -->
+          <div class="demo-scene" data-scene="3">
+            <div class="demo-copy">
+              <div class="demo-copyhead"><span id="demoType"></span><span class="demo-caret"></span></div>
+              <div class="demo-copysub" id="demoSub">Ember Roast — small-batch, back for the season.</div>
+            </div>
+          </div>
+
+          <!-- Scene 4: image prompt -->
+          <div class="demo-scene" data-scene="4">
+            <div class="demo-prompt">
+              <pre id="demoPrompt"></pre>
+              <button class="btn ghost" onclick="copyDemoPrompt()">Copy prompt</button>
+            </div>
+          </div>
+
+          <!-- Scene 5: final ad -->
+          <div class="demo-scene" data-scene="5">
+            <div class="demo-final">
+              <img id="demoFinalAd" class="hidden" alt="Final rendered ad — Solstice Coffee, Ember Roast" />
+              <div class="demo-final-ph" id="demoFinalPh">
+                <strong>Final render</strong>
+                <span>Generated from the prompt on the previous step with Gemini’s image model.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-caption" id="demoCaption"></div>
+        <div class="demo-controls">
+          <button class="btn ghost" onclick="demoNav(-1)">&larr;</button>
+          <button class="btn ghost" id="demoPlayBtn" onclick="demoToggle()">Pause</button>
+          <button class="btn ghost" onclick="demoNav(1)">&rarr;</button>
+          <div class="demo-dots" id="demoDots"></div>
+        </div>
       </section>
 
       <section id="editor" class="hidden">
@@ -3990,7 +4427,9 @@
         if ($("#designer") && !$("#designer").classList.contains("hidden")) closeDesigner();
         _editing = false;
         showEditBar(false);
+        demoStop();
         $("#editor").classList.add("hidden");
+        $("#demo").classList.add("hidden");
         $("#gallery").classList.remove("hidden");
         setHome(true);
         navActive("home");
@@ -3998,12 +4437,111 @@
         renderGallery();
       }
       function showEditor() {
+        demoStop();
         $("#gallery").classList.add("hidden");
+        $("#demo").classList.add("hidden");
         $("#editor").classList.remove("hidden");
         setHome(false);
         navActive("create");
         if (location.hash !== "#create") location.hash = "#create";
         renderBrandKit();
+      }
+
+      /* ---------- demo page: the whole pipeline on synthetic data ---------- */
+      // The final render slot: paste a data-URI (or file path) here once the ad has been
+      // generated from DEMO_PROMPT with the image model — it replaces the placeholder.
+      const DEMO_AD_SRC = "";
+      const DEMO_PROMPT =
+        "Design a COMPLETE, finished, ready-to-publish advertising poster (vertical 4:5) — not just a background. " +
+        "Style: minimal and premium, MONOCHROMATIC — two or three tones from a single hue family drawn from #7a3b2e and #2a1510; " +
+        "brand feel: warmth, craft, quiet confidence, minimal, premium; generous negative space, one soft light source, " +
+        "low-to-balanced contrast, elegant and restrained. " +
+        'Typeset this text crisply, spelled EXACTLY, in a clean modern premium sans-serif with clear hierarchy and good kerning: ' +
+        'headline "Autumn, poured slow." and subhead "Ember Roast — small-batch, back for the season." ' +
+        "Do not misspell, add, or alter the words. " +
+        "Feature a single ceramic cup of black coffee with soft rising steam as the hero product, centred, integrated naturally with a soft shadow. " +
+        "A balanced, editorial, agency-quality composition. No placeholder/lorem text, no words beyond the headline and subhead, no watermarks.";
+      const DEMO_CAPTIONS = [
+        ["Brief & data", "Enter the brand once — or upload customer data straight from a CSV, Excel or database."],
+        ["Personas", "The customers are clustered into personas; pick (or edit) the one to design for."],
+        ["Size", "Choose the ad size first — the copy and image prompt are tailored to it."],
+        ["Copy", "The copywriter agent writes the headline and subhead from the brief + persona."],
+        ["Image prompt", "The art-director agent writes the full production prompt for the image model."],
+        ["Final ad", "The image model renders the finished, on-brand poster — ready to edit, resize or hand to Figma."],
+      ];
+      let _demoStep = -1,
+        _demoTimer = null,
+        _demoTypeTimer = null;
+      function showDemo() {
+        demoStop();
+        $("#gallery").classList.add("hidden");
+        $("#editor").classList.add("hidden");
+        $("#demo").classList.remove("hidden");
+        setHome(false);
+        navActive("demo");
+        if (location.hash !== "#demo") location.hash = "#demo";
+        $("#demoPrompt").textContent = DEMO_PROMPT;
+        if (DEMO_AD_SRC) {
+          $("#demoFinalAd").src = DEMO_AD_SRC;
+          $("#demoFinalAd").classList.remove("hidden");
+          $("#demoFinalPh").classList.add("hidden");
+        }
+        const dots = $("#demoDots");
+        dots.innerHTML = DEMO_CAPTIONS.map((_, i) => `<i data-dot="${i}" onclick="demoGo(${i})"></i>`).join("");
+        demoGo(0);
+        demoPlay();
+      }
+      function demoGo(i) {
+        _demoStep = (i + DEMO_CAPTIONS.length) % DEMO_CAPTIONS.length;
+        document.querySelectorAll(".demo-scene").forEach((s) => s.classList.toggle("on", +s.dataset.scene === _demoStep));
+        document.querySelectorAll("#demoPipe [data-pipe]").forEach((s) => s.classList.toggle("on", +s.dataset.pipe <= _demoStep));
+        document.querySelectorAll("#demoDots i").forEach((d) => d.classList.toggle("on", +d.dataset.dot === _demoStep));
+        const [t, d] = DEMO_CAPTIONS[_demoStep];
+        $("#demoCaption").innerHTML = "<strong>" + t + "</strong> — " + d;
+        clearTimeout(_demoTypeTimer);
+        $("#demoSub").classList.remove("show");
+        if (_demoStep === 3) demoTypeCopy();
+      }
+      function demoTypeCopy() {
+        const text = "Autumn, poured slow.";
+        const el = $("#demoType");
+        el.textContent = "";
+        let i = 0;
+        const tick = () => {
+          el.textContent = text.slice(0, ++i);
+          if (i < text.length) _demoTypeTimer = setTimeout(tick, 55);
+          else _demoTypeTimer = setTimeout(() => $("#demoSub").classList.add("show"), 350);
+        };
+        _demoTypeTimer = setTimeout(tick, 400);
+      }
+      function demoNav(d) {
+        demoGo(_demoStep + d);
+        demoRearm();
+      }
+      function demoPlay() {
+        clearInterval(_demoTimer);
+        _demoTimer = setInterval(() => demoGo(_demoStep + 1), 4600);
+        $("#demoPlayBtn").textContent = "Pause";
+      }
+      function demoRearm() {
+        if (_demoTimer) demoPlay(); // keep playing, but restart the clock after manual nav
+      }
+      function demoToggle() {
+        if (_demoTimer) {
+          clearInterval(_demoTimer);
+          _demoTimer = null;
+          $("#demoPlayBtn").textContent = "Play";
+        } else demoPlay();
+      }
+      function demoStop() {
+        clearInterval(_demoTimer);
+        _demoTimer = null;
+        clearTimeout(_demoTypeTimer);
+      }
+      function copyDemoPrompt() {
+        (navigator.clipboard ? navigator.clipboard.writeText(DEMO_PROMPT) : Promise.reject())
+          .then(() => setStatus && setStatus("prompt copied"))
+          .catch(() => {});
       }
 
       /* ---------- brand kit: save & reuse a brand across projects ---------- */
@@ -4165,15 +4703,18 @@
         c.addEventListener("pointerup", end);
         c.addEventListener("pointercancel", end);
       })();
-      // Hash-based pages: #projects (home + past work) and #create (dedicated create page).
-      // Back/forward navigate between them; the guard keeps view switches idempotent.
+      // Hash-based pages: #projects (home + past work), #create (project creation) and
+      // #demo (how it works). Back/forward navigate; guards keep switches idempotent.
       window.addEventListener("hashchange", () => {
-        const wantCreate = location.hash === "#create",
-          onCreate = !$("#editor").classList.contains("hidden");
-        if (wantCreate && !onCreate) newProject();
-        else if (!wantCreate && onCreate) showGallery();
+        const h = location.hash,
+          onCreate = !$("#editor").classList.contains("hidden"),
+          onDemo = !$("#demo").classList.contains("hidden");
+        if (h === "#create" && !onCreate) newProject();
+        else if (h === "#demo" && !onDemo) showDemo();
+        else if (h !== "#create" && h !== "#demo" && (onCreate || onDemo)) showGallery();
       });
       if (location.hash === "#create") newProject();
+      else if (location.hash === "#demo") showDemo();
       else showGallery();
     </script>
   </body>
