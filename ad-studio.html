@@ -127,47 +127,149 @@
         color: var(--ink);
       }
       .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-        gap: 26px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 30px 34px;
         margin-top: 28px;
       }
-      .card {
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        overflow: hidden;
-        background: var(--card);
+      .fileitem {
+        position: relative;
+        width: 148px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: center;
         cursor: pointer;
-        transition:
-          transform 0.25s,
-          box-shadow 0.25s;
-        animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        padding: 0 0 8px;
+        animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
-      .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.1);
+      .fileitem:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 8px;
+        border-radius: 10px;
+      }
+      .fileitem.dragging {
+        opacity: 0.45;
+      }
+      .fileitem.drop-target .folder-icon,
+      .fileitem.drop-target .thumb {
+        outline: 2px solid var(--ink);
+        outline-offset: 8px;
+      }
+      .thumb {
+        position: relative;
+        width: 132px;
+        margin: 0 auto 9px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f3f2ef;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .fileitem:hover .thumb,
+      .fileitem:hover .folder-icon {
+        transform: translateY(-2px);
+      }
+      .thumb img {
+        width: 100%;
+        height: auto;
+        display: block;
+        background: #f2f2f2;
+      }
+      .fileitem-name {
+        display: block;
+        min-height: 18px;
+        color: #242424;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.18;
+        letter-spacing: -0.02em;
+        overflow-wrap: anywhere;
+      }
+      .fileitem-name.rename-ready {
+        cursor: text;
+      }
+      .rename-input {
+        display: block;
+        width: 100%;
+        min-height: 28px;
+        margin: -3px 0 0;
+        padding: 4px 6px;
+        border: 1px solid rgba(0, 0, 0, 0.22);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+        font-size: 14px;
+        line-height: 1.2;
+        text-align: center;
+      }
+      .rename-input:focus {
+        outline: none;
+        border-color: #000;
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+      }
+      .fileitem-sub {
+        display: none;
+      }
+      .folder-icon {
+        position: relative;
+        width: 128px;
+        height: 110px;
+        margin: 0 auto 8px;
+        background: url("assets/folder-icon.png") center / contain no-repeat;
+        transition: transform 0.2s;
+      }
+      .folder-icon img {
+        position: absolute;
+        left: 22px;
+        top: 32px;
+        width: 84px;
+        height: 52px;
+        object-fit: cover;
+        border-radius: 6px;
+        opacity: 0.92;
+      }
+      .folder-badge {
+        position: absolute;
+        right: 9px;
+        bottom: 12px;
+        min-width: 25px;
+        height: 20px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #111;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 16px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
       }
       .card {
         position: relative;
       }
       .card-actions {
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: -8px;
+        right: -6px;
         display: flex;
         gap: 6px;
         opacity: 0;
         transition: opacity 0.18s;
       }
-      .card:hover .card-actions,
-      .card:focus-within .card-actions {
+      .fileitem:hover .card-actions,
+      .fileitem:focus-within .card-actions {
         opacity: 1;
       }
       .card-actions button {
         font: inherit;
-        font-size: 11.5px;
+        font-size: 11px;
         font-weight: 600;
-        padding: 5px 11px;
+        padding: 5px 9px;
         border: none;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.94);
@@ -179,29 +281,10 @@
         background: var(--ink);
         color: #fff;
       }
-      .card img {
-        width: 100%;
-        display: block;
-        background: #f2f2f2;
-      }
-      .card-meta {
-        padding: 14px 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-      .card-meta strong {
-        font-size: 15px;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-      }
-      .card-meta .muted {
-        font-size: 13px;
-      }
       .card-ratio {
         position: absolute;
-        left: 10px;
-        top: 10px;
+        left: 8px;
+        top: 8px;
         font-size: 10.5px;
         font-weight: 600;
         letter-spacing: 0.08em;
@@ -211,28 +294,29 @@
         color: var(--ink);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
       }
-      .card-folder {
-        margin-top: 7px;
-        font: inherit;
-        font-size: 12px;
-        color: var(--muted);
-        padding: 6px 9px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fafafa;
-        max-width: 100%;
-      }
-      .card-folder:focus {
-        outline: none;
-        border-color: #000;
-      }
-      /* folder bar above the project grid */
       .folderbar {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
         align-items: center;
         margin-top: 26px;
+      }
+      .folderbar .backfolder {
+        color: var(--muted);
+        font: inherit;
+        font-size: 13px;
+        border: none;
+        background: transparent;
+        padding: 0;
+        cursor: pointer;
+      }
+      .folderbar .backfolder:hover {
+        color: var(--ink);
+      }
+      .folderbar .backfolder.drop-target {
+        color: var(--ink);
+        text-decoration: underline;
+        text-underline-offset: 4px;
       }
       .folderchip {
         display: inline-flex;
@@ -277,6 +361,49 @@
       }
       .folderchip.new {
         border-style: dashed;
+      }
+      .folder-dropzone {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 9px;
+        width: 148px;
+        min-height: 118px;
+        border: 0;
+        border-radius: 0;
+        color: var(--muted);
+        background: transparent;
+        font: inherit;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.18;
+        letter-spacing: -0.02em;
+        cursor: pointer;
+        padding: 0 0 8px;
+      }
+      .folder-dropzone.dragover {
+        color: var(--ink);
+        background: transparent;
+      }
+      .add-icon {
+        display: grid;
+        place-items: center;
+        width: 74px;
+        height: 74px;
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 54px;
+        font-weight: 700;
+        line-height: 1;
+        transition:
+          transform 0.2s,
+          color 0.2s;
+      }
+      .folder-dropzone:hover .add-icon,
+      .folder-dropzone.dragover .add-icon {
+        transform: translateY(-2px);
+        color: var(--ink);
       }
       .empty {
         text-align: center;
@@ -1226,6 +1353,60 @@
       }
       .review-close:hover {
         color: #000;
+      }
+      .studio-dialog {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(0, 0, 0, 0.36);
+        backdrop-filter: blur(5px);
+      }
+      .dialog-card {
+        width: min(430px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+        padding: 26px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
+      }
+      .dialog-card h2 {
+        margin: 0 0 8px;
+        font-size: 1.45rem;
+        font-weight: 600;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+      }
+      .dialog-card p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .dialog-card input {
+        width: 100%;
+        margin-bottom: 18px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+        font-size: 15px;
+      }
+      .dialog-card input:focus {
+        outline: none;
+        border-color: #000;
+      }
+      .dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      .dialog-danger {
+        background: #0a0a0a;
       }
       .rev-step {
         font-size: 11px;
@@ -2195,6 +2376,7 @@
         </div>
         <div id="folderBar" class="folderbar hidden"></div>
         <div id="cards" class="grid"></div>
+        <input id="folderImagePicker" type="file" accept="image/*" class="hidden" />
       </section>
 
       <!-- ═══ Demo: how a project becomes an ad, step by step ═════════════════ -->
@@ -2640,6 +2822,17 @@
         </div>
       </div>
     </div>
+    <div id="studioDialog" class="studio-dialog hidden" onclick="if (event.target === this) closeDialog(false);">
+      <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+        <h2 id="dialogTitle"></h2>
+        <p id="dialogMessage"></p>
+        <input id="dialogInput" class="hidden" />
+        <div class="dialog-actions">
+          <button class="btn ghost" type="button" id="dialogCancel" onclick="closeDialog(false)">Cancel</button>
+          <button class="btn" type="button" id="dialogOk" onclick="closeDialog(true)">Done</button>
+        </div>
+      </div>
+    </div>
 
     <script>
       const INK = "#141110",
@@ -2710,6 +2903,51 @@
       /* ---------- storage ---------- */
       const load = () => JSON.parse(localStorage.getItem("projectad") || "[]");
       const store = (list) => localStorage.setItem("projectad", JSON.stringify(list));
+      let _dialogResolve = null;
+      function closeDialog(ok) {
+        const overlay = $("#studioDialog");
+        if (!overlay) return;
+        const input = $("#dialogInput");
+        overlay.classList.add("hidden");
+        const resolve = _dialogResolve;
+        _dialogResolve = null;
+        if (resolve) resolve(ok ? (input && !input.classList.contains("hidden") ? input.value : true) : null);
+      }
+      function studioDialog(opts) {
+        const overlay = $("#studioDialog"),
+          title = $("#dialogTitle"),
+          msg = $("#dialogMessage"),
+          input = $("#dialogInput"),
+          ok = $("#dialogOk"),
+          cancel = $("#dialogCancel");
+        if (!overlay || !title || !msg || !input || !ok || !cancel) return Promise.resolve(null);
+        title.textContent = opts.title || "";
+        msg.textContent = opts.message || "";
+        ok.textContent = opts.ok || "Done";
+        cancel.textContent = opts.cancel || "Cancel";
+        ok.classList.toggle("dialog-danger", !!opts.danger);
+        cancel.classList.toggle("hidden", opts.cancel === null);
+        if (opts.input) {
+          input.classList.remove("hidden");
+          input.placeholder = opts.placeholder || "";
+          input.value = opts.value || "";
+          input.maxLength = opts.maxLength || 80;
+        } else {
+          input.classList.add("hidden");
+          input.value = "";
+        }
+        overlay.classList.remove("hidden");
+        return new Promise((resolve) => {
+          _dialogResolve = resolve;
+          setTimeout(() => (opts.input ? input.focus() : ok.focus()), 0);
+        });
+      }
+      const studioAlert = (message, title = "Heads up") =>
+        studioDialog({ title, message, ok: "OK", cancel: null }).then(() => null);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && _dialogResolve) closeDialog(false);
+        if (e.key === "Enter" && _dialogResolve && !$("#dialogInput").classList.contains("hidden")) closeDialog(true);
+      });
       const esc = (s) =>
         (s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -4202,7 +4440,7 @@
         try {
           store(list);
         } catch (e) {
-          alert("Storage full — remove some projects or use smaller / fewer reference images.");
+          studioAlert("Storage full — remove some projects or use smaller / fewer reference images.", "Storage full");
           return;
         }
         showGallery();
@@ -4441,17 +4679,54 @@
       const loadFolders = () => JSON.parse(localStorage.getItem("projectad_folders") || "[]");
       const storeFolders = (f) => localStorage.setItem("projectad_folders", JSON.stringify(f));
       let _folderFilter = "all";
-      function newFolder(returnId) {
-        const name = (prompt("Folder name (e.g. the brand):") || "").trim().slice(0, 40);
+      function currentFolderName() {
+        const f = loadFolders().find((x) => x.id === _folderFilter);
+        return f ? f.name : "";
+      }
+      async function newFolder(returnId) {
+        const raw = await studioDialog({
+          title: "New folder",
+          message: "Name a visible folder for a brand, campaign, client, or format.",
+          input: true,
+          placeholder: "e.g. Coffee",
+          ok: "Create",
+          maxLength: 40,
+        });
+        const name = (raw || "").trim().slice(0, 40);
         if (!name) return null;
         const f = { id: "f" + Date.now(), name };
         storeFolders([...loadFolders(), f]);
         if (!returnId) renderGallery();
         return f.id;
       }
-      function deleteFolder(fid) {
+      async function renameFolder(fid, ev) {
+        if (ev) ev.stopPropagation();
         const f = loadFolders().find((x) => x.id === fid);
-        if (!confirm('Delete folder "' + ((f && f.name) || "") + '"? Projects stay — they just leave the folder.')) return;
+        if (!f) return;
+        const raw = await studioDialog({
+          title: "Rename folder",
+          message: "This changes the folder label only. Projects stay where they are.",
+          input: true,
+          value: f.name,
+          ok: "Rename",
+          maxLength: 40,
+        });
+        const name = (raw || "").trim().slice(0, 40);
+        if (!name) return;
+        storeFolders(loadFolders().map((x) => (x.id === fid ? Object.assign({}, x, { name }) : x)));
+        renderGallery();
+      }
+      async function deleteFolder(fid, ev) {
+        if (ev) ev.stopPropagation();
+        const f = loadFolders().find((x) => x.id === fid);
+        const ok = await studioDialog({
+          title: "Delete folder?",
+          message: 'Projects stay in your workspace. They will just leave "' + ((f && f.name) || "this folder") + '".',
+          ok: "Delete",
+          cancel: "Keep",
+          danger: true,
+        });
+        if (!ok) return;
         storeFolders(loadFolders().filter((x) => x.id !== fid));
         const list = load();
         list.forEach((p) => {
@@ -4465,10 +4740,26 @@
         _folderFilter = fid;
         renderGallery();
       }
-      // Manually add a project to / remove it from a folder (via the card's dropdown).
-      function assignFolder(pid, val) {
+      async function setFolderImage(fid, ev) {
+        if (ev) ev.stopPropagation();
+        const input = $("#folderImagePicker");
+        if (!input) return;
+        input.onchange = () => {
+          const file = input.files && input.files[0];
+          input.value = "";
+          if (!file) return;
+          const fr = new FileReader();
+          fr.onload = () => {
+            storeFolders(loadFolders().map((f) => (f.id === fid ? Object.assign({}, f, { image: fr.result }) : f)));
+            renderGallery();
+          };
+          fr.readAsDataURL(file);
+        };
+        input.click();
+      }
+      async function assignFolder(pid, val) {
         let fid = val;
-        if (val === "__new") fid = newFolder(true);
+        if (val === "__new") fid = await newFolder(true);
         const list = load(),
           p = list.find((x) => x.id === pid);
         if (p) {
@@ -4477,65 +4768,244 @@
         }
         renderGallery();
       }
+      function moveProjectToFolder(pid, fid) {
+        const list = load(),
+          p = list.find((x) => x.id === pid);
+        if (!p) return;
+        p.folder = fid === "all" ? null : fid;
+        store(list);
+        renderGallery();
+      }
+      function renameProjectInline(pid, name) {
+        const next = (name || "").trim().slice(0, 44);
+        if (!next) return renderGallery();
+        const list = load(),
+          p = list.find((x) => x.id === pid);
+        if (!p) return;
+        p.name = next;
+        store(list);
+        renderGallery();
+      }
+      function renameFolderInline(fid, name) {
+        const next = (name || "").trim().slice(0, 40);
+        if (!next) return renderGallery();
+        storeFolders(loadFolders().map((f) => (f.id === fid ? Object.assign({}, f, { name: next }) : f)));
+        renderGallery();
+      }
+      function beginInlineRename(type, id, ev) {
+        if (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+        }
+        const label = document.querySelector(`.fileitem-name[data-${type}-id="${id}"]`);
+        if (!label || label.querySelector("input")) return;
+        const currentName = label.textContent.trim();
+        label.innerHTML = `<input class="rename-input" value="${esc(currentName)}" maxlength="${type === "folder" ? 40 : 44}">`;
+        const input = label.querySelector("input");
+        const finish = (save) => {
+          const value = save ? input.value : currentName;
+          type === "folder" ? renameFolderInline(id, value) : renameProjectInline(id, value);
+        };
+        input.addEventListener("click", (e) => e.stopPropagation());
+        input.addEventListener("dblclick", (e) => e.stopPropagation());
+        input.addEventListener("keydown", (e) => {
+          e.stopPropagation();
+          if (e.key === "Enter") finish(true);
+          if (e.key === "Escape") finish(false);
+        });
+        input.addEventListener("blur", () => finish(true));
+        setTimeout(() => {
+          input.focus();
+          input.select();
+        }, 0);
+      }
       function renderFolderBar(list) {
         const el = $("#folderBar");
         if (!el) return;
         const folders = loadFolders();
-        if (!list.length && !folders.length) {
-          el.classList.add("hidden");
-          el.innerHTML = "";
+        el.classList.remove("hidden");
+        if (_folderFilter !== "all") {
+          const name = currentFolderName() || "Folder";
+          el.innerHTML =
+            `<button type="button" class="backfolder" data-drop-all="true" onclick="setFolderFilter('all')">&larr; All projects</button>` +
+            `<button type="button" class="folderchip new" onclick="newFolder()">+ New folder</button>` +
+            `<span class="muted tiny">${esc(name)}</span>`;
           return;
         }
-        el.classList.remove("hidden");
-        const count = (fid) => list.filter((p) => (fid === "all" ? true : p.folder === fid)).length;
-        const chip = (id, name, del) =>
-          `<button type="button" class="folderchip${_folderFilter === id ? " on" : ""}" onclick="setFolderFilter('${id}')">` +
-          `${esc(name)} <b>${count(id)}</b>` +
-          (del ? `<span class="fdel" title="Delete folder" onclick="event.stopPropagation();deleteFolder('${id}')">&times;</span>` : "") +
-          `</button>`;
-        el.innerHTML =
-          chip("all", "All projects") +
-          folders.map((f) => chip(f.id, f.name, true)).join("") +
-          `<button type="button" class="folderchip new" onclick="newFolder()">+ New folder</button>`;
+        el.innerHTML = `<button type="button" class="folderchip new" onclick="newFolder()">+ New folder</button>`;
       }
       const fmtLabel = (id) => {
         const f = FORMATS.find((x) => x.id === id);
         return f ? f.label : "4:5";
       };
-      function folderSelectHtml(p) {
-        const folders = loadFolders();
+      const projectActions = (p) =>
+        `<div class="card-actions">` +
+        (p.mode === "layered"
+          ? `<button type="button" title="Edit placements, sizes, texts and colours" onclick="editProjectDesign('${p.id}', event)">Edit</button>`
+          : "") +
+        `<button type="button" title="Build another size from this ad" onclick="duplicateForSize('${p.id}', event)">New size</button>` +
+          `<button type="button" title="Delete project" onclick="deleteProject('${p.id}', event)">Delete</button>` +
+        `</div>`;
+      function projectItem(p) {
         return (
-          `<select class="card-folder" onclick="event.stopPropagation()" onchange="assignFolder('${p.id}', this.value)">` +
-          `<option value=""${!p.folder ? " selected" : ""}>No folder</option>` +
-          folders.map((f) => `<option value="${f.id}"${p.folder === f.id ? " selected" : ""}>${esc(f.name)}</option>`).join("") +
-          `<option value="__new">+ New folder…</option></select>`
+          `<div role="button" tabindex="0" class="fileitem card project-item" draggable="true" data-pid="${p.id}" onclick="openProject('${p.id}')">` +
+          `<div class="thumb"><img src="${p.poster || ""}" alt="">` +
+          `<span class="card-ratio">${fmtLabel(p.format)}</span>` +
+          `</div>` +
+          projectActions(p) +
+          `<span class="fileitem-name rename-ready" data-project-id="${p.id}" onclick="event.stopPropagation()" ondblclick="beginInlineRename('project','${p.id}', event)">${esc(p.name || "Untitled")}</span>` +
+          `</div>`
         );
+      }
+      function folderItem(f, count) {
+        return (
+          `<div role="button" tabindex="0" class="fileitem folder-item" data-fid="${f.id}" onclick="setFolderFilter('${f.id}')">` +
+          `<div class="folder-icon">` +
+          (f.image ? `<img src="${f.image}" alt="">` : "") +
+          `<span class="folder-badge">${count}</span></div>` +
+          `<div class="card-actions">` +
+          `<button type="button" title="Rename folder" onclick="renameFolder('${f.id}', event)">Rename</button>` +
+          `<button type="button" title="Choose folder image" onclick="setFolderImage('${f.id}', event)">Image</button>` +
+          `<button type="button" title="Delete folder" onclick="deleteFolder('${f.id}', event)">Delete</button>` +
+          `</div>` +
+          `<span class="fileitem-name rename-ready" data-folder-id="${f.id}" onclick="event.stopPropagation()" ondblclick="beginInlineRename('folder','${f.id}', event)">${esc(f.name)}</span>` +
+          `</div>`
+        );
+      }
+      function dropZoneHtml() {
+        return `<button type="button" class="folder-dropzone" onclick="newProject()"><span class="add-icon">+</span><span>Add project</span></button>`;
       }
       function renderGallery() {
         const list = load(),
           g = $("#cards");
+        const folders = loadFolders();
         renderFolderBar(list);
-        $("#empty").style.display = list.length ? "none" : "block";
-        const shown = _folderFilter === "all" ? list : list.filter((p) => p.folder === _folderFilter);
+        $("#empty").style.display = list.length || folders.length ? "none" : "block";
+        const shown = _folderFilter === "all" ? list.filter((p) => !p.folder) : list.filter((p) => p.folder === _folderFilter);
+        const folderHtml =
+          _folderFilter === "all"
+            ? folders.map((f) => folderItem(f, list.filter((p) => p.folder === f.id).length)).join("")
+            : "";
+        const projectHtml = shown.map((p) => projectItem(p)).join("");
         g.innerHTML =
-          shown
-            .map(
-              (p) =>
-                `<div class="card" onclick="openProject('${p.id}')"><img src="${p.poster || ""}" alt="">` +
-                `<span class="card-ratio">${fmtLabel(p.format)}</span>` +
-                `<div class="card-actions">` +
-                (p.mode === "layered"
-                  ? `<button type="button" title="Edit placements, sizes, texts and colours" onclick="editProjectDesign('${p.id}', event)">Edit</button>`
-                  : "") +
-                `<button type="button" title="Build another size from this ad" onclick="duplicateForSize('${p.id}', event)">New size</button>` +
-                `<button type="button" title="Delete project" onclick="deleteProject('${p.id}', event)">Delete</button>` +
-                `</div>` +
-                `<div class="card-meta"><strong>${esc(p.name || "Untitled")}</strong><span class="muted">${esc(audienceOf(p))}</span>${folderSelectHtml(p)}</div></div>`,
-            )
-            .join("") ||
-          (list.length
-            ? '<p class="muted" style="grid-column:1/-1">Nothing in this folder yet — use a card’s folder menu to add projects.</p>'
-            : "");
+          folderHtml +
+          projectHtml +
+          dropZoneHtml();
+        if (list.length && !shown.length && _folderFilter !== "all") {
+          g.insertAdjacentHTML("afterbegin", '<p class="muted" style="width:100%">Nothing in this folder yet — drag posters or image files here.</p>');
+        }
+        wireGalleryDnD();
+      }
+      function filesFromDrop(e) {
+        return Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter((f) => f.type && f.type.startsWith("image/"));
+      }
+      function importImageFiles(files, folderId) {
+        if (!files.length) return;
+        Promise.all(
+          files.map(
+            (file) =>
+              new Promise((resolve) => {
+                const fr = new FileReader();
+                fr.onload = () =>
+                  resolve({
+                    id: "p" + Date.now() + Math.random().toString(16).slice(2),
+                    name: file.name.replace(/\.[^.]+$/, "").slice(0, 44) || "Imported poster",
+                    poster: fr.result,
+                    format: "poster",
+                    mode: "imported",
+                    folder: folderId && folderId !== "all" ? folderId : null,
+                    seed: Math.floor(Math.random() * 2 ** 31),
+                    createdAt: new Date().toISOString(),
+                  });
+                fr.readAsDataURL(file);
+              }),
+          ),
+        ).then((items) => {
+          const list = load();
+          try {
+            store(items.concat(list));
+          } catch (e) {
+            studioAlert("Storage full — import fewer or smaller poster images.", "Storage full");
+            return;
+          }
+          renderGallery();
+        });
+      }
+      function wireGalleryDnD() {
+        const g = $("#cards");
+        if (!g) return;
+        document.querySelectorAll(".project-item").forEach((item) => {
+          item.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") openProject(item.dataset.pid);
+          });
+          item.addEventListener("dragstart", (e) => {
+            item.classList.add("dragging");
+            e.dataTransfer.setData("text/project-id", item.dataset.pid);
+            e.dataTransfer.effectAllowed = "move";
+          });
+          item.addEventListener("dragend", () => item.classList.remove("dragging"));
+        });
+        document.querySelectorAll(".folder-item").forEach((folder) => {
+          folder.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") setFolderFilter(folder.dataset.fid);
+          });
+          ["dragenter", "dragover"].forEach((type) =>
+            folder.addEventListener(type, (e) => {
+              e.preventDefault();
+              folder.classList.add("drop-target");
+            }),
+          );
+          ["dragleave", "drop"].forEach((type) =>
+            folder.addEventListener(type, () => folder.classList.remove("drop-target")),
+          );
+          folder.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const pid = e.dataTransfer.getData("text/project-id");
+            if (pid) moveProjectToFolder(pid, folder.dataset.fid);
+            else importImageFiles(filesFromDrop(e), folder.dataset.fid);
+          });
+        });
+        const backToAll = document.querySelector("[data-drop-all]");
+        if (backToAll) {
+          ["dragenter", "dragover"].forEach((type) =>
+            backToAll.addEventListener(type, (e) => {
+              if (!e.dataTransfer.getData("text/project-id")) return;
+              e.preventDefault();
+              backToAll.classList.add("drop-target");
+            }),
+          );
+          ["dragleave", "drop"].forEach((type) =>
+            backToAll.addEventListener(type, () => backToAll.classList.remove("drop-target")),
+          );
+          backToAll.addEventListener("drop", (e) => {
+            const pid = e.dataTransfer.getData("text/project-id");
+            if (!pid) return;
+            e.preventDefault();
+            e.stopPropagation();
+            moveProjectToFolder(pid, "all");
+          });
+        }
+        const dz = g.querySelector(".folder-dropzone");
+        g.ondragenter = g.ondragover = g.ondragleave = g.ondrop = null;
+        [g, dz].filter(Boolean).forEach((target) => {
+          target.ondragenter = target.ondragover = (e) => {
+              e.preventDefault();
+              if (dz) dz.classList.add("dragover");
+          };
+          target.ondragleave = () => {
+            if (dz) dz.classList.remove("dragover");
+          };
+        });
+        g.ondrop = (e) => {
+          if (dz) dz.classList.remove("dragover");
+          if (e.target.closest(".folder-item")) return;
+          e.preventDefault();
+          const pid = e.dataTransfer.getData("text/project-id");
+          const destination = _folderFilter === "all" ? "all" : _folderFilter;
+          if (pid) moveProjectToFolder(pid, destination);
+          else importImageFiles(filesFromDrop(e), destination);
+        };
       }
       // Edit a saved project's design directly — placements, sizes, texts, colours —
       // without going back through the input wizard.
@@ -4570,10 +5040,17 @@
         showPlaceholderOrLast();
         generate(false, true); // straight to the Size step; everything else is prefilled
       }
-      function deleteProject(id, ev) {
+      async function deleteProject(id, ev) {
         if (ev) ev.stopPropagation();
         const p = load().find((x) => x.id === id);
-        if (!confirm('Delete "' + ((p && p.name) || "this project") + '"? This cannot be undone.')) return;
+        const ok = await studioDialog({
+          title: "Delete project?",
+          message: 'Delete "' + ((p && p.name) || "this project") + '"? This cannot be undone.',
+          ok: "Delete",
+          cancel: "Keep",
+          danger: true,
+        });
+        if (!ok) return;
         store(load().filter((x) => x.id !== id));
         renderGallery();
       }
@@ -4761,7 +5238,7 @@
         try {
           storeBrands(brands);
         } catch (e) {
-          alert("Storage full — remove a brand kit or some projects.");
+          studioAlert("Storage full — remove a brand kit or some projects.", "Storage full");
           return;
         }
         renderBrandKit();
