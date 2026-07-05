@@ -608,6 +608,131 @@
         font-size: 12.5px;
         color: var(--muted);
       }
+      .editbar-btns {
+        display: flex;
+        gap: 8px;
+      }
+      /* ── Full-page design editor ─────────────────────────────────────────── */
+      .designer {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+      }
+      .designer-top {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 14px 4%;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.96);
+      }
+      .designer-hint {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      .designer-actions {
+        margin-left: auto;
+        display: flex;
+        gap: 10px;
+      }
+      .designer-body {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+      }
+      .designer-stage {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f0ed;
+        padding: 28px;
+      }
+      .designer-stage canvas {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+        cursor: grab;
+        touch-action: none;
+      }
+      .designer-panel {
+        width: 320px;
+        flex: none;
+        overflow-y: auto;
+        padding: 22px 22px 30px;
+        border-left: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #fff;
+      }
+      .designer-panel h3 {
+        margin: 10px 0 0;
+      }
+      .d-label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #555;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        flex: 1;
+      }
+      .d-label input,
+      .d-label select {
+        font: inherit;
+        font-size: 14px;
+        font-weight: 400;
+        letter-spacing: 0;
+        text-transform: none;
+        padding: 9px 11px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #fff;
+        color: var(--ink);
+      }
+      .d-label input:focus,
+      .d-label select:focus {
+        outline: none;
+        border-color: #000;
+      }
+      .d-label input[type="color"] {
+        padding: 3px;
+        height: 38px;
+        width: 64px;
+      }
+      .d-row {
+        display: flex;
+        gap: 10px;
+      }
+      .d-color {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+      }
+      @media (max-width: 820px) {
+        .designer-body {
+          flex-direction: column;
+        }
+        .designer-panel {
+          width: 100%;
+          border-left: none;
+          border-top: 1px solid var(--line);
+        }
+        .designer-stage {
+          min-height: 44vh;
+        }
+      }
       #wizActions {
         margin-top: 0;
         justify-content: flex-end;
@@ -1814,8 +1939,11 @@
               </div>
             </div>
             <div id="editBar" class="editbar hidden">
-              <span class="editbar-hint">Drag to move · drag a corner handle to resize</span>
-              <button class="btn" onclick="finishLayeredAd()">Finish &amp; save</button>
+              <span class="editbar-hint">Want to tweak the design?</span>
+              <div class="editbar-btns">
+                <button class="btn ghost" onclick="openDesigner()">Edit design</button>
+                <button class="btn" onclick="finishLayeredAd()">Finish &amp; save</button>
+              </div>
             </div>
             <div id="status" class="status muted"></div>
             <div id="qc" class="qc"></div>
@@ -1823,6 +1951,58 @@
         </div>
       </section>
     </main>
+
+    <!-- ═══ Full-page design editor (Canva-style final edit) ═══════════════════ -->
+    <div id="designer" class="designer hidden">
+      <div class="designer-top">
+        <div class="brand">Design editor</div>
+        <span class="designer-hint">Drag to move · drag a corner handle to resize</span>
+        <div class="designer-actions">
+          <button class="btn ghost" onclick="designerCancel()">Cancel</button>
+          <button class="btn" onclick="designerSave()">Save changes</button>
+        </div>
+      </div>
+      <div class="designer-body">
+        <div class="designer-stage"><canvas id="designCanvas"></canvas></div>
+        <aside class="designer-panel">
+          <h3>Headline</h3>
+          <label class="d-label">Text<input id="d_headline" oninput="designerApply()" /></label>
+          <div class="d-row">
+            <label class="d-label">Font<select id="d_headFont" onchange="designerApply()"></select></label>
+            <label class="d-label"
+              >Size<input id="d_headSize" type="number" min="18" max="320" oninput="designerApply()"
+            /></label>
+          </div>
+          <label class="d-label d-color"
+            >Color<input id="d_headColor" type="color" oninput="designerApply(true)" /><button
+              type="button"
+              class="linklike"
+              onclick="designerAutoColor('headline')"
+            >
+              auto
+            </button></label
+          >
+          <h3>Subhead</h3>
+          <label class="d-label">Text<input id="d_subhead" oninput="designerApply()" /></label>
+          <div class="d-row">
+            <label class="d-label">Font<select id="d_subFont" onchange="designerApply()"></select></label>
+            <label class="d-label"
+              >Size<input id="d_subSize" type="number" min="14" max="200" oninput="designerApply()"
+            /></label>
+          </div>
+          <label class="d-label d-color"
+            >Color<input id="d_subColor" type="color" oninput="designerApply(true)" /><button
+              type="button"
+              class="linklike"
+              onclick="designerAutoColor('subhead')"
+            >
+              auto
+            </button></label
+          >
+          <p class="muted tiny">The product and logo are draggable and resizable on the canvas too.</p>
+        </aside>
+      </div>
+    </div>
 
     <!-- ═══ Generate review overlay (copy → background) ═══════════════════════ -->
     <div id="review" class="review-overlay hidden" onclick="if (event.target === this) reviewCancel();">
@@ -2256,17 +2436,39 @@
         }
         ctx.putImageData(im, 0, 0);
       }
-      // Soft light scrim behind the headline zone so dark text always reads (AA large).
-      function drawTextScrim(ctx, p) {
-        const L = p.layout || defaultLayout();
-        const ty = L && L.headline ? L.headline.y : Math.round(H * 0.72);
-        const top = Math.max(0, ty - H * 0.06);
-        const g = ctx.createLinearGradient(0, top, 0, H);
-        g.addColorStop(0, rgb(WHITE, 0));
-        g.addColorStop(0.28, rgb(WHITE, 0.72));
-        g.addColorStop(1, rgb(WHITE, 0.93));
-        ctx.fillStyle = g;
-        ctx.fillRect(0, top, W, H - top);
+      // Adaptive text colour: sample the pixels under the text box and pick dark ink on
+      // light ground, warm white on dark ground — no scrim needed for legibility.
+      function autoInk(ctx, x, y, w, h) {
+        try {
+          x = Math.max(0, Math.min(W - 2, Math.round(x)));
+          y = Math.max(0, Math.min(H - 2, Math.round(y)));
+          w = Math.max(1, Math.min(W - x, Math.round(w)));
+          h = Math.max(1, Math.min(H - y, Math.round(h)));
+          const d = ctx.getImageData(x, y, w, h).data;
+          let l = 0,
+            n = 0;
+          for (let i = 0; i < d.length; i += 4 * 7) {
+            l += _lum(d[i], d[i + 1], d[i + 2]);
+            n++;
+          }
+          // ink is readable down to ~0.13 band luminance, white up to ~0.28 — switch at 0.22
+          return l / n > 0.22 ? INK : "#fafaf8";
+        } catch (e) {
+          return INK;
+        }
+      }
+      // Per-element font stacks (headline and subhead can differ).
+      const FONT_STACKS = [
+        ["brand", "Brand font"],
+        ["serif", "Serif"],
+        ["sans", "Sans"],
+        ["display", "Display"],
+      ];
+      function fontStack(id, p) {
+        if (id === "serif") return 'Georgia,"Times New Roman",serif';
+        if (id === "sans") return '-apple-system,"Helvetica Neue",Arial,sans-serif';
+        if (id === "display") return '"Arial Black","Helvetica Neue",Arial,sans-serif';
+        return (p.fontName ? '"' + p.fontName + '", ' : "") + 'Georgia,"Times New Roman",serif'; // brand default
       }
       // Soft contact shadow so the product reads as placed, not pasted.
       function drawProductShadow(ctx, b) {
@@ -2297,7 +2499,6 @@
         // Local composite (layered): procedural background + product + logo + text.
         // The full-AI ad image is drawn directly by renderFinal(), not here.
         drawBackground(ctx, rng, accent, deep, p.preset);
-        drawTextScrim(ctx, p);
         const m = 80,
           sz = 150;
         if (p.logo) {
@@ -2320,7 +2521,7 @@
             drawContain(ctx, pi, b.x, b.y, b.w, b.h);
           } catch (e) {}
         }
-        ctx.fillStyle = INK;
+        ctx.fillStyle = autoInk(ctx, 0, H * 0.72, W, 220);
         ctx.textBaseline = "top";
         const head = cap(firstLine(p.headline) || firstLine(audienceOf(p)) || (p.name || "").trim());
         ctx.font = "600 74px " + (p.fontName ? '"' + p.fontName + '", ' : "") + 'Georgia,"Times New Roman",serif';
@@ -3041,7 +3242,6 @@
           deep = p.brand_secondary ? hexToRgb(p.brand_secondary) : darken(accent);
         if (_imgcache.bg) ctx.drawImage(_imgcache.bg, 0, 0, W, H);
         else drawBackground(ctx, mulberry32((p.seed || 1) >>> 0), accent, deep, p.preset);
-        drawTextScrim(ctx, p);
         _hit = [];
         if (_imgcache.product) {
           const b = L.product;
@@ -3054,13 +3254,16 @@
           drawContain(ctx, _imgcache.logo, b.x, b.y, b.w, b.h);
           _hit.push({ id: "logo", x: b.x, y: b.y, w: b.w, h: b.h });
         }
-        ctx.fillStyle = INK;
         ctx.textBaseline = "top";
         const m = 80;
-        const font = (wt, sz) => wt + " " + sz + 'px ' + (p.fontName ? '"' + p.fontName + '", ' : "") + 'Georgia,"Times New Roman",serif';
+        const font = (wt, sz, el) => wt + " " + sz + "px " + fontStack((L[el] && L[el].font) || "brand", p);
         const head = cap(firstLine(p.headline) || firstLine(audienceOf(p)) || (p.name || "").trim());
         const hsz = (L.headline && L.headline.size) || 74;
-        ctx.font = font("600", hsz);
+        // no scrim: text colour adapts to what's underneath (unless the user chose one);
+        // sample the same full-width band the QC contrast gate measures
+        L.headline._ink = L.headline.color || autoInk(ctx, 0, L.headline.y, W, 220);
+        ctx.fillStyle = L.headline._ink;
+        ctx.font = font("600", hsz, "headline");
         let hy = L.headline.y,
           hw = 0;
         for (const ln of wrap(ctx, head, W - 2 * m)) {
@@ -3072,7 +3275,9 @@
         const sub = firstLine(p.subhead);
         if (sub) {
           const ssz = (L.subhead && L.subhead.size) || 34;
-          ctx.font = font("400", ssz);
+          L.subhead._ink = L.subhead.color || autoInk(ctx, L.subhead.x, L.subhead.y, W - 2 * m, ssz * 1.6);
+          ctx.fillStyle = L.subhead._ink;
+          ctx.font = font("400", ssz, "subhead");
           const sl = wrap(ctx, sub, W - 2 * m)[0] || "";
           ctx.fillText(sl, L.subhead.x, L.subhead.y);
           _hit.push({ id: "subhead", x: L.subhead.x, y: L.subhead.y, w: ctx.measureText(sl).width || 200, h: ssz * 1.12 });
@@ -3152,32 +3357,29 @@
         if (render) render.classList.toggle("hidden", !layered);
         if (finish) finish.classList.toggle("hidden", layered);
       }
-      // Layered step 2 — Render: composite the editable text, product and logo onto the
-      // approved background and hand it to the canvas for drag / move / resize.
+      // Layered step 2 — Render: composite the text, product and logo onto the approved
+      // background and show it on the preview, with Edit design (full-page) available.
       async function renderLayeredAd() {
         $("#review").classList.add("hidden");
         showLoading();
-        _editing = true;
         try {
           if (!current.layout) current.layout = defaultLayout();
           await cacheLayeredImages(current);
-          drawLayered($("#poster").getContext("2d"), current, true);
+          drawLayered($("#poster").getContext("2d"), current, false);
         } finally {
           showResult();
         }
-        $("#poster").style.cursor = "grab";
         showEditBar(true);
-        setStatus("Drag to move · drag a corner handle to resize · then Finish & save");
+        setStatus("Rendered — Edit design for final tweaks, or Finish & save");
         runQC();
       }
-      // Layered step 3 — Finish & save (drops the handles, saves the project).
+      // Layered step 3 — Finish & save.
       function finishLayeredAd() {
         _editing = false;
         try {
           drawLayered($("#poster").getContext("2d"), current, false);
         } catch (e) {}
         showEditBar(false);
-        $("#poster").style.cursor = "";
         setStatus("Saved.");
         saveProject();
       }
@@ -3185,10 +3387,88 @@
         const e = $("#editBar");
         if (e) e.classList.toggle("hidden", !on);
       }
-      function canvasXY(e) {
-        const c = $("#poster"),
-          r = c.getBoundingClientRect();
+      function canvasXY(e, c) {
+        const r = c.getBoundingClientRect();
         return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
+      }
+
+      /* ---------- full-page design editor (final edit before saving) ---------- */
+      let _designSnap = null;
+      const dctx = () => $("#designCanvas").getContext("2d");
+      function fontOptionsHtml(sel) {
+        return FONT_STACKS.filter(([id]) => id !== "brand" || current.fontName)
+          .map(([id, label]) => `<option value="${id}"${id === (sel || "brand") ? " selected" : ""}>${label}</option>`)
+          .join("");
+      }
+      async function openDesigner() {
+        if (!current.layout) current.layout = defaultLayout();
+        const L = current.layout;
+        _designSnap = JSON.stringify({ headline: current.headline, subhead: current.subhead, layout: L });
+        const c = $("#designCanvas");
+        c.width = W;
+        c.height = H;
+        // populate the panel
+        $("#d_headline").value = firstLine(current.headline) || "";
+        $("#d_subhead").value = firstLine(current.subhead) || "";
+        $("#d_headFont").innerHTML = fontOptionsHtml(L.headline.font);
+        $("#d_subFont").innerHTML = fontOptionsHtml(L.subhead.font);
+        $("#d_headSize").value = L.headline.size || 74;
+        $("#d_subSize").value = L.subhead.size || 34;
+        await cacheLayeredImages(current);
+        drawLayered(dctx(), current, true); // computes effective colours (_ink)
+        $("#d_headColor").value = L.headline.color || L.headline._ink || "#141110";
+        $("#d_subColor").value = L.subhead.color || L.subhead._ink || "#141110";
+        _editing = true;
+        $("#designer").classList.remove("hidden");
+        document.body.style.overflow = "hidden";
+      }
+      // Read the panel into the project and redraw. explicitColor=true when the user
+      // touched a colour input (locks it; "auto" resets to adaptive).
+      function designerApply(explicitColor) {
+        const L = current.layout;
+        current.headline = $("#d_headline").value;
+        current.subhead = $("#d_subhead").value;
+        L.headline.font = $("#d_headFont").value;
+        L.subhead.font = $("#d_subFont").value;
+        L.headline.size = Math.max(18, Math.min(320, +$("#d_headSize").value || 74));
+        L.subhead.size = Math.max(14, Math.min(200, +$("#d_subSize").value || 34));
+        if (explicitColor) {
+          L.headline.color = $("#d_headColor").value;
+          L.subhead.color = $("#d_subColor").value;
+        }
+        drawLayered(dctx(), current, true);
+      }
+      function designerAutoColor(el) {
+        current.layout[el].color = null;
+        drawLayered(dctx(), current, true);
+        $(el === "headline" ? "#d_headColor" : "#d_subColor").value = current.layout[el]._ink || "#141110";
+      }
+      function closeDesigner() {
+        _editing = false;
+        $("#designer").classList.add("hidden");
+        document.body.style.overflow = "";
+      }
+      function designerSave() {
+        closeDesigner();
+        // sync the wizard copy fields with any reworded text
+        if ($("#f_headline")) $("#f_headline").value = firstLine(current.headline) || "";
+        if ($("#f_subhead")) $("#f_subhead").value = firstLine(current.subhead) || "";
+        drawLayered($("#poster").getContext("2d"), current, false);
+        showResult();
+        showEditBar(true);
+        setStatus("Design updated — Finish & save when you're happy");
+        runQC();
+      }
+      function designerCancel() {
+        if (_designSnap) {
+          const s = JSON.parse(_designSnap);
+          current.headline = s.headline;
+          current.subhead = s.subhead;
+          current.layout = s.layout;
+        }
+        closeDesigner();
+        drawLayered($("#poster").getContext("2d"), current, false);
+        runQC();
       }
 
       /* ---------- brand-fit QC (client-side: is it on-brand, and why) ---------- */
@@ -3228,9 +3508,11 @@
               bn++;
             }
           }
+        const hcol = p.layout && p.layout.headline && (p.layout.headline.color || p.layout.headline._ink);
+        const tc = hcol ? hexToRgb(hcol) : [20, 17, 15];
         const brandFrac = brand / total,
           bgL = bn ? bl / bn : 1,
-          txtL = _lum(20, 17, 15);
+          txtL = _lum(tc[0], tc[1], tc[2]);
         const ratio = (Math.max(bgL, txtL) + 0.05) / (Math.min(bgL, txtL) + 0.05);
         const dom = Object.values(buckets).filter((v) => v / total >= 0.06).length;
         const gates = [
@@ -3624,6 +3906,7 @@
         document.querySelectorAll(".navlink").forEach((a) => a.classList.toggle("on", a.dataset.nav === page));
       }
       function showGallery() {
+        if ($("#designer") && !$("#designer").classList.contains("hidden")) closeDesigner();
         _editing = false;
         showEditBar(false);
         $("#editor").classList.add("hidden");
@@ -3729,9 +4012,9 @@
           if (f) handleCustomerFile(f);
         });
       })();
-      /* drag / move / resize (layered edit step only) */
+      /* drag / move / resize (inside the design editor) */
       (function () {
-        const c = $("#poster");
+        const c = $("#designCanvas");
         const onHandle = (b, x, y) => {
           const g = HANDLE() * 0.9,
             hx = b.x + b.w + 6,
@@ -3739,8 +4022,8 @@
           return Math.abs(x - hx) <= g && Math.abs(y - hy) <= g;
         };
         c.addEventListener("pointerdown", (e) => {
-          if (!_editing || current.mode !== "layered" || !current.layout) return;
-          const { x, y } = canvasXY(e);
+          if (!_editing || !current.layout) return;
+          const { x, y } = canvasXY(e, c);
           for (let i = _hit.length - 1; i >= 0; i--) {
             const b = _hit[i];
             if (onHandle(b, x, y)) {
@@ -3772,7 +4055,7 @@
         });
         c.addEventListener("pointermove", (e) => {
           if (!_drag && !_resize) return;
-          const { x, y } = canvasXY(e);
+          const { x, y } = canvasXY(e, c);
           if (_resize) {
             const L = current.layout[_resize.id];
             const scale = Math.max(0.25, (x - _resize.ax) / _resize.startW);
