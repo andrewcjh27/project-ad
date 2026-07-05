@@ -4841,7 +4841,6 @@
           const name = currentFolderName() || "Folder";
           el.innerHTML =
             `<button type="button" class="backfolder" data-drop-all="true" onclick="setFolderFilter('all')">&larr; All projects</button>` +
-            `<button type="button" class="folderchip new" onclick="newFolder()">+ New folder</button>` +
             `<span class="muted tiny">${esc(name)}</span>`;
           return;
         }
@@ -4983,7 +4982,6 @@
         if (backToAll) {
           ["dragenter", "dragover"].forEach((type) =>
             backToAll.addEventListener(type, (e) => {
-              if (!e.dataTransfer.getData("text/project-id")) return;
               e.preventDefault();
               backToAll.classList.add("drop-target");
             }),
