@@ -1,0 +1,2001 @@
+name,age,gender,city,interest,monthly_spend,visits_per_week
+Iris Patel,31,Nonbinary,Lisbon,matcha,35.42,5
+June Okafor,32,Male,Berlin,fitness,52.71,4
+Hugo Costa,18,Male,Toronto,study cafes,12.14,7
+Eli Costa,30,Female,Melbourne,cozy rituals,62.71,6
+Ava Lund,40,Male,Stuttgart,study cafes,60.82,5
+Nina Ito,19,Female,Austin,study cafes,19.41,6
+Noah Garcia,39,Male,Stuttgart,home office,87.73,2
+Maya Byrne,41,Male,Denver,home office,59.43,3
+Zara Nash,31,Female,Minneapolis,weekend treats,50.4,1
+Leo Okafor,42,Female,Bristol,decaf,65.36,3
+June Weber,43,Male,Mexico City,matcha,32.41,5
+Sam Reyes,49,Nonbinary,Minneapolis,fitness,96.0,2
+Iris Byrne,67,Female,Portland,classic roast,19.28,2
+Ava Costa,62,Male,Kyoto,classic roast,31.85,2
+Leo Reyes,40,Female,Manchester,home office,108.57,2
+Riley Silva,35,Male,Chicago,loyalty offers,124.5,3
+Casey Weber,28,Male,Berlin,fitness,68.68,5
+Leo Sato,21,Male,Austin,study cafes,31.71,6
+Owen Nash,35,Male,Lisbon,plant-based,49.97,5
+Lena Costa,32,Female,Mexico City,matcha,35.4,3
+Omar Byrne,41,Male,Bristol,decaf,61.53,2
+Sam Garcia,46,Male,Denver,espresso gear,105.1,1
+Ruth Novak,33,Nonbinary,Lisbon,plant-based,30.5,4
+Casey Lund,63,Female,Bath,classic roast,22.06,3
+Ruth Okafor,71,Female,Bath,tea,23.42,5
+Riley Moreau,29,Male,New York,fitness,64.38,6
+June Costa,42,Female,Bristol,decaf,54.29,4
+Owen Ito,28,Male,New York,fitness,51.02,4
+Ava Reyes,29,Female,Lisbon,matcha,56.45,4
+Owen Silva,35,Nonbinary,Bali,matcha,57.46,5
+Lena Haas,43,Male,Manchester,espresso gear,124.01,2
+Alex Kim,48,Female,Manchester,home office,66.81,0
+Maya Moreau,32,Nonbinary,Bali,plant-based,42.76,4
+Zara Nash,20,Female,Austin,iced drinks,26.87,7
+Leo Ali,66,Female,Portland,classic roast,39.58,1
+Alex Ito,49,Male,Denver,espresso gear,90.51,2
+Noah Okafor,28,Male,Singapore,fitness,91.7,4
+Noah Kim,68,Male,Portland,tea,28.84,3
+Eli Ito,21,Female,Austin,iced drinks,21.42,4
+Zara Byrne,25,Nonbinary,Bali,plant-based,41.03,6
+June Lund,39,Male,Stuttgart,espresso gear,99.89,2
+Nina Nash,40,Male,Manchester,home office,93.46,2
+Nina Garcia,21,Male,Leeds,study cafes,18.48,6
+Noah Silva,45,Male,Stuttgart,home office,90.13,1
+Owen Okafor,20,Female,Austin,study cafes,14.31,4
+June Okafor,19,Nonbinary,Leeds,specialty coffee,108.39,4
+Maya Chen,45,Male,Manchester,espresso gear,103.16,2
+Leo Reyes,27,Female,London,specialty coffee,48.47,7
+Noah Sato,20,Female,Leeds,study cafes,16.74,4
+Lena Silva,27,Nonbinary,Lisbon,matcha,47.22,6
+Eli Nash,28,Female,London,specialty coffee,58.96,6
+June Chen,21,Female,Seattle,cozy rituals,77.51,4
+Alex Vega,44,Male,Frankfurt,espresso to go,128.17,3
+Nina Novak,54,Female,Chicago,weekend treats,125.57,1
+Zara Garcia,44,Male,Denver,espresso gear,108.39,3
+Omar Weber,22,Male,Leeds,home office,132.42,7
+Jordan Haas,37,Male,Utrecht,weekend treats,35.84,0
+Alex Haas,29,Female,Melbourne,specialty coffee,58.67,7
+Zara Ito,22,Female,Frankfurt,fitness,107.15,5
+Alex Larsen,66,Male,London,decaf,132.18,3
+Zara Vega,22,Female,Bali,matcha,41.48,5
+Kai Reyes,23,Female,Seattle,cozy rituals,42.88,5
+Alex Larsen,21,Male,Leeds,iced drinks,14.51,5
+Nina Kim,37,Female,Lisbon,plant-based,26.07,7
+Ruth Haas,28,Female,Seattle,specialty coffee,58.22,4
+Noah Byrne,40,Male,Bristol,weekend treats,35.18,2
+Jordan Costa,30,Female,Lisbon,matcha,60.79,6
+Ruth Costa,47,Male,Stuttgart,home office,97.61,0
+Iris Ito,47,Female,Kyoto,study cafes,90.17,4
+Leo Haas,33,Male,Berlin,cold brew,69.02,5
+Hugo Chen,43,Male,Manchester,home office,84.81,2
+Omar Costa,28,Female,Seattle,specialty coffee,67.65,6
+Maya Novak,22,Female,Leeds,iced drinks,25.14,5
+Owen Novak,31,Male,Berlin,fitness,59.71,4
+Leo Moreau,34,Male,Bristol,weekend treats,33.71,3
+Omar Ali,35,Female,Chicago,loyalty offers,84.49,3
+Casey Kim,35,Male,Singapore,cold brew,47.91,3
+Nina Larsen,45,Female,Berlin,study cafes,133.73,7
+Eli Reyes,61,Female,Kyoto,classic roast,32.91,3
+Ruth Nash,28,Nonbinary,Lisbon,plant-based,48.87,6
+Casey Weber,40,Male,Manchester,espresso gear,132.44,0
+Lena Weber,28,Female,Seattle,specialty coffee,49.3,7
+Lena Chen,45,Female,Minneapolis,decaf,39.87,2
+Eli Silva,64,Male,Bath,tea,30.81,5
+Omar Sato,28,Female,Seattle,cozy rituals,40.67,6
+Ruth Nash,32,Male,Frankfurt,espresso to go,119.74,1
+Alex Garcia,34,Female,Bristol,decaf,33.71,3
+Leo Byrne,66,Male,Portland,classic roast,23.68,3
+Owen Patel,45,Male,Denver,home office,77.35,3
+June Larsen,32,Male,Berlin,cold brew,76.78,5
+Kai Chen,22,Female,Toronto,iced drinks,19.63,6
+Zara Nash,43,Male,Stuttgart,home office,95.92,1
+Iris Ito,40,Male,Denver,espresso gear,119.67,2
+Eli Nash,27,Male,London,specialty coffee,51.59,5
+Iris Byrne,28,Male,Berlin,cold brew,63.15,6
+Casey Okafor,36,Male,Berlin,fitness,66.43,2
+Lena Novak,65,Nonbinary,Bristol,matcha,135.59,4
+Zara Garcia,28,Female,Seattle,specialty coffee,70.53,7
+Leo Ito,20,Female,Austin,study cafes,18.56,7
+Casey Ito,26,Female,Seattle,cozy rituals,69.65,6
+Kai Byrne,29,Male,Berlin,fitness,55.47,4
+Sam Silva,35,Female,Bali,plant-based,42.87,5
+Owen Nash,48,Male,Dubai,loyalty offers,106.1,2
+Eli Sato,68,Male,Bath,classic roast,39.29,3
+Riley Ali,29,Female,London,cozy rituals,63.15,5
+Maya Costa,51,Male,Dubai,loyalty offers,87.28,3
+Lena Novak,39,Female,Frankfurt,loyalty offers,82.64,4
+Eli Novak,36,Female,Minneapolis,decaf,30.59,2
+Eli Vega,27,Female,London,cozy rituals,42.64,5
+Leo Haas,30,Female,Dubai,loyalty offers,80.58,2
+June Haas,22,Female,Toronto,study cafes,20.35,7
+Riley Haas,39,Male,Bristol,weekend treats,33.46,1
+Ruth Reyes,20,Female,Austin,iced drinks,30.1,5
+Zara Byrne,28,Female,Seattle,cozy rituals,39.6,7
+Omar Larsen,29,Female,Melbourne,cozy rituals,70.84,7
+Alex Larsen,70,Female,Kyoto,classic roast,17.69,2
+Sam Byrne,23,Female,Seattle,specialty coffee,69.1,7
+June Okafor,27,Female,Melbourne,cozy rituals,58.56,5
+June Ali,29,Male,Bali,matcha,54.18,5
+June Weber,27,Female,Melbourne,specialty coffee,53.72,4
+Leo Silva,28,Female,Seattle,specialty coffee,46.62,6
+Leo Moreau,29,Male,Seattle,specialty coffee,61.98,5
+Lena Haas,68,Male,Kyoto,classic roast,24.83,5
+Kai Ito,73,Male,Kyoto,classic roast,23.81,4
+Casey Moreau,52,Female,Frankfurt,espresso to go,113.32,1
+Eli Haas,24,Nonbinary,Seattle,cozy rituals,69.45,6
+Kai Larsen,50,Male,Denver,home office,53.2,1
+Ruth Byrne,37,Male,Dubai,loyalty offers,88.08,3
+Iris Ali,47,Nonbinary,Bath,tea,38.21,0
+Nina Haas,21,Male,Austin,study cafes,27.41,6
+Jordan Patel,43,Male,Stuttgart,espresso gear,87.42,1
+Ruth Byrne,48,Male,Denver,home office,93.18,1
+Noah Lund,38,Female,Manchester,home office,103.16,2
+Owen Garcia,32,Nonbinary,Lisbon,matcha,10.23,3
+Noah Vega,25,Female,Melbourne,specialty coffee,55.77,5
+Ava Silva,29,Nonbinary,Lisbon,matcha,36.75,6
+Zara Reyes,21,Male,Leeds,iced drinks,18.76,5
+Lena Silva,40,Female,Frankfurt,loyalty offers,85.86,2
+Riley Reyes,24,Male,Melbourne,cozy rituals,40.62,7
+Kai Novak,73,Female,Kyoto,classic roast,26.37,5
+Owen Ali,23,Male,Austin,study cafes,30.56,7
+June Moreau,35,Male,Singapore,fitness,74.25,4
+Riley Reyes,18,Nonbinary,Toronto,iced drinks,23.91,5
+Alex Kim,25,Female,Seattle,espresso to go,54.83,2
+Ava Byrne,28,Male,Bali,plant-based,42.13,2
+June Reyes,27,Female,Melbourne,cozy rituals,45.72,4
+Lena Silva,40,Male,Dubai,loyalty offers,110.9,3
+Riley Moreau,31,Female,Melbourne,specialty coffee,49.41,5
+Eli Lund,31,Nonbinary,Mexico City,matcha,47.19,3
+Omar Sato,23,Male,Toronto,iced drinks,19.27,6
+Lena Moreau,38,Male,Bristol,weekend treats,36.74,3
+Ava Larsen,40,Female,Bristol,decaf,42.33,2
+Ava Haas,37,Male,Denver,home office,109.84,2
+Zara Novak,44,Male,Chicago,espresso to go,103.85,3
+Hugo Silva,30,Male,New York,fitness,42.39,5
+Sam Larsen,37,Male,Frankfurt,espresso to go,125.31,3
+Owen Novak,42,Male,Utrecht,decaf,61.34,2
+Jordan Byrne,40,Male,Manchester,home office,92.49,5
+Ruth Reyes,30,Male,New York,cold brew,52.95,5
+Kai Reyes,22,Female,Utrecht,classic roast,103.1,3
+Maya Reyes,33,Nonbinary,Lisbon,plant-based,42.0,4
+Ruth Ali,38,Male,Denver,espresso gear,106.28,2
+Omar Okafor,22,Female,Austin,study cafes,21.95,6
+Eli Novak,30,Nonbinary,Mexico City,matcha,45.43,6
+Ava Chen,25,Female,Melbourne,cozy rituals,65.78,5
+Casey Silva,21,Female,Toronto,iced drinks,24.56,5
+Sam Larsen,31,Male,Singapore,fitness,69.94,5
+Ruth Reyes,41,Male,Denver,espresso gear,67.83,0
+Alex Kim,31,Male,Bali,plant-based,41.12,5
+Maya Silva,29,Male,Singapore,cold brew,56.26,6
+Riley Lund,40,Male,Frankfurt,espresso to go,94.04,1
+Ava Chen,30,Female,London,cozy rituals,42.7,5
+Noah Byrne,45,Male,Stuttgart,home office,107.12,2
+Omar Larsen,21,Male,Toronto,iced drinks,27.3,5
+Omar Reyes,66,Female,Portland,classic roast,42.82,3
+Alex Patel,38,Female,Lisbon,plant-based,47.08,3
+Riley Byrne,65,Female,Portland,classic roast,35.87,5
+Iris Okafor,65,Male,Portland,classic roast,25.14,4
+Noah Sato,29,Nonbinary,Bali,plant-based,45.43,4
+Riley Chen,29,Female,London,specialty coffee,54.85,6
+Jordan Vega,33,Male,Berlin,fitness,47.8,6
+Lena Okafor,20,Nonbinary,Austin,study cafes,19.17,5
+Casey Patel,20,Male,Toronto,study cafes,12.82,5
+Hugo Sato,30,Female,Melbourne,cozy rituals,41.98,6
+Lena Okafor,30,Male,Singapore,cold brew,66.77,5
+Ruth Costa,26,Male,Berlin,cold brew,66.76,5
+Riley Vega,20,Female,Toronto,study cafes,13.5,4
+Hugo Novak,21,Female,Bristol,loyalty offers,48.27,1
+Alex Lund,20,Female,Toronto,iced drinks,12.46,6
+Ruth Okafor,21,Nonbinary,Austin,iced drinks,24.65,6
+Alex Weber,26,Female,London,cozy rituals,52.79,6
+Sam Chen,38,Female,Utrecht,decaf,38.86,4
+Casey Okafor,42,Male,Denver,home office,99.0,1
+Ava Chen,36,Male,Chicago,espresso to go,131.04,2
+Leo Silva,67,Female,Portland,classic roast,29.48,2
+Iris Ito,21,Female,Seattle,specialty coffee,42.73,5
+Alex Larsen,22,Male,Toronto,iced drinks,14.1,6
+Kai Byrne,46,Female,Utrecht,weekend treats,40.75,2
+Nina Lund,28,Nonbinary,London,specialty coffee,45.51,5
+Jordan Chen,35,Male,Singapore,fitness,92.58,5
+Leo Moreau,26,Male,Berlin,fitness,76.36,5
+Omar Nash,20,Female,Leeds,iced drinks,16.43,5
+Jordan Vega,22,Male,Toronto,iced drinks,16.89,5
+Lena Byrne,48,Male,Manchester,espresso gear,74.68,2
+Nina Costa,43,Female,Mexico City,home office,29.18,3
+Alex Weber,46,Male,Manchester,home office,101.42,2
+Maya Costa,38,Male,Utrecht,decaf,65.57,2
+Riley Okafor,27,Female,London,cozy rituals,42.88,4
+Eli Vega,74,Female,Portland,classic roast,27.02,4
+Riley Haas,41,Male,Utrecht,weekend treats,43.23,1
+Sam Moreau,71,Female,Bath,tea,19.79,3
+Zara Weber,34,Female,Utrecht,weekend treats,41.1,3
+Zara Larsen,69,Male,Kyoto,tea,38.99,4
+Ava Larsen,41,Male,Frankfurt,loyalty offers,103.28,2
+Hugo Costa,67,Female,Bath,tea,28.8,4
+Riley Vega,29,Female,Melbourne,specialty coffee,49.26,4
+Maya Novak,41,Male,Utrecht,weekend treats,34.13,3
+Lena Silva,30,Male,Singapore,cold brew,85.94,3
+Lena Ali,40,Male,Denver,espresso gear,125.88,2
+Noah Nash,46,Male,Chicago,espresso to go,103.75,4
+Iris Costa,21,Male,Leeds,iced drinks,21.84,6
+Noah Silva,30,Male,New York,fitness,58.56,4
+Omar Sato,46,Female,Denver,home office,117.68,3
+Kai Haas,31,Male,Mexico City,matcha,41.4,4
+Lena Ali,26,Female,Melbourne,specialty coffee,49.79,4
+Maya Silva,39,Female,Chicago,espresso to go,73.63,2
+Alex Reyes,37,Male,Stuttgart,espresso gear,87.11,0
+Ruth Costa,33,Female,Mexico City,matcha,49.44,7
+Noah Ali,46,Male,Manchester,espresso gear,71.48,1
+Ruth Silva,64,Male,Bath,classic roast,34.92,3
+Riley Byrne,67,Female,Portland,classic roast,29.22,4
+Maya Weber,43,Male,Dubai,espresso to go,80.02,2
+Kai Larsen,29,Male,Seattle,cozy rituals,46.15,5
+Iris Ito,63,Female,Bath,tea,28.47,3
+Omar Vega,29,Male,Singapore,fitness,77.01,5
+Zara Vega,21,Female,Toronto,study cafes,23.71,4
+Leo Vega,26,Female,Toronto,iced drinks,19.33,7
+Noah Haas,24,Male,Seattle,cozy rituals,57.75,6
+Omar Nash,28,Male,Berlin,cold brew,68.09,2
+Zara Chen,34,Female,Mexico City,plant-based,31.22,6
+Lena Reyes,31,Male,Berlin,fitness,79.85,5
+Ava Garcia,34,Female,London,cozy rituals,51.28,4
+Nina Garcia,41,Female,Minneapolis,decaf,38.38,3
+Iris Silva,30,Female,Seattle,specialty coffee,62.69,5
+Ava Silva,36,Male,Mexico City,plant-based,55.03,5
+Hugo Ali,24,Male,Toronto,iced drinks,20.7,6
+Jordan Nash,40,Male,Manchester,espresso gear,100.77,2
+Zara Haas,25,Female,Melbourne,cozy rituals,60.13,6
+Maya Moreau,31,Female,Bali,matcha,38.65,5
+Alex Okafor,41,Female,Bristol,decaf,49.29,2
+Riley Novak,43,Male,Manchester,home office,93.5,1
+Iris Moreau,22,Male,Toronto,study cafes,25.64,7
+Ava Larsen,41,Male,Frankfurt,loyalty offers,103.54,3
+Ava Nash,45,Female,Dubai,espresso to go,101.96,3
+Alex Vega,45,Female,Utrecht,weekend treats,48.63,1
+Ava Lund,38,Female,Bristol,weekend treats,58.85,2
+Leo Lund,30,Female,Lisbon,plant-based,47.89,4
+Zara Costa,22,Male,Austin,iced drinks,18.78,6
+Eli Weber,67,Female,Portland,tea,30.84,3
+Kai Chen,22,Male,Austin,iced drinks,23.24,5
+Omar Nash,43,Female,Utrecht,weekend treats,51.39,2
+Jordan Weber,37,Female,Bristol,decaf,32.07,2
+Iris Larsen,18,Female,Austin,study cafes,19.92,5
+Kai Nash,29,Female,London,specialty coffee,64.36,5
+Owen Nash,51,Male,Stuttgart,espresso gear,105.74,2
+Ava Weber,25,Nonbinary,Toronto,iced drinks,26.88,5
+Lena Novak,25,Female,Melbourne,specialty coffee,48.45,6
+Nina Costa,28,Female,Melbourne,specialty coffee,56.92,5
+Zara Moreau,31,Male,Singapore,fitness,65.79,5
+Noah Byrne,35,Male,Singapore,fitness,78.23,4
+Noah Okafor,45,Male,Frankfurt,espresso to go,138.89,3
+Omar Haas,48,Male,Manchester,espresso gear,92.5,0
+Jordan Chen,44,Male,Stuttgart,espresso gear,92.84,3
+Lena Sato,29,Female,Lisbon,plant-based,57.16,5
+Kai Reyes,30,Male,New York,cold brew,54.66,4
+Alex Silva,19,Male,Toronto,iced drinks,20.27,6
+Iris Novak,32,Male,Singapore,fitness,67.6,3
+Leo Ali,27,Female,Melbourne,cozy rituals,66.22,7
+Kai Nash,40,Male,Dubai,loyalty offers,120.97,3
+Ruth Chen,31,Female,New York,fitness,84.28,5
+Sam Larsen,21,Nonbinary,Leeds,iced drinks,23.8,5
+Iris Sato,18,Male,Austin,study cafes,12.68,6
+Riley Lund,40,Female,Chicago,espresso to go,126.48,3
+Lena Kim,41,Female,Minneapolis,decaf,53.29,3
+Casey Weber,28,Female,Seattle,cozy rituals,56.34,6
+Owen Costa,22,Male,Leeds,iced drinks,15.37,7
+Leo Byrne,20,Female,Leeds,iced drinks,27.21,5
+Owen Sato,39,Female,Bristol,weekend treats,36.45,3
+Ruth Larsen,22,Nonbinary,Austin,study cafes,31.83,6
+Hugo Sato,39,Female,Chicago,espresso to go,86.44,3
+Eli Vega,30,Male,London,study cafes,35.44,4
+Ruth Vega,24,Female,Melbourne,specialty coffee,44.53,5
+Noah Lund,20,Female,Toronto,study cafes,21.37,5
+Omar Chen,28,Female,Berlin,cold brew,65.52,6
+Eli Lund,40,Male,Denver,espresso gear,106.74,3
+Alex Okafor,25,Female,Seattle,specialty coffee,62.77,6
+Maya Novak,40,Female,Frankfurt,loyalty offers,109.39,4
+Owen Novak,31,Male,Berlin,cold brew,68.94,4
+Maya Nash,33,Female,Mexico City,matcha,38.92,6
+June Patel,24,Nonbinary,Bali,matcha,57.55,4
+Omar Garcia,67,Male,Bath,tea,38.38,5
+Ava Haas,24,Male,Leeds,study cafes,18.42,5
+Ruth Vega,53,Male,Stuttgart,home office,92.06,0
+Owen Reyes,37,Female,Bristol,decaf,36.34,1
+Kai Vega,41,Female,Bristol,decaf,51.86,2
+Casey Patel,28,Nonbinary,Berlin,cold brew,50.54,5
+Jordan Sato,33,Female,Bali,matcha,53.08,5
+Omar Sato,36,Female,Bali,matcha,44.04,4
+Eli Novak,42,Male,Dubai,espresso to go,143.92,2
+Riley Weber,20,Female,Austin,study cafes,18.05,5
+Jordan Kim,29,Male,New York,cold brew,59.36,4
+Owen Ali,31,Male,Singapore,fitness,68.17,5
+Zara Reyes,29,Nonbinary,Seattle,cozy rituals,47.69,5
+Eli Okafor,22,Male,Toronto,iced drinks,12.49,5
+Omar Ito,45,Male,Frankfurt,espresso to go,126.15,2
+Nina Costa,51,Female,Dubai,espresso to go,93.77,2
+Eli Costa,25,Male,Seattle,cozy rituals,61.5,5
+Iris Ali,45,Male,Minneapolis,decaf,58.57,2
+Alex Patel,23,Female,London,specialty coffee,37.6,6
+Leo Haas,23,Female,Leeds,study cafes,29.12,7
+Alex Patel,20,Female,Austin,study cafes,23.51,5
+Alex Moreau,19,Female,Toronto,iced drinks,15.22,6
+Hugo Costa,22,Female,Austin,iced drinks,12.65,5
+Eli Kim,75,Female,Portland,classic roast,21.4,3
+Casey Reyes,20,Female,Leeds,study cafes,13.56,4
+Jordan Ito,70,Male,Kyoto,classic roast,30.35,3
+Leo Costa,42,Female,Utrecht,decaf,35.26,3
+Riley Patel,29,Female,Seattle,specialty coffee,50.4,3
+Ava Silva,18,Female,Austin,iced drinks,23.28,6
+Kai Sato,20,Nonbinary,Leeds,study cafes,19.06,5
+Jordan Novak,55,Nonbinary,Manchester,classic roast,103.27,6
+Casey Silva,42,Male,Frankfurt,loyalty offers,143.32,3
+Jordan Garcia,43,Female,Dubai,loyalty offers,77.6,3
+Maya Kim,49,Male,Chicago,espresso to go,80.8,4
+Leo Weber,30,Female,Utrecht,weekend treats,35.01,2
+Casey Costa,66,Female,Bath,classic roast,27.89,5
+Casey Lund,35,Nonbinary,Mexico City,plant-based,38.01,6
+Ruth Vega,33,Male,Utrecht,decaf,51.0,2
+Ava Ali,29,Nonbinary,Singapore,fitness,74.6,5
+Maya Kim,28,Male,Berlin,cold brew,68.54,4
+Casey Weber,24,Male,Leeds,iced drinks,19.85,4
+Sam Moreau,27,Female,Seattle,specialty coffee,66.69,4
+Jordan Larsen,32,Male,Dubai,loyalty offers,99.07,2
+June Novak,53,Nonbinary,Denver,espresso gear,63.71,6
+Ruth Weber,22,Male,Toronto,study cafes,21.36,4
+Riley Weber,24,Nonbinary,London,cozy rituals,51.51,5
+Jordan Silva,22,Nonbinary,Toronto,study cafes,20.8,6
+Maya Patel,25,Male,Melbourne,cozy rituals,46.16,6
+Noah Moreau,35,Male,Bali,matcha,32.73,5
+Owen Costa,40,Female,Minneapolis,decaf,42.48,3
+Alex Haas,61,Male,Bath,classic roast,23.78,4
+Sam Haas,24,Male,Berlin,cold brew,46.87,3
+Zara Larsen,37,Female,Utrecht,decaf,39.96,2
+Jordan Silva,38,Female,Bali,plant-based,51.15,4
+Eli Byrne,21,Female,Austin,study cafes,21.28,4
+Noah Larsen,27,Female,Lisbon,matcha,32.06,5
+Sam Haas,41,Male,Denver,espresso gear,85.49,1
+Kai Silva,25,Female,Melbourne,cozy rituals,50.16,5
+Iris Chen,31,Male,Singapore,fitness,71.38,4
+June Costa,26,Female,London,specialty coffee,73.82,7
+Kai Novak,22,Male,Austin,study cafes,17.76,7
+Sam Novak,51,Female,Chicago,espresso to go,142.5,3
+Alex Okafor,49,Nonbinary,Berlin,loyalty offers,88.13,7
+Kai Chen,36,Female,Utrecht,weekend treats,54.23,1
+Iris Weber,23,Male,Austin,fitness,97.63,0
+Jordan Silva,35,Female,Utrecht,weekend treats,38.45,2
+Alex Larsen,32,Nonbinary,Utrecht,cold brew,12.14,4
+Owen Silva,30,Female,Seattle,cozy rituals,54.18,6
+Iris Larsen,38,Female,Bristol,weekend treats,27.6,4
+Casey Kim,35,Male,Minneapolis,decaf,34.07,4
+Zara Reyes,35,Male,Minneapolis,decaf,52.46,3
+Noah Larsen,41,Male,Stuttgart,home office,68.34,3
+Casey Silva,60,Female,Kyoto,tea,32.38,4
+Maya Nash,29,Male,New York,fitness,92.28,6
+Maya Costa,42,Male,Denver,espresso gear,86.39,1
+Nina Moreau,40,Male,Frankfurt,espresso to go,94.23,4
+Zara Reyes,70,Female,Bath,tea,24.54,5
+Sam Kim,39,Female,Utrecht,weekend treats,56.55,2
+Hugo Nash,27,Female,Melbourne,specialty coffee,62.99,7
+Nina Vega,38,Female,Stuttgart,espresso gear,114.63,2
+Zara Weber,26,Female,Seattle,specialty coffee,67.26,5
+Hugo Weber,27,Male,Seattle,specialty coffee,51.5,6
+Noah Silva,44,Female,Utrecht,weekend treats,62.05,2
+Eli Costa,30,Female,Mexico City,plant-based,44.57,4
+Sam Garcia,22,Female,Austin,study cafes,15.51,6
+June Garcia,45,Male,Stuttgart,home office,108.44,2
+Omar Weber,41,Male,Manchester,espresso gear,108.76,5
+Sam Novak,36,Nonbinary,Bali,matcha,49.89,3
+Eli Sato,27,Female,Seattle,specialty coffee,62.6,6
+Leo Novak,29,Male,Singapore,fitness,55.83,5
+Ruth Chen,72,Nonbinary,Bali,home office,120.26,2
+Ruth Patel,29,Female,London,specialty coffee,53.14,4
+Kai Haas,48,Male,Stuttgart,home office,91.07,2
+Ruth Weber,46,Male,Manchester,espresso gear,87.5,2
+Iris Kim,60,Nonbinary,Singapore,cozy rituals,98.08,6
+Kai Okafor,19,Male,Leeds,iced drinks,29.04,4
+Kai Lund,34,Male,Utrecht,decaf,26.44,2
+Maya Reyes,44,Male,Denver,espresso gear,85.06,2
+Owen Costa,36,Nonbinary,Lisbon,plant-based,32.95,2
+Lena Lund,28,Female,London,specialty coffee,70.91,7
+Zara Ito,30,Male,Berlin,cold brew,89.84,5
+Nina Larsen,66,Female,Bath,tea,23.98,6
+June Moreau,19,Male,Toronto,iced drinks,22.43,4
+Nina Reyes,46,Male,Stuttgart,espresso gear,103.16,2
+Iris Costa,40,Male,Stuttgart,home office,96.79,2
+Ava Byrne,32,Female,Dubai,espresso to go,116.24,3
+Iris Ito,27,Female,Melbourne,cozy rituals,44.8,6
+Maya Nash,44,Female,Minneapolis,weekend treats,56.45,3
+Alex Sato,39,Female,Minneapolis,decaf,41.31,3
+Lena Haas,31,Male,Berlin,fitness,44.55,4
+Owen Ali,24,Male,Utrecht,decaf,28.23,1
+Kai Sato,44,Male,Chicago,loyalty offers,84.69,4
+Maya Costa,28,Female,London,cozy rituals,64.37,6
+Ruth Sato,28,Nonbinary,Mexico City,plant-based,30.43,5
+Eli Byrne,31,Female,Melbourne,specialty coffee,55.58,5
+Lena Okafor,39,Male,London,cozy rituals,37.03,5
+Iris Lund,30,Male,Berlin,cold brew,72.4,5
+Sam Patel,36,Female,Minneapolis,decaf,54.14,2
+Iris Okafor,31,Female,London,specialty coffee,53.46,5
+Alex Reyes,45,Male,Dubai,espresso to go,103.41,2
+Ava Vega,23,Nonbinary,Melbourne,cozy rituals,46.91,5
+Hugo Costa,22,Female,Leeds,study cafes,17.99,4
+Riley Chen,37,Male,Bristol,weekend treats,39.38,2
+Jordan Ali,31,Female,Bali,plant-based,31.02,4
+Sam Ito,21,Male,Austin,iced drinks,13.84,6
+Ruth Chen,26,Male,Singapore,fitness,42.87,4
+Noah Ali,25,Female,London,specialty coffee,71.31,6
+June Sato,25,Male,New York,cold brew,66.84,6
+Alex Chen,42,Male,Stuttgart,home office,61.3,3
+June Lund,29,Female,London,specialty coffee,51.94,5
+Kai Costa,29,Female,Seattle,specialty coffee,47.34,5
+Kai Moreau,26,Male,Berlin,plant-based,137.33,7
+Ava Haas,28,Female,London,cozy rituals,66.02,4
+Alex Sato,71,Female,Portland,classic roast,32.2,3
+Omar Vega,37,Female,Chicago,espresso to go,107.52,1
+Ava Reyes,20,Male,New York,specialty coffee,65.94,5
+Maya Byrne,46,Male,Denver,home office,89.48,3
+Lena Chen,66,Female,Kyoto,classic roast,39.54,4
+June Larsen,42,Female,Minneapolis,decaf,45.04,0
+Kai Silva,21,Female,Leeds,study cafes,13.37,6
+Riley Moreau,20,Female,Leeds,iced drinks,29.19,6
+Owen Nash,26,Female,Seattle,specialty coffee,52.56,5
+Ava Reyes,44,Male,Dubai,loyalty offers,87.3,2
+Hugo Larsen,41,Female,Minneapolis,weekend treats,59.43,0
+Lena Byrne,39,Male,Chicago,espresso to go,109.25,2
+Leo Okafor,38,Male,Utrecht,weekend treats,28.78,3
+Eli Silva,30,Male,Singapore,fitness,47.85,4
+Sam Weber,39,Female,Bristol,weekend treats,48.09,2
+Lena Moreau,72,Male,Bath,classic roast,28.62,4
+Leo Garcia,42,Male,Denver,home office,62.74,3
+Ava Nash,29,Female,London,cozy rituals,52.28,3
+Casey Kim,20,Female,Toronto,study cafes,11.97,7
+Ruth Patel,43,Female,Dubai,loyalty offers,97.64,2
+Eli Nash,35,Male,Bristol,decaf,58.71,0
+Hugo Moreau,51,Male,Frankfurt,loyalty offers,83.84,4
+Leo Nash,40,Female,Manchester,espresso gear,97.97,3
+Eli Nash,41,Male,Stuttgart,home office,93.96,2
+Omar Ito,28,Female,London,specialty coffee,38.17,5
+Casey Kim,71,Female,Lisbon,home office,41.99,7
+Iris Moreau,50,Male,Dubai,espresso to go,103.32,4
+Ava Weber,66,Female,Portland,classic roast,27.06,3
+Ava Chen,47,Male,Chicago,espresso to go,90.44,1
+Owen Novak,46,Female,Stuttgart,espresso gear,85.49,2
+Owen Ito,25,Female,London,cozy rituals,40.17,4
+Zara Novak,21,Female,Toronto,study cafes,28.54,6
+Lena Haas,32,Nonbinary,Mexico City,plant-based,41.04,6
+Casey Garcia,39,Female,Bristol,weekend treats,30.09,4
+Nina Nash,30,Female,Melbourne,cozy rituals,43.26,5
+Casey Moreau,32,Male,Bristol,decaf,31.27,3
+Sam Weber,32,Female,Bali,matcha,36.32,3
+Alex Costa,35,Female,Utrecht,decaf,35.33,2
+Lena Weber,37,Male,Dubai,loyalty offers,68.23,2
+Lena Moreau,48,Male,Manchester,espresso gear,64.72,1
+Maya Silva,21,Female,Leeds,iced drinks,22.71,6
+Sam Haas,66,Female,Bath,classic roast,24.78,3
+Riley Chen,33,Male,Dubai,loyalty offers,76.77,1
+Owen Nash,43,Male,Bristol,weekend treats,64.64,3
+Ruth Novak,47,Nonbinary,Leeds,espresso to go,92.72,0
+Alex Haas,33,Female,London,cozy rituals,45.08,6
+Owen Novak,40,Female,Utrecht,weekend treats,35.62,2
+June Sato,30,Male,New York,fitness,86.74,5
+Eli Nash,50,Male,Manchester,home office,128.36,2
+Casey Haas,23,Female,Leeds,iced drinks,24.76,4
+Riley Larsen,29,Nonbinary,New York,cold brew,64.54,6
+June Reyes,22,Male,Austin,study cafes,24.37,6
+Kai Costa,45,Female,Utrecht,decaf,38.62,1
+Sam Byrne,41,Male,Minneapolis,weekend treats,49.39,4
+Eli Moreau,23,Female,Austin,iced drinks,12.48,6
+Casey Moreau,25,Female,Seattle,cozy rituals,52.87,5
+Omar Vega,21,Female,Toronto,study cafes,21.47,6
+Jordan Novak,33,Male,Singapore,cold brew,45.25,4
+June Patel,41,Male,Manchester,espresso gear,111.26,1
+Zara Novak,35,Male,Bali,plant-based,31.08,6
+Iris Byrne,43,Male,Denver,home office,83.7,2
+Maya Patel,25,Nonbinary,Seattle,specialty coffee,55.01,5
+Eli Lund,35,Male,Bristol,weekend treats,37.42,4
+Sam Larsen,26,Nonbinary,Seattle,cozy rituals,53.61,5
+Eli Haas,24,Male,Toronto,iced drinks,26.23,7
+Riley Lund,30,Nonbinary,Bali,plant-based,37.86,4
+Nina Novak,60,Male,Bath,tea,18.79,5
+Casey Kim,23,Nonbinary,Kyoto,iced drinks,94.9,1
+Omar Nash,28,Nonbinary,London,iced drinks,33.92,3
+Zara Novak,30,Male,Minneapolis,weekend treats,45.61,3
+Ruth Chen,28,Female,Melbourne,cozy rituals,41.21,7
+Sam Vega,23,Male,Austin,study cafes,17.66,5
+Casey Ali,34,Female,Minneapolis,weekend treats,55.92,4
+Iris Byrne,30,Male,Chicago,espresso to go,92.69,4
+Alex Garcia,28,Male,Berlin,cold brew,91.43,3
+Eli Nash,35,Male,Bali,decaf,31.21,0
+Casey Silva,31,Male,Berlin,fitness,74.43,4
+Omar Larsen,28,Male,Singapore,cold brew,64.81,3
+Lena Ali,27,Male,Singapore,cold brew,92.54,6
+June Weber,22,Female,Leeds,study cafes,15.87,7
+Zara Patel,23,Female,Melbourne,cozy rituals,46.82,6
+Jordan Nash,30,Male,Berlin,fitness,48.98,4
+Maya Garcia,45,Male,Stuttgart,home office,75.34,2
+Owen Chen,43,Male,Manchester,espresso gear,92.33,4
+Sam Byrne,22,Female,Melbourne,specialty coffee,53.09,5
+Ava Ito,74,Male,Bath,classic roast,30.49,3
+Ava Garcia,31,Nonbinary,Bristol,espresso to go,50.18,5
+Leo Reyes,26,Female,London,specialty coffee,59.17,5
+Leo Haas,44,Male,Stuttgart,home office,91.94,2
+Kai Okafor,21,Male,Austin,iced drinks,20.03,7
+Eli Sato,49,Male,Manchester,espresso gear,76.51,3
+Casey Patel,30,Male,Berlin,fitness,51.59,3
+Ava Nash,23,Female,London,specialty coffee,53.19,6
+Lena Lund,47,Female,Toronto,weekend treats,42.05,2
+Nina Lund,36,Female,Bali,matcha,61.71,4
+Maya Costa,73,Female,Bath,tea,23.97,2
+Hugo Patel,39,Male,Chicago,espresso to go,86.13,2
+Maya Chen,59,Female,Portland,study cafes,36.28,4
+June Nash,47,Male,Frankfurt,espresso to go,86.15,3
+June Ito,27,Female,Melbourne,cozy rituals,65.87,7
+Kai Chen,32,Nonbinary,London,cozy rituals,64.26,5
+Nina Garcia,37,Male,Bristol,weekend treats,61.24,1
+Alex Vega,45,Male,Manchester,espresso gear,74.29,0
+Alex Kim,21,Female,Melbourne,cozy rituals,43.59,3
+Noah Haas,46,Male,Stuttgart,espresso gear,53.95,1
+Maya Reyes,43,Female,Utrecht,decaf,51.33,1
+Eli Larsen,38,Female,Dubai,espresso to go,113.2,4
+June Lund,32,Nonbinary,Singapore,fitness,56.47,5
+Hugo Silva,26,Female,Melbourne,cozy rituals,49.58,6
+Jordan Silva,27,Male,Singapore,cold brew,78.55,5
+Sam Patel,21,Male,Toronto,study cafes,25.08,5
+Lena Ali,21,Male,Leeds,iced drinks,22.44,5
+Zara Novak,27,Female,London,specialty coffee,62.45,7
+Jordan Byrne,37,Female,Bali,matcha,45.93,2
+Maya Chen,24,Male,Austin,study cafes,20.82,5
+Riley Sato,32,Female,Berlin,cold brew,49.22,5
+Casey Kim,28,Female,London,specialty coffee,59.33,7
+Kai Ito,22,Male,Leeds,study cafes,30.51,4
+Leo Costa,40,Female,Utrecht,decaf,48.5,1
+Lena Ali,34,Male,Utrecht,decaf,37.45,3
+Eli Okafor,32,Male,Singapore,cold brew,43.62,5
+Nina Costa,42,Male,Denver,espresso gear,100.11,3
+Casey Lund,21,Male,Toronto,iced drinks,17.38,6
+Nina Ali,69,Female,Kyoto,classic roast,28.46,3
+Maya Chen,27,Female,London,specialty coffee,51.32,6
+Maya Silva,26,Female,Bath,cold brew,100.57,0
+Owen Reyes,21,Nonbinary,Frankfurt,fitness,85.35,7
+Omar Silva,36,Female,Bali,plant-based,56.63,6
+Lena Lund,22,Female,Toronto,study cafes,10.55,5
+Leo Reyes,21,Male,Leeds,study cafes,26.05,6
+Hugo Lund,40,Female,Bristol,decaf,55.15,2
+Alex Larsen,20,Male,Austin,study cafes,17.59,5
+Omar Ali,29,Male,New York,fitness,58.47,4
+Ruth Moreau,38,Male,Manchester,espresso gear,90.49,1
+Leo Sato,22,Male,Leeds,iced drinks,23.71,6
+Omar Patel,50,Male,Stuttgart,home office,98.28,0
+Eli Ali,46,Male,Frankfurt,espresso to go,103.56,4
+Iris Ali,20,Female,Leeds,iced drinks,31.38,5
+Iris Okafor,39,Male,Manchester,home office,68.2,2
+Jordan Nash,28,Male,Berlin,cold brew,52.68,4
+Jordan Silva,28,Female,Melbourne,specialty coffee,46.97,6
+Zara Garcia,51,Male,Frankfurt,espresso to go,86.64,1
+Ruth Vega,27,Female,Melbourne,cozy rituals,40.55,7
+Omar Kim,66,Male,Kyoto,tea,30.89,1
+Nina Ali,72,Male,Kyoto,classic roast,28.74,4
+June Larsen,46,Female,Denver,espresso gear,68.09,3
+Sam Novak,30,Male,Berlin,cold brew,61.55,5
+Sam Garcia,46,Nonbinary,Leeds,home office,53.77,2
+Hugo Okafor,29,Male,New York,fitness,87.95,2
+Ava Costa,49,Male,Denver,espresso gear,103.79,3
+Owen Byrne,42,Male,Manchester,espresso gear,84.06,2
+Hugo Byrne,37,Male,Bristol,decaf,37.23,1
+Omar Moreau,58,Male,Austin,plant-based,65.35,6
+Ava Nash,21,Female,Austin,study cafes,12.43,5
+Kai Silva,40,Female,Lisbon,plant-based,53.07,4
+Ruth Byrne,47,Female,Frankfurt,espresso to go,77.38,3
+Omar Costa,35,Nonbinary,Lisbon,matcha,29.86,5
+Sam Ito,38,Female,Utrecht,weekend treats,29.81,3
+June Novak,19,Female,Austin,iced drinks,20.56,5
+Omar Reyes,20,Male,Toronto,iced drinks,27.53,6
+Owen Lund,38,Female,Denver,espresso gear,86.64,1
+Alex Garcia,37,Male,Mexico City,plant-based,41.6,5
+Eli Byrne,66,Male,Portland,tea,26.18,4
+Owen Haas,20,Male,Toronto,iced drinks,13.76,7
+Hugo Silva,22,Nonbinary,Toronto,iced drinks,14.61,5
+Lena Okafor,28,Male,Melbourne,cozy rituals,36.27,7
+Jordan Ito,34,Male,Dubai,espresso to go,155.52,5
+Omar Lund,25,Male,Berlin,fitness,90.16,3
+Ava Sato,19,Female,Leeds,study cafes,26.15,7
+Eli Haas,21,Nonbinary,Austin,iced drinks,24.99,7
+Ava Chen,21,Male,Austin,iced drinks,15.79,5
+Riley Garcia,48,Male,Manchester,espresso gear,73.6,4
+Jordan Ito,25,Female,London,specialty coffee,68.34,7
+Alex Ito,28,Male,Berlin,cold brew,70.6,4
+Zara Larsen,65,Female,Portland,classic roast,31.56,4
+Jordan Costa,22,Male,Leeds,iced drinks,13.21,3
+Lena Ali,32,Male,Mexico City,plant-based,24.59,5
+Hugo Ito,68,Male,Portland,tea,20.66,5
+Hugo Okafor,66,Female,Kyoto,tea,33.0,3
+Eli Byrne,46,Male,Stuttgart,espresso gear,73.36,2
+Nina Byrne,34,Nonbinary,Bali,plant-based,38.2,4
+Hugo Garcia,27,Female,Bali,plant-based,35.26,3
+Maya Costa,62,Nonbinary,Utrecht,espresso gear,44.78,1
+Casey Vega,30,Male,New York,fitness,52.2,5
+Kai Byrne,21,Female,Leeds,study cafes,21.43,4
+Ava Patel,29,Female,Seattle,specialty coffee,39.37,5
+Eli Ali,32,Male,Berlin,cold brew,68.46,6
+Ava Moreau,29,Female,Seattle,specialty coffee,62.94,6
+Leo Nash,25,Female,Melbourne,cozy rituals,37.99,7
+Zara Lund,23,Male,Leeds,study cafes,22.13,6
+Noah Reyes,27,Male,Berlin,cold brew,40.86,5
+Zara Sato,67,Male,Bath,classic roast,38.5,3
+June Chen,18,Male,Toronto,tea,98.67,2
+Omar Weber,29,Male,Singapore,fitness,62.8,6
+Ruth Vega,28,Male,New York,cold brew,49.2,5
+Ruth Garcia,24,Male,Austin,iced drinks,24.56,4
+Ava Ali,33,Male,Frankfurt,loyalty offers,110.74,4
+Alex Weber,32,Nonbinary,Bali,matcha,37.92,5
+June Kim,39,Female,Minneapolis,weekend treats,33.64,0
+Zara Reyes,71,Male,Portland,classic roast,39.63,3
+Kai Chen,61,Male,Seattle,specialty coffee,135.16,7
+Owen Okafor,40,Nonbinary,Lisbon,plant-based,49.61,5
+Omar Okafor,45,Male,Stuttgart,home office,101.64,2
+Kai Weber,35,Male,Denver,espresso gear,88.22,3
+Ava Okafor,55,Female,Portland,fitness,113.15,4
+Zara Sato,51,Male,Bath,cozy rituals,35.88,0
+Riley Okafor,23,Female,Leeds,iced drinks,24.61,7
+Hugo Patel,20,Male,Leeds,iced drinks,16.67,5
+Alex Patel,34,Female,Bali,matcha,52.57,4
+Maya Sato,65,Male,Bath,classic roast,21.05,5
+Casey Haas,51,Male,New York,espresso to go,63.33,1
+Leo Kim,23,Male,Austin,iced drinks,14.66,7
+Nina Moreau,40,Male,Minneapolis,weekend treats,37.09,2
+Riley Vega,61,Male,Bath,tea,24.91,5
+Omar Ito,35,Female,Utrecht,decaf,40.43,1
+Omar Sato,26,Female,Seattle,cozy rituals,53.85,5
+Eli Ito,41,Female,Minneapolis,decaf,37.21,2
+Riley Moreau,20,Nonbinary,Toronto,study cafes,30.92,6
+Jordan Costa,42,Male,Denver,espresso gear,76.38,2
+Lena Moreau,31,Nonbinary,Lisbon,matcha,48.62,6
+June Haas,20,Female,Austin,iced drinks,22.96,7
+Noah Sato,73,Female,Bath,classic roast,24.85,5
+Alex Larsen,44,Male,Manchester,espresso gear,76.04,2
+Alex Reyes,30,Female,Lisbon,plant-based,45.16,5
+Iris Sato,65,Female,Kyoto,classic roast,36.32,3
+Nina Ito,31,Nonbinary,Mexico City,matcha,57.6,3
+Eli Sato,44,Female,Manchester,home office,84.65,1
+Jordan Ali,35,Male,Dubai,espresso to go,90.26,4
+Leo Ito,47,Male,Denver,espresso gear,98.71,3
+June Novak,34,Female,Minneapolis,weekend treats,45.02,4
+Maya Patel,70,Female,Kyoto,classic roast,41.37,3
+Casey Okafor,31,Male,Mexico City,matcha,27.43,6
+Lena Okafor,65,Female,Bath,classic roast,36.73,4
+Leo Larsen,23,Female,Leeds,study cafes,29.26,5
+Alex Novak,21,Male,Leeds,study cafes,29.16,6
+Zara Lund,34,Male,Bali,plant-based,36.56,3
+Maya Larsen,26,Nonbinary,Singapore,fitness,60.81,3
+Ruth Novak,30,Male,Berlin,cold brew,54.77,5
+Iris Larsen,32,Male,Berlin,cold brew,50.51,6
+Kai Sato,34,Female,Utrecht,decaf,33.87,3
+Leo Kim,42,Male,Stuttgart,home office,79.58,2
+Kai Moreau,29,Male,Singapore,cold brew,91.71,6
+Alex Patel,35,Female,Bristol,decaf,44.51,0
+Alex Sato,40,Female,Minneapolis,decaf,40.53,1
+Nina Larsen,20,Female,Toronto,study cafes,17.09,6
+Alex Sato,40,Male,Manchester,espresso gear,11.65,5
+Zara Patel,40,Female,Frankfurt,loyalty offers,82.49,0
+Iris Novak,37,Female,Bristol,weekend treats,61.93,3
+Omar Okafor,29,Male,New York,fitness,60.58,4
+Sam Garcia,34,Female,Bali,matcha,28.49,5
+Omar Silva,20,Male,Leeds,study cafes,24.96,6
+Jordan Nash,68,Female,Bath,classic roast,35.47,2
+Alex Garcia,18,Female,Leeds,study cafes,21.46,5
+Maya Sato,69,Male,Portland,tea,38.99,3
+Ruth Reyes,20,Male,Toronto,iced drinks,28.94,6
+Sam Moreau,69,Female,Kyoto,classic roast,24.85,3
+Owen Novak,47,Male,Stuttgart,espresso gear,126.32,4
+Alex Costa,21,Female,London,cozy rituals,38.96,5
+Jordan Chen,44,Male,Frankfurt,espresso to go,92.2,2
+Maya Okafor,64,Female,Bath,tea,28.62,3
+Sam Vega,42,Male,Manchester,espresso gear,89.04,3
+Iris Sato,55,Female,Leeds,classic roast,126.85,7
+Sam Nash,41,Male,Denver,home office,56.16,1
+Lena Novak,47,Male,Denver,home office,85.16,2
+Eli Larsen,45,Male,Denver,espresso gear,114.65,1
+Ruth Vega,29,Female,Melbourne,specialty coffee,37.88,4
+Kai Costa,22,Male,Austin,study cafes,22.83,5
+June Weber,52,Female,Chicago,espresso to go,116.0,3
+Ruth Nash,30,Female,Minneapolis,weekend treats,33.02,3
+Iris Reyes,32,Female,Berlin,fitness,49.75,3
+Riley Patel,22,Female,Austin,study cafes,24.35,7
+Hugo Larsen,29,Male,Singapore,fitness,52.71,4
+Nina Byrne,41,Female,Stuttgart,home office,79.38,3
+Sam Patel,41,Male,Stuttgart,home office,122.14,4
+Owen Novak,37,Male,Utrecht,decaf,48.66,2
+Casey Novak,30,Male,New York,cold brew,74.78,5
+June Chen,42,Male,Stuttgart,espresso gear,68.6,3
+Riley Patel,20,Female,Leeds,study cafes,17.6,6
+Zara Sato,40,Female,Bali,plant-based,50.66,5
+Hugo Costa,29,Female,Seattle,specialty coffee,62.14,5
+Ruth Nash,43,Nonbinary,Utrecht,weekend treats,102.81,5
+Leo Costa,36,Male,Utrecht,weekend treats,50.43,2
+Leo Ali,49,Male,Stuttgart,home office,81.87,2
+Maya Ali,29,Male,Singapore,fitness,44.51,5
+Ava Weber,31,Female,London,cozy rituals,51.56,6
+June Sato,31,Nonbinary,Lisbon,plant-based,31.09,4
+Iris Patel,27,Male,Berlin,cold brew,62.51,5
+Eli Ali,26,Female,Melbourne,specialty coffee,58.22,7
+June Chen,67,Male,Portland,tea,17.73,3
+Ruth Larsen,32,Male,New York,fitness,83.86,4
+Owen Byrne,21,Female,London,cozy rituals,40.8,5
+Omar Nash,27,Female,London,cozy rituals,47.9,5
+Hugo Novak,57,Male,Chicago,espresso to go,70.33,3
+Zara Ali,20,Female,Leeds,iced drinks,24.43,5
+Riley Patel,33,Male,Singapore,cold brew,78.94,4
+Noah Larsen,26,Female,Melbourne,cozy rituals,43.82,4
+Alex Reyes,62,Female,Kyoto,classic roast,27.83,3
+June Haas,25,Female,Seattle,specialty coffee,47.02,6
+Jordan Larsen,29,Male,Lisbon,plant-based,52.09,4
+June Haas,40,Female,Utrecht,weekend treats,59.16,3
+Sam Moreau,27,Male,Singapore,cold brew,52.87,4
+Alex Okafor,24,Female,Melbourne,specialty coffee,38.13,5
+Leo Byrne,42,Female,Utrecht,decaf,30.26,2
+Casey Weber,27,Female,Melbourne,specialty coffee,53.67,7
+Casey Sato,35,Female,Chicago,loyalty offers,101.62,4
+Lena Byrne,28,Male,Bali,matcha,24.93,4
+Kai Costa,23,Male,Austin,iced drinks,20.6,4
+Sam Larsen,23,Female,Seattle,specialty coffee,49.69,6
+Hugo Chen,30,Nonbinary,Bali,matcha,51.12,3
+Noah Weber,46,Male,Denver,home office,73.17,3
+Owen Larsen,32,Male,Singapore,fitness,79.7,5
+Jordan Costa,21,Female,Toronto,study cafes,23.53,3
+Ruth Kim,43,Female,Mexico City,study cafes,101.81,5
+June Reyes,34,Male,Singapore,fitness,78.04,3
+Owen Lund,24,Female,Seattle,specialty coffee,45.57,5
+Ava Byrne,22,Female,Leeds,iced drinks,24.49,5
+Leo Silva,32,Male,Mexico City,plant-based,41.66,4
+Alex Sato,29,Male,Utrecht,decaf,33.37,2
+Lena Nash,29,Male,Berlin,cold brew,66.42,4
+Lena Silva,32,Nonbinary,Bali,plant-based,38.63,6
+Riley Nash,42,Male,Manchester,espresso gear,116.88,3
+Hugo Ito,20,Male,Toronto,study cafes,15.99,5
+June Okafor,70,Male,Bath,plant-based,124.23,2
+Lena Ali,42,Female,Minneapolis,decaf,46.92,1
+Zara Nash,27,Female,London,specialty coffee,53.05,5
+Maya Okafor,42,Male,Dubai,espresso to go,116.11,2
+Zara Moreau,43,Male,Manchester,home office,105.89,3
+June Silva,75,Male,Portland,classic roast,22.22,3
+Owen Haas,54,Nonbinary,New York,specialty coffee,56.9,7
+Jordan Lund,49,Male,Stuttgart,espresso gear,87.31,1
+Noah Vega,25,Female,London,specialty coffee,53.25,6
+Ava Garcia,28,Female,Utrecht,decaf,34.73,3
+Owen Costa,21,Female,Leeds,iced drinks,22.34,6
+Eli Nash,51,Female,Seattle,iced drinks,34.3,6
+June Weber,27,Male,Berlin,fitness,64.35,4
+Zara Silva,35,Male,Mexico City,matcha,46.96,4
+Hugo Haas,68,Female,Portland,classic roast,26.51,3
+Nina Larsen,32,Female,New York,fitness,73.83,4
+Lena Novak,19,Nonbinary,Austin,iced drinks,22.31,4
+Ruth Weber,64,Male,Lisbon,home office,95.07,5
+Ava Haas,20,Female,Austin,iced drinks,20.63,6
+Jordan Garcia,34,Female,Dubai,espresso to go,107.87,3
+Maya Nash,35,Female,Bali,matcha,53.58,5
+Kai Ali,69,Female,Portland,classic roast,31.43,3
+Iris Garcia,25,Female,London,specialty coffee,40.61,6
+Hugo Haas,43,Male,Manchester,home office,56.06,2
+Nina Moreau,43,Male,Frankfurt,espresso to go,119.29,3
+Eli Haas,45,Male,Utrecht,decaf,55.36,2
+Noah Ali,28,Female,Seattle,specialty coffee,68.5,6
+Omar Kim,37,Female,Bristol,weekend treats,41.82,4
+Ava Okafor,18,Male,Toronto,iced drinks,13.73,6
+Kai Vega,32,Female,Lisbon,plant-based,30.74,5
+Hugo Larsen,35,Female,Mexico City,plant-based,41.08,4
+Owen Kim,18,Female,Austin,iced drinks,25.07,4
+Kai Larsen,43,Female,Utrecht,weekend treats,50.34,1
+Lena Vega,45,Male,Minneapolis,decaf,45.75,1
+Lena Sato,27,Male,Bali,matcha,28.5,3
+Sam Novak,77,Male,Kyoto,tea,33.26,5
+Nina Novak,40,Female,Dubai,loyalty offers,94.71,4
+June Patel,20,Nonbinary,Leeds,study cafes,23.12,4
+Riley Byrne,68,Male,Portland,tea,32.51,5
+Lena Kim,22,Nonbinary,Leeds,espresso gear,10.66,4
+Ruth Silva,39,Male,Minneapolis,weekend treats,54.37,3
+Ava Okafor,22,Male,Austin,iced drinks,16.95,6
+Leo Lund,36,Male,Dubai,loyalty offers,117.73,1
+Leo Sato,30,Male,Berlin,fitness,52.54,4
+Maya Ali,36,Nonbinary,Lisbon,matcha,51.08,5
+Riley Vega,24,Female,Austin,study cafes,15.4,5
+Nina Ali,21,Female,Austin,iced drinks,13.32,6
+Alex Ito,23,Nonbinary,Leeds,iced drinks,24.57,6
+June Sato,28,Female,Toronto,specialty coffee,77.27,0
+Jordan Vega,32,Male,New York,fitness,46.95,5
+Riley Haas,75,Male,Kyoto,classic roast,36.42,5
+Nina Lund,69,Female,Bath,classic roast,37.0,5
+Omar Ali,68,Male,Kyoto,tea,26.15,3
+Jordan Garcia,48,Female,Chicago,espresso to go,110.63,5
+Jordan Costa,47,Male,Manchester,espresso gear,100.78,2
+Sam Moreau,20,Male,Leeds,iced drinks,23.47,6
+Alex Kim,31,Male,Berlin,cold brew,77.48,5
+Kai Moreau,55,Female,Frankfurt,loyalty offers,68.77,1
+Alex Ito,32,Female,Singapore,cold brew,65.79,4
+Sam Byrne,20,Nonbinary,Toronto,iced drinks,19.6,5
+Lena Moreau,44,Female,Bristol,decaf,49.52,2
+Riley Larsen,43,Female,Kyoto,plant-based,34.15,2
+Lena Costa,27,Female,Seattle,specialty coffee,49.32,4
+Nina Moreau,45,Male,Denver,home office,57.3,3
+Noah Costa,34,Nonbinary,Lisbon,matcha,53.75,4
+Hugo Weber,28,Male,Berlin,fitness,73.91,4
+Riley Moreau,42,Female,Dubai,loyalty offers,89.3,3
+Hugo Patel,47,Male,Frankfurt,espresso to go,113.12,4
+Zara Nash,43,Male,Manchester,home office,103.62,2
+Iris Ali,33,Male,New York,cold brew,69.12,5
+Noah Sato,22,Female,Leeds,iced drinks,30.16,7
+Zara Byrne,39,Male,Minneapolis,decaf,37.0,4
+Sam Sato,31,Female,Melbourne,cozy rituals,37.58,6
+Jordan Kim,35,Nonbinary,Lisbon,matcha,32.26,7
+Sam Ito,29,Male,New York,fitness,56.0,3
+Riley Costa,35,Male,Berlin,weekend treats,29.36,2
+Casey Ali,61,Male,Kyoto,classic roast,26.8,3
+Alex Larsen,37,Male,Manchester,home office,103.72,2
+Alex Reyes,37,Male,Mexico City,matcha,54.02,5
+Noah Haas,21,Male,Toronto,iced drinks,17.23,6
+Iris Silva,21,Male,Toronto,study cafes,13.73,5
+Owen Ali,37,Male,Lisbon,matcha,41.74,5
+Casey Ali,31,Male,London,specialty coffee,46.6,5
+Eli Patel,75,Male,Bath,tea,33.3,1
+Kai Nash,29,Female,Melbourne,specialty coffee,52.89,6
+Eli Haas,72,Male,Kyoto,classic roast,18.29,5
+Alex Lund,30,Female,New York,fitness,66.0,4
+Kai Novak,23,Female,Leeds,study cafes,27.91,6
+Alex Reyes,38,Female,Utrecht,weekend treats,54.4,1
+Lena Lund,42,Female,Minneapolis,weekend treats,65.15,3
+Noah Garcia,26,Female,Seattle,cozy rituals,69.07,4
+Omar Weber,39,Female,Minneapolis,weekend treats,40.86,3
+Eli Nash,41,Female,Chicago,loyalty offers,97.3,1
+Owen Reyes,37,Male,Manchester,home office,71.41,3
+Owen Larsen,30,Male,Seattle,specialty coffee,39.5,7
+Jordan Sato,33,Male,Singapore,cold brew,72.56,4
+Ava Reyes,20,Male,Austin,iced drinks,16.57,6
+Zara Costa,38,Female,Bristol,weekend treats,56.09,4
+Sam Nash,37,Female,Minneapolis,weekend treats,56.47,2
+Sam Nash,26,Female,Seattle,specialty coffee,52.97,5
+Leo Byrne,21,Male,Austin,iced drinks,20.56,6
+Omar Lund,28,Female,London,specialty coffee,40.88,6
+Owen Byrne,37,Male,Bristol,decaf,50.36,2
+Eli Weber,37,Male,Dubai,loyalty offers,73.07,4
+Omar Ito,49,Male,Dubai,espresso to go,117.21,3
+Zara Chen,44,Female,Frankfurt,loyalty offers,107.75,0
+Hugo Haas,47,Male,Denver,home office,54.99,3
+Noah Silva,43,Male,Frankfurt,loyalty offers,106.98,4
+Zara Garcia,32,Male,New York,cold brew,59.91,4
+Hugo Byrne,27,Female,Melbourne,specialty coffee,36.78,5
+Ava Weber,37,Male,Dubai,loyalty offers,121.61,2
+Casey Weber,36,Female,Minneapolis,decaf,40.24,1
+Owen Patel,20,Male,Leeds,iced drinks,19.74,4
+Eli Vega,44,Female,Manchester,espresso gear,75.06,1
+Alex Kim,61,Male,Kyoto,tea,27.42,3
+Iris Kim,30,Male,Singapore,fitness,53.79,3
+Owen Patel,61,Female,Bath,tea,28.91,3
+Ava Ali,29,Male,Berlin,fitness,61.49,4
+Ruth Patel,30,Male,Berlin,fitness,62.17,6
+Jordan Ali,29,Female,New York,fitness,52.63,4
+Eli Lund,24,Nonbinary,Austin,iced drinks,26.52,5
+Zara Ito,44,Male,Denver,home office,97.25,3
+Sam Haas,50,Male,Denver,home office,105.61,3
+Riley Reyes,29,Male,New York,fitness,53.73,6
+Jordan Kim,46,Male,Stuttgart,espresso gear,68.19,2
+Sam Haas,28,Male,Bali,plant-based,39.31,6
+Alex Lund,32,Male,New York,fitness,55.08,3
+Ruth Nash,30,Female,Bristol,decaf,45.49,1
+Hugo Sato,47,Male,Stuttgart,espresso gear,86.85,1
+Iris Kim,30,Female,Melbourne,specialty coffee,52.79,4
+June Lund,23,Male,Austin,study cafes,30.86,5
+Kai Sato,32,Male,Berlin,cold brew,59.95,5
+Iris Sato,33,Nonbinary,Bali,matcha,37.05,6
+Sam Ali,24,Female,Seattle,cozy rituals,55.55,4
+Lena Vega,40,Female,Chicago,loyalty offers,92.09,3
+Zara Kim,34,Female,Dubai,espresso to go,67.39,2
+Casey Patel,39,Female,Frankfurt,loyalty offers,73.8,3
+Ava Costa,21,Female,Toronto,iced drinks,17.32,6
+Alex Nash,28,Female,London,cozy rituals,57.27,5
+Maya Sato,41,Nonbinary,Minneapolis,decaf,80.15,7
+Riley Larsen,21,Female,Austin,iced drinks,17.08,7
+Noah Byrne,36,Female,Lisbon,matcha,49.08,3
+Riley Moreau,28,Female,London,specialty coffee,52.16,5
+Leo Kim,42,Male,Denver,espresso gear,92.47,1
+Nina Garcia,30,Female,London,cozy rituals,42.09,5
+Iris Chen,23,Male,Leeds,iced drinks,13.24,6
+Alex Okafor,44,Male,Dubai,loyalty offers,139.73,1
+Nina Nash,28,Female,Seattle,specialty coffee,39.5,6
+Ava Vega,71,Male,Bath,tea,19.63,2
+Riley Ito,41,Female,Utrecht,weekend treats,58.99,2
+Nina Silva,37,Female,Bristol,decaf,55.49,3
+Ava Patel,40,Female,Bristol,decaf,45.08,2
+Hugo Nash,46,Male,Stuttgart,espresso gear,65.56,2
+Eli Novak,28,Male,Berlin,cold brew,74.55,4
+Kai Byrne,21,Female,Leeds,iced drinks,13.48,6
+Zara Haas,29,Male,New York,fitness,65.02,6
+Lena Vega,23,Female,Austin,study cafes,15.32,6
+Eli Haas,32,Male,Singapore,cold brew,69.43,3
+Kai Okafor,34,Male,New York,cold brew,78.31,5
+Eli Weber,30,Female,Seattle,specialty coffee,38.84,7
+Omar Nash,45,Male,Stuttgart,espresso gear,86.82,2
+Ruth Patel,71,Nonbinary,Lisbon,espresso gear,94.63,7
+Kai Nash,45,Female,Frankfurt,loyalty offers,77.43,3
+Eli Silva,24,Male,Austin,study cafes,23.24,6
+Alex Okafor,21,Female,Toronto,iced drinks,19.49,5
+Riley Nash,66,Female,Bath,classic roast,22.14,4
+Alex Okafor,23,Male,Melbourne,cozy rituals,44.1,5
+Riley Nash,69,Female,Dubai,weekend treats,89.25,7
+Omar Chen,21,Female,Austin,study cafes,10.9,5
+Ava Reyes,76,Female,Bath,classic roast,32.28,3
+Jordan Moreau,66,Male,Portland,tea,23.97,2
+Sam Silva,38,Male,Minneapolis,weekend treats,61.83,1
+Nina Ito,24,Female,Leeds,study cafes,25.5,5
+Eli Silva,20,Female,Toronto,study cafes,27.46,7
+Sam Reyes,27,Female,Seattle,specialty coffee,88.29,3
+Noah Sato,46,Male,Denver,home office,117.43,2
+Maya Byrne,61,Male,Frankfurt,espresso to go,52.04,3
+Lena Garcia,27,Female,Melbourne,cozy rituals,54.07,6
+Ava Novak,26,Female,Melbourne,specialty coffee,64.21,5
+Ruth Costa,32,Male,Lisbon,matcha,34.85,4
+Zara Reyes,39,Male,Stuttgart,home office,105.95,0
+Noah Garcia,45,Male,Dubai,home office,86.44,7
+Eli Weber,26,Female,Melbourne,cozy rituals,60.63,5
+Kai Silva,40,Female,Chicago,loyalty offers,99.62,2
+Zara Costa,36,Female,Minneapolis,decaf,43.75,2
+Zara Vega,29,Female,Seattle,specialty coffee,66.66,6
+Sam Patel,36,Female,Bristol,decaf,48.84,3
+Nina Sato,25,Female,London,specialty coffee,71.46,5
+Riley Nash,43,Female,Utrecht,decaf,34.89,3
+Ruth Chen,20,Female,Austin,iced drinks,20.75,6
+Maya Garcia,67,Female,Portland,tea,31.62,4
+Kai Kim,45,Male,Stuttgart,espresso gear,70.96,2
+Leo Larsen,73,Female,Kyoto,classic roast,31.93,4
+Iris Haas,52,Male,Berlin,tea,117.11,0
+Sam Garcia,44,Male,Manchester,espresso gear,67.03,1
+Ruth Weber,40,Female,Utrecht,weekend treats,62.74,1
+Sam Novak,63,Male,Kyoto,classic roast,41.18,3
+Eli Garcia,43,Male,Stuttgart,home office,124.8,1
+Iris Silva,27,Female,Seattle,cozy rituals,52.22,6
+Jordan Silva,38,Female,Chicago,loyalty offers,75.41,2
+Ava Byrne,47,Male,Frankfurt,espresso to go,64.44,3
+Casey Novak,30,Female,London,cozy rituals,65.33,6
+Hugo Ito,34,Male,Minneapolis,weekend treats,46.51,2
+Leo Moreau,33,Female,Lisbon,matcha,36.57,2
+Casey Lund,22,Male,Leeds,iced drinks,14.18,5
+June Byrne,67,Male,Bath,tea,33.02,4
+Alex Ito,41,Female,Bristol,decaf,57.15,1
+Ava Kim,67,Female,Portland,tea,17.86,2
+Eli Silva,66,Male,Portland,tea,23.19,3
+Hugo Vega,18,Male,Toronto,iced drinks,20.03,5
+Hugo Silva,47,Male,Stuttgart,espresso gear,71.08,3
+Jordan Novak,51,Male,Dubai,espresso to go,102.39,4
+Noah Garcia,42,Female,Manchester,home office,67.96,3
+Kai Lund,21,Male,Austin,study cafes,18.68,5
+Ruth Moreau,29,Nonbinary,Lisbon,matcha,44.11,5
+Omar Novak,44,Male,Dubai,espresso to go,115.6,3
+Eli Chen,33,Nonbinary,Berlin,fitness,54.73,5
+Riley Costa,38,Female,Bali,matcha,31.14,4
+Omar Moreau,68,Male,Portland,classic roast,24.3,3
+Ruth Vega,45,Male,Dubai,espresso to go,103.41,3
+Riley Costa,23,Female,Toronto,iced drinks,31.51,4
+Noah Larsen,33,Female,Mexico City,plant-based,46.47,4
+Eli Vega,63,Male,Portland,classic roast,21.53,1
+June Larsen,34,Nonbinary,Mexico City,matcha,38.11,6
+Iris Ali,37,Female,Minneapolis,weekend treats,37.3,3
+Leo Larsen,30,Female,Seattle,cozy rituals,44.15,6
+Lena Garcia,47,Male,Manchester,home office,58.31,0
+Riley Patel,31,Female,Mexico City,plant-based,56.76,5
+Owen Chen,22,Male,Toronto,iced drinks,10.68,5
+Owen Moreau,68,Male,Bath,classic roast,23.83,3
+Leo Garcia,21,Nonbinary,Austin,study cafes,22.21,6
+Leo Sato,31,Female,Mexico City,matcha,43.23,3
+Zara Moreau,31,Male,New York,cold brew,62.4,5
+Leo Ali,44,Female,Bath,matcha,110.87,6
+Riley Haas,21,Male,Austin,study cafes,18.72,5
+Omar Garcia,28,Male,Singapore,cold brew,48.1,4
+Zara Chen,27,Female,Seattle,cozy rituals,56.43,4
+Leo Ali,29,Female,Melbourne,cozy rituals,47.34,5
+Ruth Kim,19,Female,Austin,iced drinks,29.53,5
+Kai Ito,24,Female,London,specialty coffee,36.05,5
+Omar Reyes,23,Female,Seattle,cozy rituals,65.55,6
+June Larsen,46,Female,Frankfurt,loyalty offers,117.21,3
+June Lund,72,Male,Portland,classic roast,19.04,4
+Zara Larsen,29,Female,Seattle,specialty coffee,65.78,5
+Ava Vega,45,Female,Bristol,decaf,35.22,4
+Hugo Vega,65,Female,Bath,classic roast,35.23,3
+Riley Nash,63,Male,Bath,classic roast,20.66,3
+Kai Patel,60,Male,Dubai,cold brew,121.1,0
+Omar Lund,38,Female,Bristol,decaf,54.15,1
+Sam Nash,26,Female,Mexico City,plant-based,43.45,5
+Noah Sato,38,Female,Utrecht,decaf,38.04,2
+Ava Lund,65,Female,Portland,classic roast,60.54,2
+Owen Haas,68,Female,Kyoto,tea,22.24,4
+Owen Garcia,53,Female,Denver,plant-based,72.51,2
+Kai Kim,68,Male,Kyoto,tea,21.43,3
+Ava Patel,31,Nonbinary,Lisbon,matcha,41.93,4
+Alex Ito,54,Male,Manchester,specialty coffee,132.84,3
+Lena Patel,31,Nonbinary,New York,fitness,84.74,3
+Iris Nash,18,Female,Toronto,study cafes,18.8,4
+Nina Lund,33,Female,Lisbon,plant-based,30.57,5
+Jordan Ali,29,Female,Seattle,specialty coffee,42.09,6
+Eli Ito,40,Male,Frankfurt,espresso to go,146.13,1
+Lena Moreau,20,Female,Leeds,study cafes,26.36,5
+Ruth Byrne,27,Female,Melbourne,cozy rituals,70.1,5
+Owen Silva,28,Male,Singapore,fitness,83.0,3
+Hugo Chen,32,Male,Chicago,loyalty offers,129.71,3
+Omar Costa,71,Male,Kyoto,classic roast,32.18,4
+Ruth Ali,34,Male,Berlin,cold brew,69.08,3
+Riley Costa,44,Female,Stuttgart,espresso gear,62.95,2
+Maya Kim,42,Male,Manchester,home office,69.07,3
+Leo Reyes,31,Female,London,specialty coffee,45.84,5
+Eli Byrne,43,Male,Stuttgart,home office,66.0,3
+Kai Kim,32,Male,Mexico City,matcha,43.16,5
+Riley Larsen,20,Female,Toronto,iced drinks,21.86,6
+Ruth Haas,29,Female,London,cozy rituals,58.26,6
+Kai Ito,43,Female,Frankfurt,espresso to go,126.36,2
+Zara Lund,56,Female,Chicago,loyalty offers,124.69,3
+Zara Ali,30,Nonbinary,London,cozy rituals,42.07,5
+Kai Kim,35,Female,Utrecht,decaf,42.33,3
+Eli Patel,39,Male,Stuttgart,espresso gear,98.29,2
+Maya Lund,27,Female,London,specialty coffee,72.79,7
+Jordan Okafor,27,Male,New York,cold brew,57.93,4
+Sam Larsen,39,Female,Lisbon,plant-based,49.63,7
+Lena Byrne,61,Female,Portland,classic roast,27.07,3
+Nina Moreau,47,Male,Denver,home office,100.93,3
+Riley Kim,39,Female,Bristol,decaf,44.33,3
+Eli Larsen,44,Male,Utrecht,decaf,59.75,4
+Iris Weber,50,Male,Stuttgart,espresso gear,86.94,2
+Riley Reyes,44,Male,Denver,home office,68.86,2
+Noah Ito,27,Female,Melbourne,specialty coffee,59.06,3
+Iris Chen,40,Male,Chicago,loyalty offers,134.19,5
+Sam Chen,48,Female,Dubai,loyalty offers,114.39,2
+Sam Novak,22,Female,Toronto,iced drinks,22.95,6
+Hugo Patel,32,Female,Singapore,fitness,73.6,3
+June Byrne,75,Male,Bath,tea,34.4,3
+Noah Sato,32,Male,Manchester,espresso gear,98.72,3
+Omar Ali,63,Male,Portland,tea,33.04,3
+Omar Okafor,23,Nonbinary,Austin,study cafes,17.71,6
+Nina Ali,37,Nonbinary,Dubai,specialty coffee,128.76,0
+Jordan Weber,66,Female,Bath,classic roast,26.44,3
+Zara Okafor,40,Male,Dubai,loyalty offers,139.07,1
+Ruth Vega,63,Female,Kyoto,tea,32.29,2
+Alex Chen,23,Nonbinary,Minneapolis,weekend treats,21.1,5
+Alex Chen,67,Female,Bath,classic roast,36.2,2
+Riley Ali,35,Female,Minneapolis,decaf,48.54,2
+Zara Larsen,40,Male,Bristol,decaf,35.34,1
+Lena Vega,43,Male,Manchester,espresso gear,55.9,3
+Ruth Garcia,34,Nonbinary,Lisbon,matcha,42.19,3
+Casey Garcia,64,Female,Portland,classic roast,32.1,3
+Iris Novak,45,Male,Denver,espresso gear,104.85,3
+Omar Byrne,29,Male,Singapore,fitness,66.32,6
+Alex Okafor,66,Male,Kyoto,classic roast,22.42,2
+Eli Reyes,31,Male,Lisbon,matcha,39.16,5
+Kai Haas,26,Nonbinary,Melbourne,specialty coffee,50.03,5
+June Byrne,34,Female,Utrecht,weekend treats,40.47,2
+Noah Ali,46,Female,Lisbon,iced drinks,26.97,3
+Noah Weber,37,Female,Minneapolis,weekend treats,58.59,1
+Jordan Lund,33,Female,Dubai,loyalty offers,74.35,4
+Iris Nash,28,Male,New York,cold brew,53.78,5
+Riley Novak,34,Male,Manchester,espresso gear,84.43,1
+Ruth Ito,36,Female,Minneapolis,decaf,38.47,2
+Zara Sato,28,Nonbinary,London,cozy rituals,49.09,5
+Iris Sato,25,Nonbinary,Mexico City,weekend treats,98.85,2
+Lena Vega,21,Female,Austin,iced drinks,25.68,5
+Lena Weber,20,Female,Leeds,iced drinks,11.0,5
+Noah Garcia,29,Male,New York,cold brew,49.94,4
+Jordan Nash,32,Male,Singapore,cold brew,80.4,5
+June Kim,34,Nonbinary,Bali,matcha,55.84,4
+Kai Ito,29,Female,Seattle,cozy rituals,71.26,5
+Omar Haas,46,Nonbinary,Manchester,plant-based,49.2,3
+Leo Patel,35,Female,Mexico City,matcha,32.83,4
+Ruth Vega,73,Male,Portland,tea,35.63,5
+Riley Ito,22,Female,Toronto,iced drinks,23.96,5
+Ruth Okafor,38,Male,Stuttgart,home office,80.08,2
+Owen Ito,37,Male,Bristol,decaf,38.16,2
+Hugo Silva,47,Male,Denver,home office,79.23,2
+Iris Weber,44,Female,Stuttgart,espresso gear,113.82,2
+Nina Okafor,42,Male,Denver,home office,75.27,2
+Zara Larsen,41,Nonbinary,Lisbon,plant-based,52.46,3
+Eli Ali,34,Female,Lisbon,plant-based,46.83,3
+Ruth Byrne,33,Male,Bali,plant-based,43.92,4
+Jordan Haas,39,Female,Minneapolis,decaf,29.83,2
+Nina Reyes,49,Nonbinary,Singapore,study cafes,20.54,3
+Alex Nash,64,Male,Bath,tea,17.67,1
+June Kim,27,Male,London,specialty coffee,31.14,6
+June Vega,26,Female,Seattle,cozy rituals,43.66,5
+Jordan Ito,22,Female,Toronto,iced drinks,19.91,6
+Nina Ito,63,Male,Dubai,home office,56.06,5
+Omar Okafor,47,Male,Stuttgart,espresso gear,68.98,2
+Maya Okafor,22,Female,Leeds,study cafes,23.73,4
+Riley Ito,33,Female,Lisbon,plant-based,33.13,4
+Eli Novak,28,Male,Singapore,cold brew,63.6,5
+Jordan Costa,31,Female,Dubai,espresso to go,96.66,3
+Zara Okafor,39,Male,Manchester,espresso gear,101.63,3
+Kai Nash,42,Female,Minneapolis,decaf,35.72,3
+Riley Garcia,31,Male,Berlin,cold brew,53.2,3
+Ruth Novak,26,Female,Toronto,iced drinks,17.19,7
+Leo Novak,27,Female,New York,fitness,71.13,3
+Eli Reyes,36,Male,Lisbon,matcha,50.79,6
+Kai Garcia,66,Male,Bath,classic roast,25.65,5
+Hugo Silva,47,Male,Dubai,loyalty offers,117.22,2
+Hugo Haas,24,Female,London,specialty coffee,67.09,5
+Alex Reyes,49,Male,Frankfurt,espresso to go,98.93,0
+Jordan Moreau,43,Male,Stuttgart,home office,101.14,1
+Ruth Vega,21,Female,Austin,study cafes,19.47,6
+Eli Costa,21,Male,Toronto,study cafes,15.45,6
+Omar Silva,27,Female,London,cozy rituals,42.34,6
+Alex Byrne,76,Female,Kyoto,tea,35.6,3
+Maya Weber,31,Nonbinary,Melbourne,cozy rituals,56.92,5
+Iris Ali,28,Female,London,specialty coffee,39.0,4
+Nina Novak,27,Male,London,specialty coffee,44.07,5
+Lena Haas,50,Nonbinary,London,cold brew,67.87,6
+Riley Moreau,23,Nonbinary,Singapore,home office,61.44,3
+June Byrne,66,Female,Portland,tea,39.71,4
+Eli Kim,45,Female,Frankfurt,espresso to go,141.58,5
+Noah Garcia,45,Male,Stuttgart,home office,73.1,2
+Zara Sato,30,Male,Berlin,fitness,47.28,4
+Riley Patel,34,Male,Bristol,decaf,54.79,3
+Maya Lund,35,Female,Utrecht,decaf,28.46,1
+Noah Haas,47,Female,Stuttgart,home office,102.61,2
+Zara Haas,24,Female,Leeds,iced drinks,12.39,4
+Sam Byrne,28,Nonbinary,Frankfurt,home office,101.57,3
+Eli Kim,26,Female,London,specialty coffee,48.75,6
+Iris Chen,32,Male,Singapore,cold brew,74.1,5
+Omar Haas,20,Female,Toronto,study cafes,27.69,7
+Ava Novak,22,Female,Melbourne,specialty coffee,38.35,6
+Eli Chen,40,Female,Utrecht,decaf,60.72,4
+Riley Costa,40,Male,Dubai,loyalty offers,106.94,2
+Eli Garcia,71,Female,Kyoto,tea,20.42,2
+Eli Patel,32,Male,Singapore,fitness,88.67,3
+Iris Okafor,41,Male,Denver,espresso gear,94.51,2
+Lena Haas,20,Female,Toronto,study cafes,28.58,4
+Noah Larsen,28,Female,London,cozy rituals,44.44,6
+Omar Ito,21,Nonbinary,Austin,study cafes,16.21,5
+Lena Moreau,38,Male,Chicago,loyalty offers,96.72,4
+Eli Garcia,45,Female,Bristol,plant-based,30.66,0
+Omar Kim,64,Female,Bath,classic roast,44.05,2
+Ruth Nash,35,Male,Bali,matcha,43.78,3
+Owen Novak,42,Male,Denver,espresso gear,70.23,3
+Jordan Reyes,32,Female,Berlin,fitness,43.11,5
+Omar Ito,20,Female,Toronto,iced drinks,18.03,6
+Zara Lund,25,Female,Bali,plant-based,45.27,4
+Riley Silva,21,Female,Leeds,study cafes,19.92,5
+Ruth Okafor,32,Male,Singapore,fitness,68.7,4
+Iris Garcia,27,Female,London,specialty coffee,53.98,7
+Owen Byrne,53,Male,Dubai,loyalty offers,72.23,3
+Sam Moreau,40,Male,Frankfurt,espresso to go,89.25,4
+Maya Reyes,41,Male,Manchester,home office,74.13,2
+Lena Ali,67,Male,Portland,tea,41.37,3
+Alex Silva,38,Nonbinary,Bali,plant-based,26.36,3
+Lena Byrne,35,Male,Bali,classic roast,78.66,4
+Ava Kim,32,Male,Frankfurt,loyalty offers,145.51,4
+Leo Kim,26,Female,London,cozy rituals,59.7,5
+Eli Patel,21,Female,Toronto,study cafes,28.51,5
+Ruth Silva,55,Male,Frankfurt,loyalty offers,119.18,3
+Noah Ito,70,Male,Bath,tea,36.68,5
+Casey Ali,34,Male,Lisbon,matcha,31.02,5
+Alex Lund,28,Male,New York,fitness,59.45,5
+Iris Okafor,34,Male,Chicago,loyalty offers,101.13,3
+Ruth Novak,19,Male,Austin,iced drinks,23.73,5
+Nina Reyes,29,Male,Berlin,cold brew,67.25,5
+Hugo Moreau,66,Male,Kyoto,tea,26.63,3
+Nina Chen,18,Male,Utrecht,fitness,93.22,6
+Iris Vega,22,Female,Leeds,study cafes,28.29,6
+Ruth Haas,31,Male,Singapore,cold brew,54.98,4
+June Patel,22,Female,Leeds,study cafes,28.62,6
+Sam Ali,28,Male,Berlin,fitness,71.15,5
+Ruth Byrne,34,Female,Bali,matcha,37.74,5
+Iris Kim,68,Female,Kyoto,tea,21.82,5
+Leo Silva,75,Nonbinary,Denver,weekend treats,118.59,1
+Noah Chen,28,Male,New York,cold brew,69.92,4
+Sam Costa,40,Male,Minneapolis,decaf,56.24,1
+Ava Kim,52,Male,Chicago,loyalty offers,113.62,1
+Lena Byrne,18,Male,Toronto,iced drinks,22.47,4
+Omar Chen,28,Female,New York,fitness,50.27,5
+Ava Vega,47,Female,Frankfurt,espresso to go,72.76,3
+June Moreau,26,Female,London,specialty coffee,53.81,6
+Iris Novak,72,Male,Portland,classic roast,42.98,4
+Leo Byrne,31,Female,Mexico City,plant-based,46.01,4
+Maya Costa,68,Female,Kyoto,tea,27.23,3
+Ava Silva,33,Female,Bristol,weekend treats,58.0,1
+Alex Chen,32,Female,Minneapolis,decaf,48.81,0
+Noah Nash,29,Nonbinary,Lisbon,plant-based,46.01,4
+Sam Lund,41,Male,Manchester,home office,107.31,1
+Iris Ito,33,Female,Lisbon,plant-based,33.37,6
+Ava Costa,36,Male,Berlin,tea,111.53,7
+Zara Patel,22,Male,Toronto,iced drinks,30.04,6
+Casey Silva,25,Female,London,cozy rituals,50.52,4
+Alex Silva,27,Male,Berlin,cold brew,54.3,4
+Eli Patel,38,Male,Chicago,espresso to go,121.94,3
+Owen Byrne,25,Male,Berlin,cold brew,65.85,4
+June Weber,45,Nonbinary,Berlin,cold brew,27.81,1
+Leo Vega,35,Female,Utrecht,weekend treats,42.78,3
+Casey Haas,64,Female,Portland,tea,20.7,4
+Jordan Okafor,44,Male,Stuttgart,espresso gear,118.6,3
+Zara Chen,30,Male,New York,fitness,74.04,6
+Zara Larsen,50,Female,Dubai,loyalty offers,118.93,3
+Ava Moreau,27,Nonbinary,London,specialty coffee,63.94,4
+Leo Lund,67,Male,Bath,classic roast,36.08,2
+Eli Silva,34,Male,Lisbon,matcha,39.11,3
+Alex Silva,18,Nonbinary,New York,classic roast,33.77,6
+Jordan Larsen,35,Male,Frankfurt,espresso to go,105.41,3
+Iris Nash,43,Female,Denver,home office,62.92,2
+Zara Haas,27,Male,Stuttgart,home office,33.04,1
+Lena Patel,36,Female,Utrecht,decaf,35.71,2
+Owen Moreau,23,Female,Leeds,iced drinks,15.65,6
+Ruth Nash,23,Female,Toronto,study cafes,24.95,4
+Hugo Lund,45,Male,Stuttgart,home office,74.24,2
+Nina Sato,37,Female,Utrecht,decaf,42.73,0
+Owen Lund,23,Female,Toronto,study cafes,23.44,4
+June Silva,38,Female,Bristol,weekend treats,59.3,1
+Noah Ali,43,Male,Stuttgart,home office,76.83,0
+Owen Patel,27,Male,London,specialty coffee,62.3,6
+Iris Reyes,24,Female,Austin,iced drinks,30.97,4
+Ava Moreau,71,Female,Kyoto,tea,18.45,3
+Noah Byrne,21,Female,Toronto,iced drinks,15.67,7
+Sam Lund,45,Male,Stuttgart,home office,81.98,2
+Nina Silva,34,Male,Lisbon,plant-based,47.86,4
+Eli Ali,28,Female,Melbourne,specialty coffee,44.14,6
+Alex Haas,24,Female,Toronto,iced drinks,23.33,5
+Casey Costa,34,Female,Dubai,espresso to go,101.94,4
+Casey Sato,31,Male,Minneapolis,weekend treats,56.9,2
+Riley Okafor,36,Male,Minneapolis,weekend treats,59.26,2
+Omar Sato,38,Female,Manchester,espresso gear,89.69,3
+Leo Garcia,53,Male,Dubai,loyalty offers,101.91,0
+Noah Ali,25,Female,Melbourne,specialty coffee,42.51,6
+Zara Ali,66,Female,Bath,tea,22.66,5
+Iris Nash,69,Male,Kyoto,classic roast,33.93,4
+Nina Sato,18,Female,Toronto,iced drinks,21.51,5
+Owen Patel,44,Male,Chicago,espresso to go,86.43,1
+Owen Okafor,49,Male,Chicago,espresso to go,84.92,3
+Jordan Haas,38,Male,Manchester,home office,121.18,2
+Lena Reyes,28,Male,New York,cold brew,48.55,3
+Ruth Kim,20,Female,Leeds,study cafes,23.69,4
+Maya Silva,36,Female,Bristol,decaf,47.33,2
+Riley Costa,42,Female,Dubai,loyalty offers,100.27,1
+Eli Moreau,18,Male,Austin,iced drinks,22.09,6
+Lena Byrne,22,Female,Leeds,iced drinks,20.02,6
+Sam Costa,37,Male,Stuttgart,home office,52.36,2
+Nina Silva,73,Female,Kyoto,tea,35.64,4
+Nina Ito,41,Male,Stuttgart,home office,73.99,1
+Hugo Garcia,29,Female,Melbourne,specialty coffee,51.51,5
+Ruth Lund,44,Male,Denver,home office,87.75,3
+Omar Ito,44,Female,Frankfurt,espresso to go,131.84,2
+Noah Haas,23,Female,Seattle,cozy rituals,58.04,5
+Hugo Reyes,65,Female,Portland,tea,18.31,4
+June Haas,29,Male,Singapore,fitness,93.84,4
+Riley Larsen,21,Female,Austin,iced drinks,26.59,4
+Ava Okafor,20,Male,Austin,iced drinks,16.38,5
+Kai Haas,26,Female,Seattle,cozy rituals,43.75,6
+Ava Silva,28,Female,Melbourne,specialty coffee,54.19,4
+Leo Nash,23,Female,Seattle,specialty coffee,39.16,6
+Iris Okafor,39,Male,Manchester,espresso gear,88.0,1
+Zara Okafor,32,Female,Dubai,espresso to go,80.5,4
+Sam Byrne,24,Female,Seattle,specialty coffee,48.96,6
+Eli Kim,72,Female,Portland,tea,38.07,3
+Owen Chen,46,Male,Manchester,espresso gear,93.59,2
+Leo Ali,29,Male,Berlin,fitness,57.46,4
+Leo Byrne,26,Female,London,cozy rituals,68.63,7
+Alex Chen,20,Male,Toronto,study cafes,11.93,5
+Owen Okafor,24,Female,Bali,matcha,33.17,3
+Zara Lund,33,Male,Berlin,fitness,63.02,5
+Jordan Kim,33,Male,Singapore,fitness,70.49,7
+Casey Ali,65,Male,Bath,classic roast,29.96,2
+Sam Haas,50,Female,Austin,espresso gear,80.86,2
+Eli Moreau,64,Female,Portland,tea,28.27,5
+June Byrne,69,Female,Bath,classic roast,21.4,3
+Maya Garcia,54,Male,Chicago,loyalty offers,89.37,4
+Sam Nash,23,Female,London,cozy rituals,60.53,5
+Noah Ito,22,Female,Melbourne,cozy rituals,64.53,6
+Ava Haas,30,Male,Berlin,cold brew,51.65,5
+Sam Costa,23,Female,Melbourne,specialty coffee,42.03,5
+Zara Haas,28,Male,New York,fitness,41.69,5
+Jordan Vega,62,Nonbinary,Singapore,cold brew,100.61,0
+Alex Sato,38,Male,Utrecht,weekend treats,33.05,3
+Alex Moreau,41,Female,Bristol,weekend treats,35.28,3
+Maya Chen,29,Male,New York,fitness,47.26,6
+June Nash,28,Female,Melbourne,cozy rituals,78.69,5
+Nina Weber,66,Female,Portland,tea,20.9,4
+Sam Garcia,31,Female,London,specialty coffee,41.96,6
+Casey Ito,69,Female,Toronto,espresso gear,68.61,1
+Leo Kim,68,Female,Portland,tea,23.73,4
+Leo Weber,29,Male,Berlin,cold brew,88.48,4
+Ruth Okafor,22,Nonbinary,London,cozy rituals,67.69,5
+Hugo Reyes,29,Female,Melbourne,specialty coffee,49.7,6
+Maya Ali,71,Female,Bath,classic roast,29.14,4
+Noah Costa,24,Female,Melbourne,cozy rituals,52.75,4
+Kai Ali,29,Female,Seattle,cozy rituals,57.94,5
+Eli Reyes,21,Female,Toronto,iced drinks,20.23,5
+Maya Novak,28,Female,Seattle,specialty coffee,54.63,6
+Maya Patel,27,Female,Melbourne,cozy rituals,56.54,6
+Lena Lund,42,Male,Stuttgart,espresso gear,106.48,2
+June Costa,30,Female,Bali,plant-based,42.01,5
+June Novak,36,Female,Bristol,weekend treats,31.64,2
+Alex Vega,71,Male,Portland,tea,35.8,3
+Leo Novak,40,Male,Denver,home office,90.23,2
+Casey Lund,23,Female,Leeds,iced drinks,16.51,5
+Eli Nash,21,Male,Austin,study cafes,28.72,6
+Hugo Chen,42,Male,Stuttgart,home office,98.37,1
+Ruth Larsen,32,Nonbinary,Bali,matcha,31.33,5
+Noah Larsen,34,Female,Lisbon,plant-based,29.7,3
+Eli Sato,25,Male,Austin,iced drinks,11.61,5
+Ava Vega,29,Female,Seattle,cozy rituals,41.2,5
+Nina Vega,21,Male,Toronto,study cafes,15.76,6
+Nina Sato,21,Female,Leeds,iced drinks,14.34,5
+Alex Byrne,20,Male,Leeds,study cafes,19.97,4
+Riley Silva,32,Nonbinary,Seattle,cozy rituals,63.92,7
+Nina Lund,27,Female,Seattle,cozy rituals,35.18,6
+Hugo Ali,40,Female,Manchester,espresso gear,59.66,2
+Noah Chen,25,Female,London,cozy rituals,49.21,5
+June Reyes,72,Female,Kyoto,classic roast,25.44,3
+Leo Okafor,21,Nonbinary,Toronto,study cafes,25.76,6
+Riley Okafor,33,Female,Utrecht,decaf,55.09,0
+Ava Nash,36,Male,Austin,plant-based,16.41,0
+Ava Lund,22,Female,Seattle,specialty coffee,35.75,6
+Maya Chen,34,Female,Mexico City,matcha,47.79,4
+Owen Costa,20,Female,Austin,iced drinks,19.77,6
+Kai Weber,37,Female,Denver,home office,92.53,1
+Zara Novak,27,Female,Melbourne,cozy rituals,57.38,4
+Lena Ito,42,Female,Stuttgart,home office,80.34,2
+Eli Larsen,24,Male,Bali,matcha,33.84,6
+Jordan Reyes,44,Male,Dubai,loyalty offers,81.41,2
+Ruth Sato,49,Male,Stuttgart,home office,129.57,2
+Owen Nash,26,Female,Singapore,cold brew,46.97,4
+Nina Kim,66,Male,Leeds,weekend treats,120.68,0
+Nina Novak,70,Female,Bath,tea,25.44,2
+Maya Lund,38,Male,Mexico City,plant-based,38.71,5
+Iris Vega,32,Female,Mexico City,plant-based,40.09,3
+Leo Sato,32,Female,Mexico City,tea,134.01,6
+Maya Chen,31,Male,Singapore,fitness,70.9,6
+Eli Novak,30,Male,Mexico City,plant-based,37.7,3
+Maya Silva,63,Female,Bath,tea,30.99,4
+Owen Okafor,26,Male,Manchester,tea,47.51,2
+Noah Ali,64,Male,Bath,classic roast,30.6,3
+Noah Novak,28,Male,New York,cold brew,59.1,4
+Zara Novak,26,Female,Melbourne,specialty coffee,55.96,5
+Lena Ali,29,Male,New York,fitness,64.16,3
+Noah Silva,72,Female,Bath,classic roast,34.28,4
+Omar Ali,20,Nonbinary,Austin,iced drinks,16.59,7
+Maya Ali,31,Nonbinary,Lisbon,plant-based,35.54,5
+Lena Weber,41,Female,Utrecht,decaf,50.06,1
+Omar Ali,67,Female,Bath,tea,33.03,4
+Kai Byrne,69,Male,Bath,tea,29.79,4
+Maya Kim,21,Male,Austin,study cafes,29.68,7
+Zara Nash,49,Female,Denver,home office,130.2,3
+Alex Ito,64,Female,Kyoto,tea,36.07,3
+Riley Byrne,72,Female,Portland,tea,38.35,4
+Kai Costa,69,Female,Portland,classic roast,33.15,3
+Ava Ito,25,Female,London,specialty coffee,43.12,4
+Omar Okafor,24,Female,Toronto,iced drinks,16.92,6
+June Reyes,28,Nonbinary,Melbourne,cozy rituals,38.33,7
+Zara Garcia,29,Female,London,cozy rituals,60.55,4
+Owen Nash,25,Male,Berlin,fitness,94.78,5
+Owen Kim,25,Female,Seattle,cozy rituals,71.63,6
+Omar Okafor,42,Male,Frankfurt,espresso to go,123.49,3
+Eli Okafor,33,Male,Berlin,cold brew,47.23,5
+Riley Byrne,20,Female,Austin,study cafes,23.49,6
+Kai Ito,34,Female,Toronto,decaf,56.85,4
+Riley Sato,24,Female,Leeds,iced drinks,22.18,6
+Maya Weber,21,Male,Leeds,iced drinks,22.35,7
+Sam Ito,44,Female,Manchester,espresso gear,70.92,1
+June Kim,21,Female,Toronto,iced drinks,27.27,6
+Sam Haas,40,Male,Minneapolis,decaf,53.2,1
+Owen Nash,40,Female,Minneapolis,decaf,64.61,2
+Casey Okafor,71,Male,Portland,tea,28.54,2
+Ava Weber,21,Male,Leeds,iced drinks,26.36,6
+Kai Reyes,26,Female,Seattle,cozy rituals,62.22,4
+Hugo Novak,28,Female,Seattle,specialty coffee,39.89,5
+Lena Haas,57,Female,Melbourne,cozy rituals,117.93,7
+Riley Nash,28,Female,New York,cold brew,46.33,4
+Ruth Moreau,33,Male,Berlin,cold brew,52.84,6
+Maya Sato,19,Female,Austin,study cafes,27.7,4
+Jordan Garcia,39,Nonbinary,London,home office,63.06,6
+Zara Moreau,19,Male,Toronto,iced drinks,25.51,5
+Owen Novak,36,Female,Mexico City,matcha,41.68,5
+Leo Chen,38,Female,Bali,plant-based,49.08,3
+Alex Silva,32,Male,Singapore,fitness,46.64,4
+Lena Lund,56,Female,Dubai,espresso to go,119.62,1
+Nina Costa,32,Male,Singapore,cold brew,53.87,5
+Sam Haas,28,Female,Melbourne,specialty coffee,49.02,5
+Noah Nash,23,Female,Toronto,iced drinks,14.71,5
+Lena Okafor,22,Female,Toronto,study cafes,23.42,5
+Casey Larsen,32,Male,Frankfurt,loyalty offers,82.27,3
+Sam Vega,45,Male,Bath,home office,21.79,6
+Nina Okafor,43,Male,Chicago,loyalty offers,117.16,2
+Kai Moreau,26,Male,New York,cold brew,57.29,4
+Kai Ito,31,Male,New York,cold brew,64.54,3
+Eli Novak,46,Male,Denver,espresso gear,75.99,2
+Hugo Sato,36,Male,Stuttgart,home office,119.41,1
+Riley Lund,26,Female,Melbourne,specialty coffee,52.94,4
+Eli Vega,24,Female,London,specialty coffee,57.04,5
+Leo Lund,38,Male,Dubai,espresso to go,86.76,3
+Casey Sato,30,Male,Seattle,specialty coffee,73.46,7
+Ava Novak,32,Female,London,cozy rituals,59.61,4
+Ava Nash,71,Male,Kyoto,classic roast,19.64,6
+Iris Patel,28,Male,New York,cold brew,66.98,6
+Ava Novak,31,Male,New York,fitness,69.32,5
+Hugo Ali,21,Female,Leeds,iced drinks,18.26,6
+Leo Ali,38,Male,Bristol,decaf,43.19,3
+Sam Moreau,32,Female,Seattle,specialty coffee,46.03,6
+Riley Silva,20,Female,Toronto,iced drinks,27.13,6
+Owen Byrne,37,Female,Bristol,decaf,56.26,2
+Owen Kim,29,Female,Melbourne,cozy rituals,42.24,4
+Maya Lund,22,Male,Austin,study cafes,15.21,7
+Iris Costa,20,Female,Austin,iced drinks,26.27,6
+Alex Haas,53,Male,Bali,espresso gear,138.92,7
+Zara Reyes,69,Female,Kyoto,tea,34.86,5
+Eli Costa,65,Male,Bath,tea,24.12,4
+June Sato,39,Female,Bristol,decaf,47.07,4
+Ruth Patel,19,Female,Leeds,study cafes,24.11,5
+Owen Reyes,43,Male,Utrecht,decaf,45.14,3
+Eli Silva,46,Male,Frankfurt,loyalty offers,92.23,0
+Iris Lund,21,Female,Austin,study cafes,12.23,6
+Kai Sato,40,Female,Minneapolis,decaf,35.85,2
+Iris Vega,32,Male,Singapore,fitness,49.21,4
+Omar Silva,33,Female,Seattle,cozy rituals,42.39,5
+Sam Weber,63,Female,Bath,tea,19.24,3
+Owen Okafor,21,Male,Toronto,iced drinks,20.09,6
+Riley Lund,21,Male,Leeds,iced drinks,15.11,5
+Leo Patel,50,Male,Frankfurt,espresso to go,119.57,2
+Jordan Silva,50,Male,Chicago,espresso to go,122.4,2
+Ava Ali,66,Female,Bath,tea,20.18,3
+Ava Novak,37,Female,Bristol,decaf,43.31,2
+Lena Costa,39,Female,Utrecht,decaf,47.12,1
+Owen Chen,37,Male,Lisbon,matcha,36.36,4
+Zara Costa,43,Male,Stuttgart,home office,105.7,0
+Kai Larsen,48,Female,Chicago,loyalty offers,134.6,2
+Ava Sato,40,Female,Bristol,weekend treats,49.36,4
+Riley Patel,36,Female,Bali,plant-based,29.36,6
+Maya Sato,48,Female,Frankfurt,loyalty offers,65.91,2
+Sam Byrne,30,Male,Berlin,fitness,51.53,3
+Hugo Ali,42,Female,Bristol,weekend treats,30.15,2
+Iris Kim,44,Male,Manchester,espresso gear,68.3,1
+Nina Okafor,21,Male,Toronto,iced drinks,11.84,5
+June Ali,29,Nonbinary,Singapore,cold brew,69.12,5
+Ruth Moreau,64,Male,Bath,tea,29.87,5
+Omar Kim,66,Female,Kyoto,tea,27.74,5
+Iris Okafor,38,Female,Lisbon,matcha,38.07,4
+Nina Larsen,37,Female,Bristol,weekend treats,33.18,3
+Lena Garcia,23,Female,Austin,study cafes,22.85,5
+Noah Haas,30,Male,Singapore,fitness,75.43,4
+Alex Ito,68,Male,Bath,classic roast,37.21,3
+Alex Patel,30,Female,Seattle,cozy rituals,44.02,6
+Omar Vega,24,Female,Seattle,cozy rituals,75.91,7
+Riley Garcia,40,Male,Frankfurt,espresso to go,70.18,2
+Riley Nash,28,Female,London,specialty coffee,48.86,6
+Leo Haas,48,Female,Dubai,espresso to go,75.37,3
+Ruth Byrne,29,Male,Singapore,fitness,55.13,5
+Nina Lund,20,Male,Leeds,study cafes,23.09,7
+June Costa,28,Nonbinary,Mexico City,matcha,33.52,5
+Eli Ito,41,Male,Denver,espresso gear,66.87,4
+Iris Ito,28,Male,Berlin,cold brew,66.78,5
+Ava Nash,50,Female,Dubai,loyalty offers,95.12,3
+Nina Ito,39,Female,Mexico City,plant-based,55.16,5
+Alex Kim,20,Male,Leeds,iced drinks,32.3,6
+Ava Chen,30,Male,Singapore,fitness,44.75,5
+Alex Ito,35,Nonbinary,Lisbon,matcha,47.8,4
+Kai Novak,69,Female,Bath,tea,27.61,3
+Kai Novak,30,Nonbinary,Lisbon,matcha,44.63,4
+June Garcia,38,Male,Mexico City,matcha,37.46,4
+Noah Weber,29,Female,Melbourne,specialty coffee,55.88,5
+Owen Okafor,38,Male,Chicago,loyalty offers,104.84,3
+Lena Larsen,22,Female,London,cozy rituals,56.03,6
+Kai Ali,41,Male,Stuttgart,home office,125.93,0
+Alex Byrne,26,Male,Singapore,cold brew,60.01,5
+Casey Ito,24,Female,London,specialty coffee,65.24,6
+Ava Chen,34,Nonbinary,Bali,matcha,35.04,7
+Jordan Kim,25,Female,London,cozy rituals,49.45,5
+Zara Ito,36,Male,Minneapolis,decaf,41.69,3
+Iris Ali,74,Male,Portland,tea,36.66,2
+Jordan Novak,62,Female,Portland,classic roast,20.22,3
+Lena Okafor,22,Female,Austin,study cafes,19.18,7
+Nina Moreau,37,Female,Bali,plant-based,29.29,4
+Eli Sato,73,Male,Portland,classic roast,30.4,3
+Nina Moreau,27,Female,Seattle,specialty coffee,43.82,6
+Riley Lund,24,Female,London,cozy rituals,69.59,7
+Hugo Patel,31,Female,Frankfurt,loyalty offers,101.97,3
+Owen Costa,28,Female,Seattle,cozy rituals,74.9,6
+Ava Larsen,20,Female,Austin,iced drinks,28.82,5
+June Ito,32,Nonbinary,Singapore,cold brew,67.59,5
+Kai Weber,25,Female,Seattle,specialty coffee,54.6,7
+Maya Vega,36,Nonbinary,Mexico City,matcha,29.77,4
+Eli Weber,20,Nonbinary,Leeds,study cafes,13.12,6
+Noah Ali,30,Male,Singapore,fitness,91.75,5
+Nina Novak,23,Nonbinary,Leeds,cold brew,54.81,6
+Ava Ali,34,Female,Minneapolis,weekend treats,49.12,1
+Jordan Ito,44,Female,Dubai,espresso to go,101.53,2
+Zara Vega,70,Female,Portland,tea,38.52,5
+Casey Patel,25,Female,Seattle,cozy rituals,48.51,6
+Ruth Lund,23,Male,Austin,study cafes,22.37,6
+Riley Silva,40,Male,Manchester,espresso gear,80.69,2
+Hugo Larsen,38,Nonbinary,Bali,matcha,41.37,5
+Omar Ali,47,Male,Denver,espresso gear,114.61,1
+Eli Haas,20,Nonbinary,Toronto,iced drinks,22.55,4
+Sam Larsen,29,Nonbinary,Bali,plant-based,40.58,4
+Jordan Moreau,37,Male,Bali,plant-based,57.78,5
+Noah Okafor,29,Male,Lisbon,plant-based,37.4,5
+Casey Patel,29,Male,Singapore,fitness,54.41,2
+Lena Novak,54,Male,Dubai,loyalty offers,111.82,1
+Maya Ali,30,Female,Singapore,fitness,63.19,5
+June Ito,36,Male,Frankfurt,loyalty offers,72.7,0
+Riley Nash,52,Male,Dubai,loyalty offers,103.42,3
+Kai Haas,20,Nonbinary,Toronto,study cafes,18.0,5
+Jordan Haas,37,Female,Utrecht,decaf,45.08,1
+Noah Haas,48,Nonbinary,Bali,cozy rituals,121.9,2
+Eli Garcia,69,Female,Kyoto,tea,34.45,5
+Omar Haas,35,Female,Utrecht,weekend treats,54.94,2
+Kai Novak,27,Male,Berlin,cold brew,56.18,3
+Zara Chen,20,Male,Leeds,iced drinks,14.71,5
+Riley Sato,50,Male,Stuttgart,home office,114.22,4
+Maya Garcia,56,Male,Kyoto,matcha,109.01,4
+Ava Garcia,38,Female,Utrecht,decaf,36.74,1
+Leo Patel,26,Male,Seattle,specialty coffee,51.98,5
+Eli Vega,27,Female,Melbourne,cozy rituals,59.23,7
+Leo Ito,21,Male,Leeds,study cafes,15.96,5
+Iris Vega,63,Female,Bath,tea,24.64,5
+Jordan Lund,23,Female,London,specialty coffee,65.69,5
+Ava Okafor,29,Female,Seattle,cozy rituals,47.41,6
+June Reyes,25,Female,Seattle,specialty coffee,47.17,5
+Omar Costa,34,Male,Berlin,cold brew,46.46,4
+Lena Novak,28,Male,New York,cold brew,60.05,5
+Casey Larsen,62,Male,Portland,classic roast,22.36,4
+Alex Silva,34,Female,Utrecht,weekend treats,46.78,1
+Hugo Ito,20,Female,Austin,study cafes,18.5,7
+Lena Ali,22,Female,London,matcha,92.47,6
+Eli Lund,69,Male,Kyoto,classic roast,23.77,4
+Jordan Larsen,22,Male,Leeds,iced drinks,20.17,6
+Sam Chen,30,Male,Singapore,cold brew,53.36,6
+Kai Weber,46,Male,Chicago,espresso to go,94.16,3
+Owen Lund,19,Female,Austin,iced drinks,23.09,5
+Ruth Novak,45,Male,Stuttgart,espresso gear,60.81,3
+Sam Kim,41,Female,Frankfurt,espresso to go,106.76,2
+Casey Weber,40,Female,Utrecht,weekend treats,46.92,2
+Hugo Silva,30,Female,Lisbon,matcha,53.5,6
+Leo Costa,27,Female,Seattle,cozy rituals,64.73,5
+Omar Novak,43,Female,Dubai,espresso to go,113.47,2
+Casey Moreau,25,Male,Manchester,study cafes,88.62,7
+June Byrne,58,Male,Bath,espresso to go,93.24,3
+Maya Lund,29,Male,Singapore,cold brew,77.12,3
+Eli Weber,27,Male,Melbourne,specialty coffee,42.56,7
+Leo Ali,39,Female,Utrecht,weekend treats,56.01,2
+Zara Patel,23,Nonbinary,Leeds,iced drinks,11.77,7
+Owen Vega,43,Female,Stuttgart,espresso gear,107.62,3
+June Sato,29,Male,Berlin,cold brew,81.53,5
+Owen Byrne,48,Male,Chicago,loyalty offers,131.51,3
+Zara Novak,20,Male,Leeds,study cafes,26.86,5
+Ruth Sato,60,Male,Portland,tea,22.01,5
+Lena Moreau,35,Female,Mexico City,plant-based,35.19,3
+Nina Weber,32,Male,Denver,espresso gear,67.94,0
+Leo Novak,38,Female,Bristol,weekend treats,68.35,1
+Alex Okafor,67,Male,Kyoto,tea,29.59,4
+Eli Novak,23,Female,Seattle,specialty coffee,44.38,6
+Ava Patel,28,Male,Singapore,cold brew,62.61,5
+Owen Weber,39,Male,Utrecht,weekend treats,33.37,2
+Iris Larsen,42,Male,Stuttgart,espresso gear,129.88,2
+Zara Ali,21,Male,Toronto,study cafes,21.76,5
+Maya Reyes,28,Female,Melbourne,cozy rituals,55.75,6
+Iris Patel,27,Female,Seattle,cozy rituals,46.49,5
+Casey Reyes,22,Female,Toronto,study cafes,29.22,6
+Owen Vega,22,Male,Austin,iced drinks,18.35,4
+Kai Garcia,26,Female,Lisbon,plant-based,50.37,6
+Eli Ito,20,Female,Toronto,iced drinks,20.99,5
+Owen Patel,39,Male,Stuttgart,home office,120.09,3
+Zara Moreau,25,Female,Melbourne,cozy rituals,44.26,6
+Sam Reyes,21,Male,Toronto,iced drinks,28.18,7
+Alex Garcia,52,Male,Toronto,loyalty offers,122.41,0
+Lena Ali,30,Male,Berlin,cold brew,52.34,4
+Kai Weber,36,Female,Bristol,weekend treats,50.29,0
+Nina Chen,20,Female,Leeds,study cafes,24.12,5
+Ruth Ali,66,Male,Kyoto,classic roast,24.38,3
+Leo Ali,70,Male,Portland,classic roast,35.37,4
+Jordan Ali,32,Female,Bali,plant-based,47.66,3
+Zara Larsen,28,Female,Manchester,cozy rituals,128.82,6
+Ava Sato,66,Female,Kyoto,tea,24.34,4
+Owen Lund,40,Male,Mexico City,matcha,31.25,5
+Noah Moreau,70,Female,Bath,classic roast,24.88,3
+Jordan Weber,39,Female,Bristol,weekend treats,48.97,3
+Hugo Garcia,33,Male,Berlin,fitness,54.19,4
+June Ito,31,Male,Mexico City,plant-based,51.98,4
+Leo Byrne,43,Male,Frankfurt,loyalty offers,95.86,3
+Noah Okafor,23,Female,Austin,iced drinks,29.97,5
+Iris Haas,35,Male,Mexico City,matcha,38.32,4
+Ruth Reyes,58,Male,Frankfurt,loyalty offers,110.47,3
+Jordan Haas,20,Female,Toronto,study cafes,29.56,6
+Noah Costa,21,Female,Melbourne,cozy rituals,35.94,5
+Hugo Patel,28,Nonbinary,Melbourne,specialty coffee,59.43,5
+Ava Costa,48,Male,Dubai,loyalty offers,127.34,2
+Ava Moreau,20,Male,Austin,study cafes,30.4,6
+Riley Weber,39,Female,Bristol,weekend treats,33.32,2
+Jordan Patel,20,Female,Toronto,study cafes,22.02,7
+Riley Silva,53,Male,Stuttgart,espresso gear,126.13,2
+Sam Garcia,33,Female,Lisbon,plant-based,56.63,7
+Hugo Lund,29,Female,Seattle,cozy rituals,45.28,7
+Zara Sato,23,Female,Melbourne,cozy rituals,72.32,5
+Hugo Larsen,63,Female,Portland,classic roast,29.54,2
+Jordan Sato,52,Female,Seattle,home office,47.22,6
+Ruth Nash,45,Male,Stuttgart,espresso gear,88.99,1
+Nina Nash,40,Male,Stuttgart,home office,98.4,2
+Leo Novak,52,Nonbinary,New York,decaf,37.52,4
+Ruth Ali,40,Male,Minneapolis,decaf,34.19,1
+Lena Costa,23,Female,Austin,study cafes,20.2,4
+Alex Ali,30,Male,New York,cold brew,64.8,4
+June Costa,21,Male,Toronto,study cafes,23.24,6
+June Okafor,39,Female,Chicago,loyalty offers,141.57,3
+Owen Costa,40,Male,Denver,home office,102.45,1
+Riley Vega,65,Male,Bath,tea,30.0,5
+Zara Sato,42,Male,Denver,home office,71.08,2
+Ruth Okafor,49,Male,Portland,specialty coffee,20.82,1
+Leo Byrne,28,Male,Singapore,cold brew,60.72,1
+Eli Okafor,68,Male,Kyoto,tea,25.49,2
+Noah Patel,27,Female,Melbourne,specialty coffee,63.54,6
+Ava Okafor,28,Nonbinary,London,specialty coffee,63.65,5
+Leo Sato,34,Male,Berlin,fitness,43.91,4
+Ruth Vega,67,Male,Kyoto,tea,16.85,3
+Owen Byrne,22,Female,Leeds,study cafes,15.69,6
+Sam Novak,31,Nonbinary,Bali,plant-based,27.29,4
+Maya Larsen,36,Female,Bali,matcha,30.05,4
+Alex Byrne,39,Male,Denver,espresso gear,107.81,3
+Ruth Patel,46,Male,Manchester,home office,102.93,2
+June Chen,43,Male,Dubai,loyalty offers,128.49,4
+Leo Silva,46,Male,Denver,espresso gear,115.25,4
+Hugo Haas,29,Female,Seattle,cozy rituals,53.22,5
+Leo Okafor,46,Male,Manchester,home office,124.17,2
+Nina Ito,28,Female,Seattle,specialty coffee,70.37,5
+Casey Kim,30,Nonbinary,Mexico City,plant-based,33.24,4
+Zara Moreau,40,Nonbinary,Lisbon,plant-based,30.43,5
+Nina Chen,29,Female,Bali,plant-based,49.63,5
+Lena Novak,32,Male,Bali,plant-based,36.1,5
+Hugo Novak,37,Female,Minneapolis,weekend treats,47.46,1
+Ruth Chen,39,Male,Stuttgart,espresso gear,75.72,3
+Casey Silva,27,Female,Mexico City,plant-based,48.26,4
+Noah Garcia,36,Female,Bristol,weekend treats,47.3,1
+Noah Haas,38,Male,Frankfurt,espresso to go,138.85,2
+Jordan Patel,71,Male,Kyoto,tea,25.72,5
+Nina Chen,40,Female,Dubai,espresso to go,118.39,2
+Maya Weber,38,Female,Bristol,weekend treats,45.17,1
+June Nash,46,Male,Denver,espresso gear,71.33,2
+Casey Lund,36,Male,Bristol,decaf,31.7,2
+Noah Okafor,41,Nonbinary,Lisbon,specialty coffee,86.83,7
+Lena Haas,62,Nonbinary,Stuttgart,study cafes,30.24,3
+Zara Patel,19,Female,Toronto,iced drinks,16.75,6
+Leo Larsen,28,Nonbinary,Singapore,cold brew,47.74,3
+Noah Lund,45,Female,Manchester,home office,80.3,2
+Ava Reyes,27,Female,Melbourne,specialty coffee,57.46,4
+Omar Chen,39,Female,Stuttgart,home office,105.85,3
+Nina Chen,20,Female,Austin,study cafes,21.12,5
+Lena Byrne,68,Male,Bath,classic roast,31.11,3
+Alex Ito,22,Female,London,cozy rituals,47.48,6
+Nina Patel,25,Female,Melbourne,specialty coffee,46.5,4
+Casey Novak,41,Male,Denver,home office,84.87,1
+Maya Patel,32,Female,Utrecht,decaf,53.95,2
+Kai Byrne,24,Male,Seattle,specialty coffee,52.48,3
+Sam Ali,31,Nonbinary,Melbourne,cozy rituals,60.47,6
+Jordan Haas,26,Male,Singapore,cold brew,79.41,6
+Riley Chen,35,Male,Stuttgart,home office,69.06,2
+Eli Kim,31,Male,Berlin,cold brew,62.11,6
+Owen Lund,35,Female,Lisbon,plant-based,37.53,2
+Noah Sato,28,Female,London,cozy rituals,52.71,6
+Jordan Lund,33,Male,New York,cold brew,85.87,3
+Sam Weber,41,Female,Dubai,espresso to go,113.09,4
+Alex Novak,71,Male,Bath,tea,38.26,2
+June Garcia,30,Female,London,cozy rituals,32.81,6
+Leo Novak,37,Female,Dubai,loyalty offers,110.24,2
+Leo Weber,38,Female,Utrecht,decaf,42.88,3
+Casey Nash,35,Female,Utrecht,weekend treats,30.73,2
+Zara Chen,26,Female,Bali,matcha,26.13,3
+Casey Okafor,25,Female,Seattle,specialty coffee,47.93,6
+Iris Chen,38,Female,Mexico City,plant-based,46.13,5
+Ruth Patel,35,Female,Mexico City,plant-based,37.17,5
+Jordan Ali,67,Male,Bath,iced drinks,27.3,2
+Kai Silva,33,Male,Utrecht,decaf,47.18,2
+Eli Weber,22,Male,Toronto,iced drinks,24.1,6
+Nina Garcia,42,Male,Manchester,espresso gear,74.98,3
+Omar Larsen,27,Female,Melbourne,specialty coffee,67.12,5
+Omar Nash,26,Female,London,specialty coffee,70.27,7
+Omar Sato,30,Male,Singapore,cold brew,64.59,6
+Alex Costa,47,Male,Denver,espresso gear,75.57,4
+Maya Haas,24,Male,Singapore,fitness,87.43,5
+Hugo Sato,26,Female,London,specialty coffee,37.19,5
+Jordan Weber,34,Male,Singapore,cold brew,93.14,4
+Noah Moreau,37,Female,Dubai,espresso to go,72.29,6
+Kai Haas,69,Female,Bath,tea,20.49,4
+Riley Sato,22,Female,Leeds,study cafes,27.82,7
+Zara Haas,23,Female,Toronto,iced drinks,17.65,5
+Owen Moreau,21,Female,Leeds,study cafes,13.4,6
+Noah Haas,21,Male,Toronto,iced drinks,25.03,7
+Sam Haas,65,Male,Portland,tea,18.92,4
+Alex Ali,35,Male,Frankfurt,loyalty offers,87.34,3
+Iris Patel,35,Male,Dubai,espresso to go,70.14,1
+Kai Lund,77,Female,Bath,tea,38.65,5
+Lena Silva,23,Nonbinary,Seattle,specialty coffee,44.43,6
+Riley Sato,31,Female,Mexico City,plant-based,35.91,6
+Leo Nash,39,Female,Chicago,loyalty offers,124.0,1
+Iris Ali,26,Female,London,cozy rituals,42.15,6
+Leo Lund,20,Female,Austin,study cafes,26.24,5
+Kai Moreau,27,Male,Singapore,cold brew,66.91,6
+Nina Moreau,72,Female,Kyoto,classic roast,28.1,4
+Kai Weber,48,Male,Chicago,espresso to go,111.4,3
+Maya Haas,31,Male,Singapore,cold brew,76.15,5
+Eli Ito,41,Female,Chicago,espresso to go,101.46,2
+Casey Haas,30,Female,Seattle,cozy rituals,43.34,5
+Leo Patel,27,Female,Seattle,cozy rituals,52.84,7
+Maya Weber,29,Female,London,specialty coffee,43.17,6
+Ruth Okafor,30,Female,London,specialty coffee,64.03,4
+Ruth Nash,20,Female,Austin,study cafes,24.3,3
+Hugo Garcia,39,Male,Denver,espresso gear,110.33,4
+Noah Nash,56,Female,Bath,plant-based,110.96,7
+Sam Silva,21,Male,Leeds,study cafes,17.55,5
+Alex Okafor,41,Male,Frankfurt,loyalty offers,113.81,3
+Ruth Lund,43,Nonbinary,Bristol,loyalty offers,56.99,2
+June Vega,70,Female,Portland,tea,21.07,3
+Ruth Patel,29,Male,Berlin,cold brew,77.51,3
+Nina Garcia,27,Female,Melbourne,cozy rituals,58.31,4
+Ruth Kim,18,Male,Leeds,study cafes,15.37,6
+June Byrne,38,Male,Denver,home office,63.01,3
+Alex Lund,39,Male,Denver,espresso gear,87.93,2
+Casey Reyes,20,Female,Austin,iced drinks,21.72,4
+Hugo Moreau,22,Female,Austin,iced drinks,25.83,5
+Maya Lund,37,Female,Mexico City,plant-based,31.25,5
+Nina Ito,19,Male,Leeds,study cafes,17.48,3
+Noah Vega,28,Female,Seattle,cozy rituals,38.86,6
+Hugo Moreau,22,Female,Leeds,study cafes,17.23,6
+Nina Novak,68,Female,Kyoto,classic roast,19.19,4
+Ava Costa,29,Male,Singapore,cold brew,49.47,4
+Lena Moreau,26,Female,London,cozy rituals,68.38,3
+Ruth Larsen,69,Female,Portland,classic roast,23.81,2
+Nina Nash,32,Male,Singapore,fitness,75.36,4
+Casey Silva,41,Female,Chicago,espresso to go,84.75,1
+Zara Kim,47,Male,Denver,home office,71.79,2
+Ruth Nash,29,Female,London,cozy rituals,50.69,5
+Maya Byrne,21,Female,Seattle,specialty coffee,41.51,5
+Sam Ali,35,Female,Minneapolis,weekend treats,56.9,2
+Maya Nash,64,Male,Bath,classic roast,21.63,2
+Maya Okafor,21,Female,Leeds,study cafes,20.27,4
+Iris Nash,27,Female,Melbourne,specialty coffee,54.62,6
+Riley Chen,64,Male,Bath,classic roast,21.44,6
+Ava Larsen,27,Female,Seattle,specialty coffee,65.58,6
+Noah Garcia,34,Male,Bali,plant-based,30.28,6
+Nina Novak,25,Female,Seattle,cozy rituals,41.11,5
+Maya Haas,23,Male,Leeds,study cafes,18.08,5
+Omar Okafor,26,Female,Melbourne,cozy rituals,40.55,5
+Maya Okafor,26,Female,Seattle,specialty coffee,51.65,7
+Lena Larsen,37,Male,Berlin,specialty coffee,94.9,5
+Jordan Chen,31,Male,Berlin,cold brew,62.94,4
+Omar Okafor,44,Male,Dubai,espresso to go,110.15,2
+Noah Byrne,29,Male,Berlin,fitness,79.16,5
+Zara Ali,28,Female,London,specialty coffee,38.24,4
+Noah Ali,31,Male,London,decaf,22.75,2
+Jordan Ito,22,Female,Toronto,iced drinks,17.83,6
+Zara Vega,28,Female,Lisbon,matcha,56.29,4
+Iris Chen,51,Male,Denver,espresso gear,76.02,4
+Lena Ito,39,Male,Frankfurt,loyalty offers,86.73,2
+Lena Costa,25,Female,London,specialty coffee,46.98,7
+Maya Reyes,64,Male,Bath,classic roast,22.22,3
+Jordan Chen,26,Nonbinary,Melbourne,specialty coffee,59.21,5
+Jordan Larsen,27,Female,Seattle,cozy rituals,72.22,7
+Alex Haas,42,Male,Stuttgart,espresso gear,88.5,0
+Nina Reyes,20,Male,Austin,study cafes,27.01,6
+Alex Sato,37,Male,Bristol,decaf,32.16,1
+Hugo Moreau,36,Male,Utrecht,decaf,57.31,2
+Owen Reyes,74,Female,Portland,tea,37.66,3
+Leo Novak,28,Nonbinary,Bali,matcha,29.83,5
+Hugo Novak,27,Male,Melbourne,cozy rituals,62.66,6
+Ruth Okafor,25,Female,London,specialty coffee,37.87,6
+Maya Lund,21,Female,Toronto,study cafes,20.92,4
+Leo Garcia,74,Nonbinary,Singapore,weekend treats,60.68,0
+Maya Garcia,20,Female,Toronto,study cafes,30.19,4
+Sam Sato,44,Male,Frankfurt,espresso to go,103.04,3
+June Byrne,53,Male,Toronto,tea,73.29,1
+Owen Silva,31,Male,Mexico City,plant-based,52.88,6
+Leo Okafor,21,Male,Leeds,study cafes,27.0,5
+Ruth Garcia,38,Female,Utrecht,decaf,38.82,2
+Nina Ali,35,Male,Bali,matcha,41.02,3
+Maya Ali,41,Male,Bristol,weekend treats,42.16,2
+Kai Reyes,33,Female,New York,fitness,92.41,5
+Owen Silva,20,Male,Toronto,classic roast,40.99,2
+Nina Patel,66,Male,Portland,tea,34.83,4
+Maya Patel,31,Nonbinary,Bali,matcha,37.74,5
+Jordan Reyes,70,Male,Kyoto,tea,32.68,4
+June Weber,42,Male,Manchester,home office,98.05,2
+Hugo Okafor,41,Female,Minneapolis,weekend treats,42.8,3
+Omar Haas,46,Female,Dubai,espresso to go,94.93,3
+Noah Reyes,45,Male,Stuttgart,espresso gear,67.6,2
+Alex Ali,69,Female,Portland,classic roast,34.71,3
+Nina Patel,25,Female,London,cozy rituals,60.74,6
+Ruth Ito,37,Female,Minneapolis,decaf,64.88,1
+Omar Moreau,24,Female,London,specialty coffee,46.65,6
+Zara Reyes,40,Male,Frankfurt,espresso to go,146.84,0
+Iris Kim,29,Female,Lisbon,plant-based,37.94,4
+Lena Vega,28,Female,London,cozy rituals,62.57,6
+Kai Larsen,45,Male,Stuttgart,home office,101.81,1
+June Okafor,29,Nonbinary,Mexico City,plant-based,35.85,4
+Omar Nash,67,Male,Portland,classic roast,44.22,2
+Ava Costa,35,Nonbinary,Lisbon,cozy rituals,66.97,2
+Kai Ali,67,Male,Portland,classic roast,31.42,3
+Zara Costa,31,Female,New York,cold brew,47.92,4
+Riley Chen,49,Male,Manchester,home office,89.97,1
+Hugo Okafor,39,Female,Stuttgart,home office,69.77,1
+Hugo Ito,26,Female,Seattle,specialty coffee,64.66,4
+Ruth Lund,29,Female,New York,fitness,56.61,7
+June Lund,56,Male,Frankfurt,loyalty offers,123.64,5
+Jordan Sato,32,Male,Mexico City,plant-based,37.58,5
+Maya Ali,27,Female,Melbourne,specialty coffee,66.79,4
+Iris Vega,38,Female,Bristol,decaf,52.55,2
+Riley Garcia,43,Female,Minneapolis,weekend treats,51.42,4
+Sam Reyes,23,Female,Seattle,cozy rituals,43.0,7
+Lena Larsen,46,Male,Stuttgart,home office,77.9,0
+Casey Garcia,23,Female,Leeds,iced drinks,16.36,6
+Jordan Novak,37,Female,Bali,plant-based,50.12,4
+Riley Silva,30,Male,Singapore,fitness,54.46,5
+Zara Lund,27,Female,Melbourne,specialty coffee,43.16,4
+Maya Novak,66,Male,Portland,tea,32.72,6
+Zara Larsen,42,Female,Manchester,espresso gear,90.47,1
+Jordan Nash,20,Female,Austin,study cafes,14.68,5
+Alex Moreau,38,Female,Minneapolis,decaf,55.65,2
+Lena Lund,41,Male,Manchester,home office,115.07,1
+Ava Ito,25,Female,Seattle,cozy rituals,53.39,4
+Noah Moreau,39,Female,Utrecht,decaf,46.82,3
+Ava Silva,32,Male,Lisbon,matcha,28.98,7
+June Ito,23,Male,Leeds,study cafes,19.3,7
+Eli Weber,30,Male,Berlin,fitness,77.44,6
+Alex Costa,39,Male,Bristol,decaf,63.26,3
+Lena Reyes,27,Male,Dubai,espresso to go,126.58,2
+Alex Ali,45,Male,Stuttgart,espresso gear,89.12,1
+Leo Sato,33,Male,Utrecht,weekend treats,36.64,0
+Leo Ali,30,Nonbinary,New York,fitness,50.7,5
+Zara Sato,22,Male,Toronto,iced drinks,22.46,6
+Sam Vega,29,Male,Singapore,cold brew,83.26,4
+Noah Moreau,28,Female,Melbourne,specialty coffee,54.32,7
+Omar Haas,25,Female,Seattle,cozy rituals,68.35,5
+Jordan Vega,37,Male,Dubai,loyalty offers,75.61,3
+Nina Novak,22,Male,Leeds,iced drinks,14.5,5
+Omar Nash,30,Male,Singapore,fitness,63.4,6
+June Ito,46,Female,Utrecht,decaf,31.31,4
+Jordan Ali,68,Female,Portland,classic roast,32.17,2
+Casey Moreau,27,Male,Lisbon,plant-based,55.64,4
+Owen Costa,23,Nonbinary,Austin,study cafes,24.0,5
+Ruth Reyes,67,Female,Kyoto,tea,23.61,3
+Casey Garcia,38,Female,Bristol,weekend treats,56.63,4
+Ruth Ali,57,Male,Frankfurt,espresso to go,96.09,2
+Zara Moreau,35,Female,Lisbon,plant-based,32.08,5
+Sam Ito,47,Male,Manchester,home office,124.39,2
+Kai Ito,32,Male,New York,fitness,72.89,6
+Nina Kim,42,Male,Manchester,espresso gear,89.25,4
+Jordan Weber,29,Female,Berlin,cold brew,62.97,5
+Hugo Garcia,47,Male,Stuttgart,home office,78.29,2
+Jordan Vega,23,Male,Austin,study cafes,12.94,6
+Kai Nash,43,Female,Chicago,loyalty offers,74.73,3
+Maya Ito,48,Male,Stuttgart,espresso gear,77.4,4
+Alex Chen,21,Male,Leeds,iced drinks,22.85,5
+Alex Larsen,28,Female,Berlin,cold brew,62.0,4
+Kai Reyes,62,Male,Portland,classic roast,29.27,7
+Zara Moreau,60,Female,Kyoto,classic roast,30.22,4
+Ava Patel,36,Female,Bristol,decaf,46.02,2
+Maya Patel,38,Male,Dubai,espresso to go,94.85,3
+Riley Moreau,33,Female,Lisbon,matcha,42.98,4
+Sam Moreau,29,Male,Bali,plant-based,27.03,7
+Sam Okafor,32,Female,Melbourne,specialty coffee,43.05,4
+Jordan Costa,21,Female,Toronto,iced drinks,17.71,6
+June Haas,46,Male,Stuttgart,espresso gear,66.84,3
+Nina Weber,28,Female,Seattle,specialty coffee,46.84,7
+Zara Sato,19,Female,Austin,study cafes,28.55,5
+Nina Ali,50,Female,Stuttgart,espresso gear,86.76,3
+Ruth Larsen,63,Male,Bath,tea,21.34,3
+Lena Okafor,23,Male,Toronto,study cafes,25.35,5
+Zara Ali,73,Male,Portland,classic roast,29.73,4
+Ava Sato,42,Male,Denver,home office,94.2,2
+Sam Kim,44,Male,Stuttgart,espresso gear,91.48,2
+Sam Lund,38,Female,Bali,plant-based,40.37,4
+Casey Nash,26,Female,Seattle,specialty coffee,60.44,5
+Sam Vega,31,Male,Berlin,cold brew,74.83,6
+Kai Kim,72,Female,Kyoto,tea,28.2,2
+Iris Chen,41,Male,Frankfurt,espresso to go,99.6,3
+Omar Costa,28,Male,Singapore,cold brew,56.35,5
+Ava Garcia,36,Female,Minneapolis,weekend treats,38.08,4
+Eli Lund,32,Female,Melbourne,specialty coffee,56.24,5
+Nina Larsen,34,Female,Minneapolis,weekend treats,37.18,3
+June Okafor,37,Male,Mexico City,plant-based,48.89,5
+Zara Costa,23,Female,Seattle,specialty coffee,56.62,7
+Zara Larsen,31,Male,Berlin,fitness,73.84,7
+Casey Silva,40,Female,Dubai,espresso to go,132.91,3
+Nina Silva,43,Male,Manchester,espresso gear,117.49,2
+Kai Costa,19,Female,Austin,iced drinks,20.17,5
+Ruth Nash,70,Female,Bath,classic roast,32.78,4
+Sam Moreau,28,Female,Seattle,cozy rituals,48.13,6
+Leo Garcia,36,Male,Lisbon,plant-based,36.31,4
+Iris Okafor,36,Nonbinary,Lisbon,matcha,46.31,4
+Jordan Haas,35,Nonbinary,Lisbon,matcha,58.17,5
+Lena Weber,32,Male,New York,fitness,47.48,4
+Eli Kim,29,Male,London,cozy rituals,51.98,7
+Hugo Haas,42,Male,Frankfurt,espresso to go,99.68,0
+Sam Ito,22,Male,Austin,iced drinks,25.98,5
+Eli Kim,28,Male,Singapore,cold brew,72.24,4
+Jordan Nash,69,Male,Kyoto,classic roast,19.82,3
+Casey Patel,50,Male,Austin,cozy rituals,88.66,0
+Leo Larsen,75,Female,Bath,classic roast,22.75,4
+Ava Garcia,42,Male,Denver,home office,91.02,2
+Maya Haas,22,Male,Leeds,study cafes,14.03,6
+Zara Novak,34,Female,Lisbon,matcha,34.54,7
+Sam Costa,37,Female,Mexico City,plant-based,50.52,4
+Jordan Reyes,35,Male,Denver,home office,85.8,3
+Casey Silva,45,Male,Stuttgart,home office,103.22,3
+Eli Costa,72,Female,Kyoto,tea,38.51,4
+Omar Haas,30,Female,Seattle,cozy rituals,59.11,5
+Maya Weber,31,Female,Utrecht,weekend treats,57.96,2
+Riley Okafor,20,Female,Toronto,iced drinks,27.29,5
+Ava Chen,20,Male,Leeds,study cafes,13.68,5
+Owen Sato,51,Male,Chicago,espresso to go,123.28,0
+Kai Silva,32,Female,Lisbon,matcha,37.85,5
+Hugo Okafor,29,Male,Singapore,cold brew,65.71,3
+Omar Kim,32,Female,Bali,matcha,56.55,3
+Sam Nash,29,Male,New York,cold brew,48.14,3
+Noah Vega,29,Male,Seattle,cozy rituals,60.08,7
+Eli Weber,49,Male,Stuttgart,espresso gear,69.33,2
+June Moreau,43,Female,Chicago,loyalty offers,131.38,2
+Maya Haas,25,Female,London,cozy rituals,49.71,5
+Ruth Silva,28,Male,Singapore,cold brew,54.77,5
+Nina Kim,26,Nonbinary,Bali,plant-based,39.86,4
+Riley Garcia,23,Male,Leeds,iced drinks,11.23,5
+Casey Chen,20,Female,Toronto,study cafes,24.25,4
+Owen Okafor,66,Female,Bath,classic roast,31.04,1
+Iris Chen,29,Female,London,cozy rituals,48.61,5
+Casey Larsen,32,Female,Lisbon,matcha,53.28,5
+Hugo Sato,31,Male,Berlin,cold brew,78.87,4
+Sam Kim,45,Nonbinary,New York,plant-based,125.95,5
+Eli Reyes,48,Male,Frankfurt,loyalty offers,75.8,2
+Noah Reyes,37,Female,Mexico City,matcha,44.23,3
+Ruth Kim,22,Nonbinary,Leeds,study cafes,26.28,7
+Noah Nash,26,Female,Seattle,specialty coffee,42.76,6
+Eli Kim,29,Male,New York,fitness,53.46,5
+Ava Ito,32,Male,Berlin,fitness,48.48,5
+Ruth Ali,25,Female,Melbourne,specialty coffee,51.41,5
+Hugo Ito,41,Male,Utrecht,weekend treats,29.31,3
+Iris Novak,22,Nonbinary,Utrecht,decaf,35.18,7
+Maya Okafor,29,Female,Lisbon,plant-based,41.26,6
+Noah Larsen,66,Female,Portland,tea,21.62,2
+Kai Lund,64,Female,Bath,tea,21.43,3
+Riley Garcia,40,Male,Bristol,decaf,56.25,2
+Owen Lund,25,Female,Seattle,cozy rituals,55.74,6
+June Larsen,33,Male,New York,fitness,64.44,6
+Noah Larsen,20,Male,Austin,iced drinks,27.21,5
+Ava Weber,32,Male,New York,fitness,87.81,4
+Jordan Ali,72,Female,Portland,classic roast,32.66,3
+Maya Haas,39,Male,Chicago,espresso to go,94.15,4
+Jordan Patel,46,Male,Denver,home office,110.91,2
+Jordan Silva,30,Male,Bali,plant-based,50.47,4
+Ava Patel,46,Male,Denver,espresso gear,95.25,2
+Eli Costa,37,Male,Frankfurt,espresso to go,92.33,2
+Lena Larsen,31,Nonbinary,Lisbon,matcha,44.93,4
+Casey Novak,35,Female,Dubai,loyalty offers,134.08,3
+Hugo Kim,35,Female,Minneapolis,weekend treats,43.68,2
+Omar Weber,28,Female,Seattle,specialty coffee,46.44,5
+Riley Ali,33,Female,Dubai,espresso to go,122.53,5
+Casey Reyes,31,Female,Singapore,fitness,65.68,6
+Leo Okafor,45,Female,Frankfurt,loyalty offers,122.34,1
+Omar Sato,47,Male,Manchester,espresso gear,71.44,2
+Hugo Ali,72,Male,Portland,classic roast,17.76,4
+Riley Silva,52,Male,Dubai,espresso to go,89.47,3
+Hugo Byrne,25,Male,Berlin,fitness,70.17,5
+Ava Costa,71,Male,Kyoto,classic roast,30.31,4
+Sam Moreau,32,Female,Lisbon,plant-based,41.68,5
+Owen Okafor,23,Female,Austin,iced drinks,27.25,7
+Ruth Moreau,48,Female,Dubai,loyalty offers,89.35,3
+Zara Kim,21,Male,Toronto,study cafes,16.54,5
+Eli Garcia,63,Female,Portland,classic roast,28.94,3
+Lena Weber,39,Female,Bristol,decaf,40.0,2
+Leo Moreau,20,Female,Toronto,iced drinks,23.47,6
+Omar Okafor,42,Male,Chicago,espresso to go,87.87,3
+Jordan Kim,42,Female,Bristol,weekend treats,32.58,0
+Noah Novak,27,Female,Melbourne,specialty coffee,54.46,6
+Casey Vega,44,Male,Stuttgart,home office,90.68,3
+Owen Okafor,29,Female,Mexico City,plant-based,45.8,3
+Noah Ali,47,Male,Denver,espresso gear,62.62,3
+Sam Patel,29,Nonbinary,London,cozy rituals,68.22,5
+Ava Nash,36,Male,Mexico City,matcha,45.99,2
+Owen Nash,32,Male,Singapore,fitness,46.73,4
+Casey Moreau,40,Female,Utrecht,weekend treats,38.94,1
+Noah Weber,25,Female,Seattle,cozy rituals,75.35,5
+Casey Nash,44,Female,Dubai,espresso to go,134.0,2
+June Patel,55,Male,Leeds,home office,12.67,7
+Leo Lund,27,Female,London,specialty coffee,48.15,6
+Casey Ali,39,Male,Stuttgart,espresso gear,108.46,2
+Nina Larsen,40,Female,Minneapolis,decaf,40.85,3
+Ava Byrne,41,Male,Chicago,espresso to go,123.35,3
+Noah Nash,27,Female,New York,cold brew,39.49,5
