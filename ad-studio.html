@@ -75,6 +75,20 @@
         font-size: 16px;
         max-width: 540px;
       }
+      .demo-lead {
+        max-width: none;
+      }
+      .demo-lead-line {
+        display: block;
+      }
+      .demo-lead-first {
+        white-space: nowrap;
+      }
+      @media (max-width: 860px) {
+        .demo-lead-first {
+          white-space: normal;
+        }
+      }
       .muted {
         color: var(--muted);
       }
@@ -2950,9 +2964,9 @@
       <!-- ═══ Demo: how a project becomes an ad, step by step ═════════════════ -->
       <section id="demo" class="demo hidden">
         <h1>How it works</h1>
-        <p class="lead">
-          A sample project, end to end — from raw inputs and customer data to the finished ad.<br />
-          Synthetic brand: <strong>Solstice Coffee</strong>.
+        <p class="lead demo-lead">
+          <span class="demo-lead-line demo-lead-first">A sample project, end to end — from raw inputs and customer data to the finished ad.</span>
+          <span class="demo-lead-line">Synthetic brand: <strong>Solstice Coffee</strong>.</span>
         </p>
         <div class="demo-pipe" id="demoPipe">
           <button type="button" data-pipe="0" onclick="demoJump(0)">Brief</button><span class="pipe-arrow">→</span
