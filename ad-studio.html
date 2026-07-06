@@ -269,28 +269,43 @@
       }
       .card-actions {
         position: absolute;
-        top: -8px;
-        right: -6px;
+        left: 6px;
+        right: 6px;
         display: flex;
         gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
         opacity: 0;
-        transition: opacity 0.18s;
+        transform: translateY(6px);
+        transition:
+          opacity 0.18s,
+          transform 0.18s;
+        z-index: 2;
+      }
+      /* project actions sit at the BOTTOM of the poster preview (clear of the size badge) */
+      .thumb .card-actions {
+        bottom: 8px;
+      }
+      /* folder actions sit over the folder icon */
+      .folder-item .card-actions {
+        top: 8px;
       }
       .fileitem:hover .card-actions,
       .fileitem:focus-within .card-actions {
         opacity: 1;
+        transform: translateY(0);
       }
       .card-actions button {
         font: inherit;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
-        padding: 5px 9px;
+        padding: 4px 8px;
         border: none;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.94);
+        background: rgba(255, 255, 255, 0.95);
         color: var(--ink);
         cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
       }
       .card-actions button:hover {
         background: var(--ink);
@@ -2459,11 +2474,63 @@
           opacity: 1;
           transform: none;
         }
-        .customer-demo-card,
-        .customer-demo-card.on .customer-demo-pulse {
-          animation: none;
-          transform: none;
-        }
+      }
+      /* demo data sheet + clustering explainer */
+      .demo-data {
+        margin-top: 52px;
+        padding-top: 38px;
+        border-top: 1px solid var(--line);
+        max-width: 720px;
+      }
+      .demo-data h2 {
+        font-weight: 600;
+        font-size: 1.55rem;
+        letter-spacing: -0.03em;
+        margin: 0 0 12px;
+      }
+      .demo-data h3 {
+        font-weight: 600;
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        text-transform: none;
+        margin: 34px 0 6px;
+      }
+      .demo-data-lead {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0 0 18px;
+      }
+      .demo-data-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .demo-data-actions .btn {
+        text-decoration: none;
+      }
+      .demo-data code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11.5px;
+        background: #f4f3f0;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 1px 5px;
+      }
+      .demo-how {
+        margin: 10px 0 16px;
+        padding-left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        font-size: 14.5px;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      .demo-how strong {
+        color: var(--ink);
       }
 
       /* ── Landing hero ───────────────────────────────────────────────────────── */
@@ -3326,6 +3393,7 @@
               <div class="actions hidden" id="wizActions">
                 <button class="btn ghost" onclick="saveProject()">Save</button>
                 <button class="btn ghost" onclick="exportSpec()">Export spec</button>
+                <button class="btn ghost" onclick="figmaHandoff()">Send to Figma</button>
                 <button class="btn" onclick="generate(false)">Generate</button>
               </div>
             </div>
@@ -3389,6 +3457,7 @@
               <span class="editbar-hint">Want to tweak the design?</span>
               <div class="editbar-btns">
                 <button class="btn ghost" onclick="openDesigner()">Edit design</button>
+                <button class="btn ghost" onclick="figmaHandoff()">Send to Figma</button>
                 <button class="btn" onclick="finishLayeredAd()">Finish &amp; save</button>
               </div>
             </div>
@@ -3460,7 +3529,7 @@
         <div id="revPersona" class="hidden">
           <div class="rev-step" id="revPersonaStep">Step 1 of 4 — Persona</div>
           <h2 class="rev-title">Pick the persona to design for</h2>
-          <p class="rev-status">Grouped from your customer data — edit any, then choose one. The copy and image prompt build from it.</p>
+          <p class="rev-status">Grouped from your customer data — edit any, then choose one or more. The copy and image prompt build from your selection.</p>
           <div id="personaList" class="personas"></div>
           <div class="rev-actions">
             <button class="btn" onclick="reviewAcceptPersona()">Continue &rarr;</button>
@@ -3790,6 +3859,11 @@
           agenda: p.agenda,
         };
       }
+      // Exclude any generator/app watermark or badge from the output. (Note: this only
+      // removes VISIBLE marks — the model's invisible SynthID watermark can't be prompted away.)
+      const NO_WATERMARK =
+        "Absolutely no watermarks, no signatures, no captions, no UI, and no generator or app logo — " +
+        "in particular no Gemini / Google sparkle mark or badge anywhere in the image. Clean edge-to-edge artwork only.";
       function bgPrompt(p, hasRefs) {
         const sec = p.brand_secondary || "a darker shade";
         const feel = [p.values, p.identity].filter(Boolean).join(", ");
@@ -3798,7 +3872,8 @@
         // generous negative space, low-to-balanced contrast, restrained and premium.
         return (
           `A premium, extremely minimal, flat 2D abstract poster background (${fmtAspect()}) in a MONOCHROMATIC scheme — two or three tones from a single hue family drawn from ${p.brand_primary || "#1f6f54"} and ${sec}${feel ? `; brand feel: ${feel}` : ""}. ` +
-          `Composition: one calm focal glow or soft organic shape, a single gentle light source, generous empty negative space, low-to-balanced contrast, fine subtle grain. Keep uncluttered areas for text (upper-centre for a headline; lower third kept light for dark text). Restrained and elegant — no text, no logos, no objects, no people.` +
+          `Composition: one calm focal glow or soft organic shape, a single gentle light source, generous empty negative space, low-to-balanced contrast, fine subtle grain. Keep uncluttered areas for text (upper-centre for a headline; lower third kept light for dark text). Restrained and elegant — no text, no logos, no objects, no people. ` +
+          NO_WATERMARK +
           (hasRefs
             ? " Match the visual STYLE, palette and mood of the provided reference images — never copy their content."
             : "")
@@ -4111,6 +4186,7 @@
           }
           current.targetSegment = null;
           current.personaPick = null;
+          current.personaPicks = null;
           if (summary) {
             $("#f_audience").value = summary; // feeds generation through collect()
             _customerRows = parsed;
@@ -4190,6 +4266,16 @@
         if (locH) parts.push("mostly " + top(locH, 3).map((x) => x.v).join(", "));
         const intH = find(/interest|hobby|category|segment|preference|style|taste/i);
         if (intH) parts.push("interests: " + top(intH, 3).map((x) => x.v).join(", "));
+        const avg = (h) => {
+          const nums = vals(h).map(Number).filter((x) => !isNaN(x));
+          return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+        };
+        const spendH = find(/spend|revenue|value|purchase|order/i),
+          visitH = find(/visit|frequency|trips/i);
+        const habits = [];
+        if (spendH && avg(spendH) != null) habits.push("~" + Math.round(avg(spendH)) + "/mo spend");
+        if (visitH && avg(visitH) != null) habits.push(Math.round(avg(visitH) * 10) / 10 + " visits/wk");
+        if (habits.length) parts.push(habits.join(" · "));
         if (!parts.length) return n + " customers · columns: " + headers.slice(0, 6).join(", ");
         return n + " customers — " + parts.join("; ") + ".";
       }
@@ -4453,40 +4539,55 @@
         const back = $("#revFmtBack");
         if (back) back.classList.toggle("hidden", !hasP);
       }
-      // Persona step: editable segment cards; the chosen one becomes the audience.
+      // Persona step: editable segment cards; choose ONE OR MORE — the selection becomes
+      // the audience the copy and image prompt build from.
       function renderPersonaChoices() {
         const el = $("#personaList");
         if (!el) return;
         const segs = current.segments || [];
-        if (current.personaPick == null) current.personaPick = current.targetSegment || 0;
+        if (!Array.isArray(current.personaPicks) || !current.personaPicks.length)
+          current.personaPicks = [current.personaPick != null ? current.personaPick : current.targetSegment || 0];
+        const on = (i) => current.personaPicks.includes(i);
         el.innerHTML = segs
           .map((s, i) => {
             const desc = (s.summary || "").replace(/^\d+ customers — /, "");
             return (
-              `<div class="persona-card${current.personaPick === i ? " on" : ""}" data-p="${i}">` +
-              `<label class="persona-head"><input type="radio" name="persona"${current.personaPick === i ? " checked" : ""} onchange="pickPersona(${i})">` +
+              `<div class="persona-card${on(i) ? " on" : ""}" data-p="${i}">` +
+              `<label class="persona-head"><input type="checkbox"${on(i) ? " checked" : ""} onchange="pickPersona(${i}, this.checked)">` +
               `<span>Persona ${i + 1}</span><span class="persona-pct">${s.pct}% of customers</span></label>` +
               `<textarea class="persona-edit" rows="2" oninput="editPersona(${i}, this.value)">${esc(desc)}</textarea></div>`
             );
           })
           .join("");
       }
-      function pickPersona(i) {
-        current.personaPick = i;
-        document.querySelectorAll("#personaList .persona-card").forEach((c) => c.classList.toggle("on", +c.dataset.p === i));
+      function pickPersona(i, checked) {
+        const picks = new Set(current.personaPicks || []);
+        if (checked) picks.add(i);
+        else picks.delete(i);
+        current.personaPicks = [...picks].sort((a, b) => a - b);
+        document.querySelectorAll("#personaList .persona-card").forEach((c) =>
+          c.classList.toggle("on", current.personaPicks.includes(+c.dataset.p)),
+        );
       }
       function editPersona(i, val) {
         const s = (current.segments || [])[i];
         if (s) s.summary = val.trim(); // store the edited profile (drives audience on accept)
       }
-      // Persona accepted → its profile becomes the audience that copy + prompt build from.
+      // Persona(s) accepted → their profiles become the audience copy + prompt build from.
       function reviewAcceptPersona() {
-        const i = current.personaPick || 0;
-        const s = (current.segments || [])[i];
-        if (s) {
-          current.audience = s.summary;
-          if ($("#f_audience")) $("#f_audience").value = s.summary;
-        }
+        const segs = current.segments || [];
+        let picks = (current.personaPicks || []).filter((i) => segs[i]);
+        if (!picks.length) picks = [0]; // fall back to the largest segment
+        const audience =
+          picks.length === 1
+            ? segs[picks[0]].summary
+            : "Blend of " +
+              picks.length +
+              " personas — " +
+              picks.map((i, j) => "(" + (j + 1) + ") " + (segs[i].summary || "").replace(/^\d+ customers — /, "").replace(/\.$/, "")).join("; ") +
+              ".";
+        current.audience = audience;
+        if ($("#f_audience")) $("#f_audience").value = audience;
         revStage("format");
         renderFmtChoices();
       }
@@ -4595,7 +4696,8 @@
             : ``) +
           (p.logo ? `Place the provided brand logo small and tasteful in a corner. ` : ``) +
           (inputs.length ? `Provided images, in order: ${inputs.join(", ")}. ` : ``) +
-          `A balanced, editorial, agency-quality composition. No placeholder/lorem text, no words beyond the headline and subhead, no watermarks.`
+          `A balanced, editorial, agency-quality composition. No placeholder/lorem text, no words beyond the headline and subhead. ` +
+          NO_WATERMARK
         );
       }
       async function reviewAcceptCopy() {
@@ -5180,11 +5282,46 @@
         }
         showGallery();
       }
-      function download() {
+      function dlBlob(href, name) {
         const a = document.createElement("a");
-        a.download = (current.name || "ad") + ".png";
-        a.href = $("#poster").toDataURL("image/png");
+        a.download = name;
+        a.href = href;
         a.click();
+      }
+      function download() {
+        dlBlob($("#poster").toDataURL("image/png"), (current.name || "ad") + ".png");
+      }
+      // Full-resolution render of the current ad (independent of what's on the preview).
+      async function renderFullRes() {
+        const c = document.createElement("canvas");
+        c.width = W;
+        c.height = H;
+        const ctx = c.getContext("2d");
+        if (current.mode !== "layered" && current._adImage) {
+          try {
+            ctx.drawImage(await loadImg(current._adImage), 0, 0, W, H);
+            return c;
+          } catch (e) {}
+        }
+        await cacheLayeredImages(current);
+        drawLayered(ctx, current, false);
+        return c;
+      }
+      // Figma handoff: download the full-res PNG + the ad-spec JSON (the two files the
+      // Figma plugin needs), then tell the user the next steps.
+      async function figmaHandoff() {
+        collect();
+        const base = slug(current.name);
+        const c = await renderFullRes();
+        dlBlob(c.toDataURL("image/png"), base + ".png");
+        const specUrl = URL.createObjectURL(
+          new Blob([JSON.stringify(buildSpec(current), null, 2)], { type: "application/json" }),
+        );
+        setTimeout(() => {
+          dlBlob(specUrl, base + ".spec.json");
+          setTimeout(() => URL.revokeObjectURL(specUrl), 4000);
+        }, 350);
+        setStatus("Downloaded " + base + ".png + " + base + ".spec.json — open the Figma plugin, paste the spec, choose the PNG, then Build in Figma.");
       }
 
       /* ---------- ad-spec (v0.2) — the studio's canonical model + export ---------- */
@@ -5585,8 +5722,8 @@
           `<div role="button" tabindex="0" class="fileitem card project-item" draggable="true" data-pid="${p.id}" onclick="openProject('${p.id}')">` +
           `<div class="thumb"><img src="${p.poster || ""}" alt="">` +
           `<span class="card-ratio">${fmtLabel(p.format)}</span>` +
-          `</div>` +
           projectActions(p) +
+          `</div>` +
           `<span class="fileitem-name rename-ready" data-project-id="${p.id}" onclick="event.stopPropagation()" ondblclick="beginInlineRename('project','${p.id}', event)">${esc(p.name || "Untitled")}</span>` +
           `</div>`
         );
@@ -5805,7 +5942,6 @@
         _editing = false;
         showEditBar(false);
         demoStop();
-        customerDemoStop();
         $("#editor").classList.add("hidden");
         $("#demo").classList.add("hidden");
         $("#gallery").classList.remove("hidden");
@@ -5839,7 +5975,8 @@
         'headline "Autumn, poured slow." and subhead "Ember Roast — small-batch, back for the season." ' +
         "Do not misspell, add, or alter the words. " +
         "Feature a single ceramic cup of black coffee with soft rising steam as the hero product, centred, integrated naturally with a soft shadow. " +
-        "A balanced, editorial, agency-quality composition. No placeholder/lorem text, no words beyond the headline and subhead, no watermarks.";
+        "A balanced, editorial, agency-quality composition. No placeholder/lorem text, no words beyond the headline and subhead. " +
+        NO_WATERMARK;
       const DEMO_CAPTIONS = [
         ["Brief & data", "Enter the brand once — or upload customer data straight from a CSV, Excel or database."],
         ["Personas", "The customers are clustered into personas; pick (or edit) the one to design for."],
@@ -5853,7 +5990,6 @@
         _demoTypeTimer = null;
       function showDemo() {
         demoStop();
-        customerDemoStop();
         $("#gallery").classList.add("hidden");
         $("#editor").classList.add("hidden");
         $("#demo").classList.remove("hidden");
