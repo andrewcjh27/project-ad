@@ -1180,6 +1180,428 @@
         padding: 14px;
         margin-top: -4px;
       }
+      .demo-data {
+        margin-top: 46px;
+        padding-top: 34px;
+        border-top: 1px solid var(--line);
+        max-width: none;
+      }
+      .demo-data h2 {
+        font-weight: 600;
+        font-size: 1.45rem;
+        letter-spacing: -0.03em;
+        margin: 0 0 10px;
+      }
+      .demo-data h3 {
+        font-weight: 600;
+        font-size: 1rem;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        text-transform: none;
+        margin: 30px 0 6px;
+      }
+      .demo-data-lead {
+        color: var(--muted);
+        font-size: 14.5px;
+        line-height: 1.55;
+        margin: 0 0 16px;
+        max-width: 820px;
+      }
+      .demo-data-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .demo-data-actions .btn {
+        padding: 11px 17px;
+        font-size: 13px;
+        text-decoration: none;
+      }
+      .demo-data code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11.5px;
+        background: #f4f3f0;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 1px 5px;
+      }
+      .demo-how {
+        margin: 8px 0 14px;
+        padding-left: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+        line-height: 1.52;
+        color: var(--muted);
+        list-style: none;
+      }
+      .demo-how strong {
+        color: var(--ink);
+      }
+      .demo-how li {
+        position: relative;
+        padding: 8px 10px 8px 36px;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .demo-how li::before {
+        content: attr(data-step-label);
+        position: absolute;
+        left: 10px;
+        top: 9px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: #efeee9;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 600;
+      }
+      .demo-how li:hover,
+      .demo-how li.on {
+        background: #fafaf8;
+        border-color: var(--line);
+        color: #5f5f5b;
+      }
+      .demo-how li.on::before {
+        background: var(--ink);
+        color: #fff;
+      }
+      .demo-how-wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 28px;
+        align-items: start;
+      }
+      .how-viz {
+        position: sticky;
+        top: 92px;
+        min-height: 320px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background:
+          linear-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+          #fff;
+        background-size: 24px 24px;
+        overflow: hidden;
+        cursor: pointer;
+      }
+      .how-viz-head {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        top: 12px;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .how-viz-title {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .how-viz-step {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .how-layer {
+        position: absolute;
+        inset: 46px 15px 15px;
+        opacity: 0;
+        transform: translateY(10px);
+        pointer-events: none;
+        transition:
+          opacity 0.28s,
+          transform 0.28s;
+      }
+      .how-viz[data-how-step="0"] .how-layer[data-layer="0"],
+      .how-viz[data-how-step="1"] .how-layer[data-layer="1"],
+      .how-viz[data-how-step="2"] .how-layer[data-layer="2"],
+      .how-viz[data-how-step="3"] .how-layer[data-layer="3"],
+      .how-viz[data-how-step="4"] .how-layer[data-layer="4"] {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+      .how-table {
+        display: grid;
+        grid-template-columns: 0.8fr 0.8fr 1fr 1fr;
+        gap: 6px;
+      }
+      .how-cell {
+        height: 16px;
+        border-radius: 5px;
+        background: #e9e7e2;
+      }
+      .how-cell.head {
+        background: var(--ink);
+      }
+      .how-cell.num {
+        animation: roleNum 1.6s ease infinite alternate;
+      }
+      .how-cell.cat {
+        animation: roleCat 1.6s ease infinite alternate;
+      }
+      @keyframes roleNum {
+        to {
+          background: #c9d7ff;
+        }
+      }
+      @keyframes roleCat {
+        to {
+          background: #d8ead8;
+        }
+      }
+      .how-vector {
+        position: relative;
+        height: 100%;
+      }
+      .how-bars {
+        position: absolute;
+        left: 0;
+        top: 8px;
+        width: 45%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .how-bar {
+        height: 10px;
+        border-radius: 999px;
+        background: #dedbd3;
+        transform-origin: left;
+        animation: vectorBars 1.8s ease infinite alternate;
+      }
+      .how-bar:nth-child(2) {
+        width: 76%;
+        animation-delay: 0.15s;
+      }
+      .how-bar:nth-child(3) {
+        width: 54%;
+        animation-delay: 0.3s;
+      }
+      @keyframes vectorBars {
+        from {
+          transform: scaleX(0.45);
+        }
+        to {
+          transform: scaleX(1);
+        }
+      }
+      .how-axis {
+        position: absolute;
+        right: 8px;
+        bottom: 12px;
+        width: 47%;
+        height: 78%;
+        border-left: 2px solid #d7d4cc;
+        border-bottom: 2px solid #d7d4cc;
+      }
+      .how-dot {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--ink);
+        transform: translate(-50%, -50%);
+      }
+      .how-axis .how-dot {
+        animation: vectorDot 1.8s ease infinite alternate;
+      }
+      @keyframes vectorDot {
+        from {
+          opacity: 0.25;
+          transform: translate(-50%, -50%) scale(0.65);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+      .kmeans {
+        position: relative;
+        height: 100%;
+      }
+      .kmeans .how-dot {
+        background: #9d9990;
+        transition:
+          left 0.7s ease,
+          top 0.7s ease,
+          background 0.7s ease;
+        animation: kmeansPulse 2.4s ease infinite alternate;
+      }
+      .how-viz[data-how-step="2"] .kmeans .how-dot.c1 {
+        background: #1f6f54;
+      }
+      .how-viz[data-how-step="2"] .kmeans .how-dot.c2 {
+        background: #c06b3e;
+      }
+      .how-viz[data-how-step="2"] .kmeans .how-dot.c3 {
+        background: #5d6fb8;
+      }
+      .centroid {
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        transform: translate(-50%, -50%) rotate(45deg);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
+        opacity: 0;
+        animation: centroidIn 2.4s ease infinite alternate;
+      }
+      .centroid.c1 {
+        background: #1f6f54;
+      }
+      .centroid.c2 {
+        background: #c06b3e;
+      }
+      .centroid.c3 {
+        background: #5d6fb8;
+      }
+      @keyframes kmeansPulse {
+        from {
+          transform: translate(-50%, -50%) scale(0.78);
+          opacity: 0.55;
+        }
+        to {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+      }
+      @keyframes centroidIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -50%) rotate(45deg) scale(0.65);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%) rotate(45deg) scale(1);
+        }
+      }
+      .k-choice {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-top: 20px;
+      }
+      .k-pill {
+        padding: 7px 0;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 11px;
+        animation: kScan 2s ease infinite;
+      }
+      .k-pill:nth-child(5) {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+      .k-merge {
+        margin: 28px auto 0;
+        width: 74%;
+        height: 72px;
+        position: relative;
+      }
+      .k-merge span {
+        position: absolute;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #e8e4dc;
+        display: grid;
+        place-items: center;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .k-merge span:nth-child(1) {
+        left: 0;
+        top: 4px;
+      }
+      .k-merge span:nth-child(2) {
+        left: 38%;
+        top: 28px;
+        animation: mergeIn 2s ease infinite alternate;
+      }
+      .k-merge span:nth-child(3) {
+        right: 0;
+        top: 4px;
+      }
+      @keyframes kScan {
+        50% {
+          transform: translateY(-2px);
+        }
+      }
+      @keyframes mergeIn {
+        to {
+          background: var(--ink);
+          color: #fff;
+        }
+      }
+      .profile-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .profile-card {
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 10px;
+        background: #fafaf8;
+        animation: profileRise 1.8s ease infinite alternate;
+      }
+      .profile-card:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+      .profile-card:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .profile-card b {
+        display: block;
+        font-size: 12px;
+        color: var(--ink);
+      }
+      .profile-card span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      @keyframes profileRise {
+        from {
+          opacity: 0.65;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @media (max-width: 860px) {
+        .demo-how-wrap {
+          grid-template-columns: 1fr;
+        }
+        .how-viz {
+          position: relative;
+          top: auto;
+        }
+      }
       .customer-demo-head {
         display: flex;
         align-items: baseline;
@@ -2529,8 +2951,8 @@
       <section id="demo" class="demo hidden">
         <h1>How it works</h1>
         <p class="lead">
-          A sample project, end to end — from raw inputs and customer data to the finished ad. Synthetic brand:
-          <strong>Solstice Coffee</strong>.
+          A sample project, end to end — from raw inputs and customer data to the finished ad.<br />
+          Synthetic brand: <strong>Solstice Coffee</strong>.
         </p>
         <div class="demo-pipe" id="demoPipe">
           <button type="button" data-pipe="0" onclick="demoJump(0)">Brief</button><span class="pipe-arrow">→</span
@@ -2621,6 +3043,135 @@
           <button class="btn ghost" onclick="demoNav(1)">&rarr;</button>
           <div class="demo-dots" id="demoDots"></div>
         </div>
+        <!-- ── Try it with the demo customer database ─────────────────────── -->
+        <div class="demo-data">
+          <h2>Try it yourself — the demo customer database</h2>
+          <p class="demo-data-lead">
+            A synthetic database of <strong>2,000 customers</strong> (age, gender, city, interest, monthly spend,
+            visits per week) built from eight deliberately diverse audience archetypes plus 6% random noise — so the
+            clustering has to genuinely <em>find</em> the groups. Download it, then upload it in the
+            <strong>Customer data</strong> box on the create page and click Generate to see the personas.
+          </p>
+          <div class="demo-data-actions">
+            <a
+              class="btn"
+              href="https://raw.githubusercontent.com/andrewcjh27/project-ad/master/demo-customers.csv"
+              download="demo-customers.csv"
+              >Download demo-customers.csv</a
+            >
+            <span class="muted tiny">also in the repo root as <code>demo-customers.csv</code> · regenerate it with <code>make_demo_customers.py</code></span>
+          </div>
+
+          <h3>How the grouping / clustering works</h3>
+          <div class="demo-how-wrap">
+            <div>
+              <ol class="demo-how">
+                <li data-how-step="0" data-step-label="1" role="button" tabindex="0" onclick="customerDemoPick(0)" onkeydown="customerDemoKey(event, 0)">
+                  <strong>Read the table.</strong> Column roles are inferred from the headers: age / spend / visits are
+                  treated as numbers; gender, city and interest as categories. Names and IDs are ignored.
+                </li>
+                <li data-how-step="1" data-step-label="2" role="button" tabindex="0" onclick="customerDemoPick(1)" onkeydown="customerDemoKey(event, 1)">
+                  <strong>Turn each person into a vector.</strong> Numeric columns are z-scored (so age and spend weigh
+                  equally) and the top categories are one-hot encoded — every customer becomes a point in feature space.
+                </li>
+                <li data-how-step="2" data-step-label="3" role="button" tabindex="0" onclick="customerDemoPick(2)" onkeydown="customerDemoKey(event, 2)">
+                  <strong>Cluster with k-means.</strong> Five seeded restarts, fully deterministic — the same file always
+                  produces the same groups.
+                </li>
+                <li data-how-step="3" data-step-label="4" role="button" tabindex="0" onclick="customerDemoPick(3)" onkeydown="customerDemoKey(event, 3)">
+                  <strong>Pick the number of groups automatically.</strong> The clusterer tries k&nbsp;=&nbsp;3–10, merges
+                  any clusters that share a coarse signature (dominant gender · top interest · age band), folds fragments
+                  under 3% into the largest group, and keeps whichever k leaves the <em>most distinct</em> groups — cluster
+                  as much as the data supports, but never two personas that read the same.
+                </li>
+                <li data-how-step="4" data-step-label="5" role="button" tabindex="0" onclick="customerDemoPick(4)" onkeydown="customerDemoKey(event, 4)">
+                  <strong>Profile each group.</strong> Every cluster becomes an editable persona — size %, age range,
+                  gender split, top cities, interests, spend &amp; visit habits — and you pick one <em>or several</em> to
+                  design for; the copy and image prompt build from your selection.
+                </li>
+              </ol>
+              <p class="muted tiny">
+                Everything runs in your browser — the raw rows never leave the page and are not stored; only the small
+                persona summaries persist with a project.
+              </p>
+            </div>
+            <div class="how-viz" id="customerDemo" data-how-step="0" role="button" tabindex="0" aria-label="Customer grouping visual demo" onclick="customerDemoNext()" onkeydown="customerDemoKey(event)">
+              <div class="how-viz-head">
+                <span class="how-viz-title" id="customerDemoTitle">Read the table</span>
+                <span class="how-viz-step" id="customerDemoStep">Step 1 of 5</span>
+              </div>
+              <div class="how-layer" data-layer="0">
+                <div class="how-table" aria-hidden="true">
+                  <i class="how-cell head"></i><i class="how-cell head"></i><i class="how-cell head"></i><i class="how-cell head"></i>
+                  <i class="how-cell num"></i><i class="how-cell cat"></i><i class="how-cell cat"></i><i class="how-cell num"></i>
+                  <i class="how-cell num"></i><i class="how-cell cat"></i><i class="how-cell cat"></i><i class="how-cell num"></i>
+                  <i class="how-cell num"></i><i class="how-cell cat"></i><i class="how-cell cat"></i><i class="how-cell num"></i>
+                  <i class="how-cell num"></i><i class="how-cell cat"></i><i class="how-cell cat"></i><i class="how-cell num"></i>
+                  <i class="how-cell num"></i><i class="how-cell cat"></i><i class="how-cell cat"></i><i class="how-cell num"></i>
+                </div>
+              </div>
+              <div class="how-layer" data-layer="1">
+                <div class="how-vector" aria-hidden="true">
+                  <div class="how-bars">
+                    <i class="how-bar" style="width: 92%"></i>
+                    <i class="how-bar"></i>
+                    <i class="how-bar"></i>
+                    <i class="how-bar" style="width: 64%"></i>
+                  </div>
+                  <div class="how-axis">
+                    <i class="how-dot" style="left: 18%; top: 74%"></i>
+                    <i class="how-dot" style="left: 34%; top: 48%"></i>
+                    <i class="how-dot" style="left: 52%; top: 60%"></i>
+                    <i class="how-dot" style="left: 68%; top: 26%"></i>
+                    <i class="how-dot" style="left: 82%; top: 42%"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="how-layer" data-layer="2">
+                <div class="kmeans" aria-hidden="true">
+                  <i class="how-dot c1" style="left: 18%; top: 68%"></i>
+                  <i class="how-dot c1" style="left: 25%; top: 58%"></i>
+                  <i class="how-dot c1" style="left: 34%; top: 72%"></i>
+                  <i class="how-dot c1" style="left: 28%; top: 80%"></i>
+                  <i class="how-dot c2" style="left: 62%; top: 28%"></i>
+                  <i class="how-dot c2" style="left: 72%; top: 34%"></i>
+                  <i class="how-dot c2" style="left: 78%; top: 22%"></i>
+                  <i class="how-dot c2" style="left: 66%; top: 42%"></i>
+                  <i class="how-dot c3" style="left: 56%; top: 72%"></i>
+                  <i class="how-dot c3" style="left: 70%; top: 78%"></i>
+                  <i class="how-dot c3" style="left: 82%; top: 66%"></i>
+                  <i class="centroid c1" style="left: 26%; top: 70%"></i>
+                  <i class="centroid c2" style="left: 70%; top: 32%"></i>
+                  <i class="centroid c3" style="left: 70%; top: 72%"></i>
+                </div>
+              </div>
+              <div class="how-layer" data-layer="3">
+                <div class="k-choice" aria-hidden="true">
+                  <span class="k-pill">k=3</span>
+                  <span class="k-pill">k=4</span>
+                  <span class="k-pill">k=5</span>
+                  <span class="k-pill">k=6</span>
+                  <span class="k-pill">k=7</span>
+                  <span class="k-pill">k=8</span>
+                  <span class="k-pill">k=9</span>
+                  <span class="k-pill">k=10</span>
+                </div>
+                <div class="k-merge" aria-hidden="true">
+                  <span>A</span>
+                  <span>A'</span>
+                  <span>B</span>
+                </div>
+              </div>
+              <div class="how-layer" data-layer="4">
+                <div class="profile-cards" aria-hidden="true">
+                  <div class="profile-card"><b>Persona 1 · 42%</b><span>Urban specialty coffee, higher visits</span></div>
+                  <div class="profile-card"><b>Persona 2 · 33%</b><span>Home espresso, higher monthly spend</span></div>
+                  <div class="profile-card"><b>Persona 3 · 25%</b><span>Study cafes, frequent weekday visits</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section id="editor" class="hidden">
@@ -2656,39 +3207,6 @@
                 <span class="dropbox-sub">CSV, Excel (.xlsx / .xls) or database (.db / .sqlite) — click or drop a file</span>
               </label>
               <div class="filenote muted" id="customerDataNote"></div>
-              <div class="customer-demo" id="customerDemo" aria-label="Demo customer database flow">
-                <div class="customer-demo-head">
-                  <span class="customer-demo-title">Try it yourself — demo customer database</span>
-                  <span class="customer-demo-step" id="customerDemoStep">Step 1 of 4</span>
-                </div>
-                <div class="customer-demo-grid">
-                  <div class="customer-demo-card" data-customer-demo="0">
-                    <b>Upload</b>
-                    <div class="customer-demo-table" aria-hidden="true">
-                      <i></i><i></i><i></i>
-                      <i></i><i></i><i></i>
-                      <i></i><i></i><i></i>
-                    </div>
-                    <span>customers.csv, Excel, or database</span>
-                  </div>
-                  <div class="customer-demo-card" data-customer-demo="1">
-                    <b>Read fields</b>
-                    <span class="customer-demo-pill">24 rows</span>
-                    <span>age, city, interest, purchase history</span>
-                  </div>
-                  <div class="customer-demo-card" data-customer-demo="2">
-                    <b>Find personas</b>
-                    <div class="customer-demo-line customer-demo-pulse"></div>
-                    <div class="customer-demo-line short customer-demo-pulse"></div>
-                    <span>cluster customers by shared signals</span>
-                  </div>
-                  <div class="customer-demo-card" data-customer-demo="3">
-                    <b>Pick target</b>
-                    <div class="customer-demo-persona">Persona 1 · 42%</div>
-                    <span>copy and image prompt adapt to this group</span>
-                  </div>
-                </div>
-              </div>
               <button type="button" class="linklike" id="noDataToggle" onclick="toggleAudienceManual()">
                 Got no customer data?
               </button>
@@ -3771,31 +4289,53 @@
         }
         return top1(find(ROLE_RE.gender)) + "|" + top1(find(ROLE_RE.interest)) + "|" + band;
       }
-      // Cluster the rows into up-to-4 audience segments, each with a readable profile.
+      // Cluster the rows into 3-10 audience segments, each with a readable profile.
       function segmentRows(headers, rows, k) {
         const n = rows.length;
         if (n < 8) return null; // too few to segment meaningfully
-        k = Math.max(2, Math.min(k || Math.min(4, Math.floor(n / 6)), 4));
         const { vecs, dims } = buildFeatures(headers, rows);
         if (!dims) return null;
-        let best = null;
-        for (let r = 0; r < 5; r++) {
-          const res = kmeans(vecs, k, 1234 + r * 97);
-          if (!best || res.inertia < best.inertia) best = res;
+        const minK = Math.min(3, n);
+        const maxK = Math.max(minK, Math.min(10, Math.floor(n / 6) || minK, n));
+        const requestedK = k ? Math.max(minK, Math.min(+k || minK, maxK)) : null;
+        const candidateKs = requestedK
+          ? [requestedK]
+          : Array.from({ length: maxK - minK + 1 }, (_, i) => minK + i);
+        let bestProfile = null;
+        for (const kk of candidateKs) {
+          let bestRun = null;
+          for (let r = 0; r < 5; r++) {
+            const res = kmeans(vecs, kk, 1234 + kk * 131 + r * 97);
+            if (!bestRun || res.inertia < bestRun.inertia) bestRun = res;
+          }
+          const groups = Array.from({ length: kk }, () => []);
+          bestRun.assign.forEach((c, i) => groups[c].push(rows[i]));
+          // merge clusters with the same coarse signature
+          const merged = {};
+          groups
+            .filter((g) => g.length)
+            .forEach((g) => {
+              const sig = segSignature(headers, g);
+              (merged[sig] = merged[sig] || []).push(...g);
+            });
+          let profiled = Object.values(merged)
+            .map((g) => ({ size: g.length, pct: Math.round((100 * g.length) / n), summary: summarizeRows({ headers, rows: g }) }))
+            .sort((a, b) => b.size - a.size);
+          if (profiled.length > 1) {
+            const largest = profiled[0];
+            profiled = profiled.filter((g, i) => {
+              if (i === 0 || g.pct >= 3) return true;
+              largest.size += g.size;
+              largest.pct = Math.round((100 * largest.size) / n);
+              return false;
+            });
+          }
+          const distinctCount = profiled.length;
+          const balance = profiled.reduce((s, g) => s + Math.min(g.pct, 18), 0);
+          const score = distinctCount * 1000 + balance - bestRun.inertia / Math.max(1, n);
+          if (!bestProfile || score > bestProfile.score) bestProfile = { score, profiled };
         }
-        const groups = Array.from({ length: k }, () => []);
-        best.assign.forEach((c, i) => groups[c].push(rows[i]));
-        // merge clusters with the same coarse signature
-        const merged = {};
-        groups
-          .filter((g) => g.length)
-          .forEach((g) => {
-            const sig = segSignature(headers, g);
-            (merged[sig] = merged[sig] || []).push(...g);
-          });
-        return Object.values(merged)
-          .map((g) => ({ size: g.length, pct: Math.round((100 * g.length) / n), summary: summarizeRows({ headers, rows: g }) }))
-          .sort((a, b) => b.size - a.size);
+        return bestProfile ? bestProfile.profiled : null;
       }
       // Guided audience input for businesses without a customer database:
       // clicking a hint scaffolds a labelled line for them to fill in.
@@ -4760,8 +5300,6 @@
         $("#btnBack").style.visibility = curStep === 1 ? "hidden" : "visible";
         $("#btnNext").classList.toggle("hidden", curStep === 3);
         $("#wizActions").classList.toggle("hidden", curStep !== 3); // actions only on the final step
-        if (curStep === 1) customerDemoPlay();
-        else customerDemoStop();
       }
       function step(d) {
         showStep(curStep + d);
@@ -5264,6 +5802,7 @@
       }
       function showEditor() {
         demoStop();
+        customerDemoStop();
         $("#gallery").classList.add("hidden");
         $("#demo").classList.add("hidden");
         $("#editor").classList.remove("hidden");
@@ -5271,7 +5810,6 @@
         navActive("create");
         if (location.hash !== "#create") location.hash = "#create";
         renderBrandKit();
-        customerDemoPlay();
       }
 
       /* ---------- demo page: the whole pipeline on synthetic data ---------- */
@@ -5318,6 +5856,7 @@
         dots.innerHTML = DEMO_CAPTIONS.map((_, i) => `<i data-dot="${i}" onclick="demoGo(${i})"></i>`).join("");
         demoGo(0);
         demoPlay();
+        customerDemoPlay();
       }
       function demoGo(i) {
         _demoStep = (i + DEMO_CAPTIONS.length) % DEMO_CAPTIONS.length;
@@ -5376,27 +5915,57 @@
           .catch(() => {});
       }
 
-      /* ---------- customer database mini-demo in the project brief ---------- */
-      const CUSTOMER_DEMO_LABELS = ["Step 1 of 4", "Step 2 of 4", "Step 3 of 4", "Step 4 of 4"];
+      /* ---------- customer database mini-demo on the how-it-works page ---------- */
+      const CUSTOMER_DEMO_LABELS = ["Step 1 of 5", "Step 2 of 5", "Step 3 of 5", "Step 4 of 5", "Step 5 of 5"];
+      const CUSTOMER_DEMO_TITLES = [
+        "Read the table",
+        "Vectorize each customer",
+        "Cluster with k-means",
+        "Choose the group count",
+        "Profile the personas",
+      ];
       let _customerDemoStep = 0,
         _customerDemoTimer = null;
       function customerDemoGo(i) {
-        const cards = document.querySelectorAll("[data-customer-demo]");
-        if (!cards.length) return;
-        _customerDemoStep = (i + cards.length) % cards.length;
-        cards.forEach((card) => {
-          const idx = +card.dataset.customerDemo;
-          card.classList.toggle("on", idx === _customerDemoStep);
-          card.classList.toggle("done", idx < _customerDemoStep);
+        const viz = $("#customerDemo");
+        const steps = document.querySelectorAll("[data-how-step]");
+        if (!viz || !steps.length) return;
+        _customerDemoStep = (i + CUSTOMER_DEMO_LABELS.length) % CUSTOMER_DEMO_LABELS.length;
+        viz.dataset.howStep = String(_customerDemoStep);
+        steps.forEach((step) => {
+          const idx = +step.dataset.howStep;
+          step.classList.toggle("on", idx === _customerDemoStep);
         });
         const stepLabel = $("#customerDemoStep");
         if (stepLabel) stepLabel.textContent = CUSTOMER_DEMO_LABELS[_customerDemoStep] || "";
+        const title = $("#customerDemoTitle");
+        if (title) title.textContent = CUSTOMER_DEMO_TITLES[_customerDemoStep] || "";
+      }
+      function customerDemoNext() {
+        customerDemoGo(_customerDemoStep + 1);
+        customerDemoRearm();
+      }
+      function customerDemoPick(i) {
+        customerDemoGo(i);
+        customerDemoRearm();
+      }
+      function customerDemoKey(e, i) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        if (typeof i === "number") {
+          customerDemoPick(i);
+        } else {
+          customerDemoNext();
+        }
       }
       function customerDemoPlay() {
-        if ($("#editor")?.classList.contains("hidden") || curStep !== 1) return;
+        if ($("#demo")?.classList.contains("hidden")) return;
         customerDemoGo(_customerDemoStep);
         clearInterval(_customerDemoTimer);
-        _customerDemoTimer = setInterval(() => customerDemoGo(_customerDemoStep + 1), 2200);
+        _customerDemoTimer = setInterval(() => customerDemoGo(_customerDemoStep + 1), 3200);
+      }
+      function customerDemoRearm() {
+        if (_customerDemoTimer) customerDemoPlay();
       }
       function customerDemoStop() {
         clearInterval(_customerDemoTimer);
