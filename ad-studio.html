@@ -1909,6 +1909,63 @@
           transform: none;
         }
       }
+      /* demo data sheet + clustering explainer */
+      .demo-data {
+        margin-top: 52px;
+        padding-top: 38px;
+        border-top: 1px solid var(--line);
+        max-width: 720px;
+      }
+      .demo-data h2 {
+        font-weight: 600;
+        font-size: 1.55rem;
+        letter-spacing: -0.03em;
+        margin: 0 0 12px;
+      }
+      .demo-data h3 {
+        font-weight: 600;
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        text-transform: none;
+        margin: 34px 0 6px;
+      }
+      .demo-data-lead {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0 0 18px;
+      }
+      .demo-data-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .demo-data-actions .btn {
+        text-decoration: none;
+      }
+      .demo-data code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11.5px;
+        background: #f4f3f0;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 1px 5px;
+      }
+      .demo-how {
+        margin: 10px 0 16px;
+        padding-left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        font-size: 14.5px;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      .demo-how strong {
+        color: var(--ink);
+      }
 
       /* ── Landing hero ───────────────────────────────────────────────────────── */
       .landing {
@@ -2500,6 +2557,57 @@
           <button class="btn ghost" id="demoPlayBtn" onclick="demoToggle()">Pause</button>
           <button class="btn ghost" onclick="demoNav(1)">&rarr;</button>
           <div class="demo-dots" id="demoDots"></div>
+        </div>
+
+        <!-- ── Try it with the demo customer database ─────────────────────── -->
+        <div class="demo-data">
+          <h2>Try it yourself — the demo customer database</h2>
+          <p class="demo-data-lead">
+            A synthetic database of <strong>2,000 customers</strong> (age, gender, city, interest, monthly spend,
+            visits per week) built from eight deliberately diverse audience archetypes plus 6% random noise — so the
+            clustering has to genuinely <em>find</em> the groups. Download it, then upload it in the
+            <strong>Customer data</strong> box on the create page and click Generate to see the personas.
+          </p>
+          <div class="demo-data-actions">
+            <a
+              class="btn"
+              href="https://raw.githubusercontent.com/andrewcjh27/project-ad/master/demo-customers.csv"
+              download="demo-customers.csv"
+              >Download demo-customers.csv</a
+            >
+            <span class="muted tiny">also in the repo root as <code>demo-customers.csv</code> · regenerate it with <code>make_demo_customers.py</code></span>
+          </div>
+
+          <h3>How the grouping / clustering works</h3>
+          <ol class="demo-how">
+            <li>
+              <strong>Read the table.</strong> Column roles are inferred from the headers: age / spend / visits are
+              treated as numbers; gender, city and interest as categories. Names and IDs are ignored.
+            </li>
+            <li>
+              <strong>Turn each person into a vector.</strong> Numeric columns are z-scored (so age and spend weigh
+              equally) and the top categories are one-hot encoded — every customer becomes a point in feature space.
+            </li>
+            <li>
+              <strong>Cluster with k-means.</strong> Five seeded restarts, fully deterministic — the same file always
+              produces the same groups.
+            </li>
+            <li>
+              <strong>Pick the number of groups automatically.</strong> The clusterer tries k&nbsp;=&nbsp;2–6, merges
+              any clusters that share a coarse signature (dominant gender · top interest · age band), folds fragments
+              under 3% into the largest group, and keeps whichever k leaves the <em>most distinct</em> groups — cluster
+              as much as the data supports, but never two personas that read the same.
+            </li>
+            <li>
+              <strong>Profile each group.</strong> Every cluster becomes an editable persona — size %, age range,
+              gender split, top cities, interests, spend &amp; visit habits — and you pick one <em>or several</em> to
+              design for; the copy and image prompt build from your selection.
+            </li>
+          </ol>
+          <p class="muted tiny">
+            Everything runs in your browser — the raw rows never leave the page and are not stored; only the small
+            persona summaries persist with a project.
+          </p>
         </div>
       </section>
 
