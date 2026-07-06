@@ -3161,12 +3161,12 @@
                 </li>
                 <li data-how-step="3" data-step-label="4" role="button" tabindex="0" onclick="customerDemoPick(3)" onkeydown="customerDemoKey(event, 3)">
                   <strong>Pick the number of groups automatically.</strong> The clusterer tries k&nbsp;=&nbsp;3–10, merges
-                  any clusters that share a coarse signature (dominant gender · top interest · age band), folds fragments
-                  under 3% into the largest group, and keeps whichever k leaves the <em>most distinct</em> groups — cluster
-                  as much as the data supports, but never two personas that read the same.
+                  any clusters that share a coarse signature (dominant gender · top interest · age band), keeps every
+                  group that represents at least 10% of customers, and picks whichever k leaves the <em>most distinct</em>
+                  personas — cluster as much as the data supports, but never two personas that read the same.
                 </li>
                 <li data-how-step="4" data-step-label="5" role="button" tabindex="0" onclick="customerDemoPick(4)" onkeydown="customerDemoKey(event, 4)">
-                  <strong>Profile each group.</strong> Every cluster becomes an editable persona — size %, age range,
+                  <strong>Profile each group.</strong> Every 10%+ cluster becomes an editable persona — size %, age range,
                   gender split, top cities, interests, spend &amp; visit habits — and you pick one <em>or several</em> to
                   design for; the copy and image prompt build from your selection.
                 </li>
@@ -4418,18 +4418,12 @@
               const sig = segSignature(headers, g);
               (merged[sig] = merged[sig] || []).push(...g);
             });
-          let profiled = Object.values(merged)
+          const personaMinShare = 0.1;
+          const allProfiles = Object.values(merged)
             .map((g) => ({ size: g.length, pct: Math.round((100 * g.length) / n), summary: summarizeRows({ headers, rows: g }) }))
             .sort((a, b) => b.size - a.size);
-          if (profiled.length > 1) {
-            const largest = profiled[0];
-            profiled = profiled.filter((g, i) => {
-              if (i === 0 || g.pct >= 3) return true;
-              largest.size += g.size;
-              largest.pct = Math.round((100 * largest.size) / n);
-              return false;
-            });
-          }
+          const profiled = allProfiles.filter((g) => g.size / n >= personaMinShare);
+          if (!profiled.length && allProfiles.length) profiled.push(allProfiles[0]);
           const distinctCount = profiled.length;
           const balance = profiled.reduce((s, g) => s + Math.min(g.pct, 18), 0);
           const score = distinctCount * 1000 + balance - bestRun.inertia / Math.max(1, n);
