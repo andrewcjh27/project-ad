@@ -4043,9 +4043,11 @@
       // local copy and rotate any key that has been exposed.
       const TEXT_KEY = ""; // free-tier key (gemini-2.5-flash) → AI copy
       const IMAGE_KEY = ""; // billed key (gemini-2.5-flash-image) → full-AI images
-      const getTextKey = () =>
-        (TEXT_KEY || localStorage.getItem("pa_textkey") || localStorage.getItem("pa_key") || "").trim();
       const getImageKey = () => (IMAGE_KEY || localStorage.getItem("pa_imgkey") || "").trim();
+      // A Gemini key entered for images works for text too — reuse it so copy is
+      // AI-generated whenever ANY key is present, not only a dedicated text key.
+      const getTextKey = () =>
+        (TEXT_KEY || localStorage.getItem("pa_textkey") || localStorage.getItem("pa_key") || getImageKey() || "").trim();
       const setStatus = (t) => {
         const s = $("#status");
         if (s) s.textContent = t;
@@ -4096,16 +4098,24 @@
         return "data:image/png;base64," + (part.inlineData || part.inline_data).data;
       }
       const COPY_SYS =
-        'You are a brand Copywriter. From the brand brief, write a short ad HEADLINE (<=5 words) and a brief one-line SUBHEAD in a minimal, understated voice — restrained, never hype. Return JSON {"headline":..,"subhead":..}.';
+        "You are a senior brand Copywriter. You receive a JSON brief with the brand name, " +
+        "description, target audience/persona, products, brand values, voice and campaign goal. " +
+        "ANALYSE all of it, then write ORIGINAL ad copy for a poster: a HEADLINE of at most 5 words " +
+        "and a single-line SUBHEAD. Voice: minimal, understated, premium — restrained, never hype. " +
+        "Do NOT copy or paraphrase the brand description verbatim as the headline or subhead — write " +
+        "fresh campaign lines informed by the audience, product and values. The headline and subhead " +
+        'must read differently from each other. Return only JSON {"headline":..,"subhead":..}.';
+      // The full brief handed to the copywriter — every wizard field, clearly labelled
+      // so the model writes from the audience/product/values, not just the description.
       function briefOf(p) {
         return {
-          name: p.name,
+          brand: p.name,
           description: p.description,
           audience: audienceOf(p),
           products: p.products,
           values: p.values,
-          identity: p.identity,
-          agenda: p.agenda,
+          voice: p.identity,
+          goal: p.agenda,
         };
       }
       // Exclude any generator/app watermark or badge from the output. (Note: this only
@@ -4848,22 +4858,75 @@
         if ($("#revHeadline").value) setRev("#revCopyStatus", "Your headline — edit it or regenerate.");
         else await reviewRegenCopy(); // no headline yet -> write one with Gemini
       }
-      // Deterministic subhead from the brief when no LLM is available (offline).
+      // ── deterministic copywriter (offline / no-key fallback) ──────────────────
+      // Composes a FRESH headline + subhead by analysing every brief field. It never
+      // returns the brand description verbatim — it recombines the salient tokens
+      // (product, audience, values, description keywords) into new campaign-style
+      // lines, seeded for variety. Real Gemini copy drops in via reviewRegenCopy()
+      // whenever a key is present; this keeps the offline path generative, not a copy.
+      const COPY_STOP = new Set(
+        ("the a an and or but for to of in on at it is are be we you your our they them their this that with " +
+          "from into you're really very just so also new now get make made premium quality best good great " +
+          "love people brand store shop offer offers who want without").split(/\s+/)
+      );
+      const firstItem = (s) => ((s || "").split(/[,\n;]/).map((x) => x.trim()).filter(Boolean)[0] || "");
+      const nthItem = (s, i) => ((s || "").split(/[,\n;]/).map((x) => x.trim()).filter(Boolean)[i] || "");
+      const firstWords = (s, n) => (s || "").trim().split(/\s+/).filter(Boolean).slice(0, n).join(" ");
+      // Salient words drawn from values + description + audience + products, deduped,
+      // stop-words removed — the raw material for lines that echo the brief without copying it.
+      function themeWords(p, n) {
+        const pool = [p.values, p.description, audienceOf(p), p.products].filter(Boolean).join(" ");
+        const seen = new Set(),
+          out = [];
+        pool
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, " ")
+          .split(/\s+/)
+          .forEach((w) => {
+            if (w.length > 3 && !COPY_STOP.has(w) && !seen.has(w)) {
+              seen.add(w);
+              out.push(w);
+            }
+          });
+        return n ? out.slice(0, n) : out;
+      }
+      function composeCopy(p) {
+        const seed = (p.seed || 1) >>> 0;
+        const product = firstItem(p.products);
+        const value = firstItem(p.values);
+        const value2 = nthItem(p.values, 1);
+        const audShort = firstWords(audienceOf(p).replace(/\d+\s*[–-]\s*\d+/g, "").trim(), 4);
+        const themes = themeWords(p, 6);
+        const t = themes[seed % (themes.length || 1)] || value || "";
+        const t2 = themes[1] || value2 || "";
+
+        // HEADLINE (<=5 words) — pick a template whose source tokens exist.
+        const heads = [];
+        if (product && value) heads.push(`${cap(product)}, ${value.toLowerCase()}.`);
+        if (t && t2 && t !== t2) heads.push(`${cap(t)} meets ${t2.toLowerCase()}.`);
+        if (audShort) heads.push(`Made for ${audShort.toLowerCase()}.`);
+        if (product) heads.push(`${cap(product)}. Nothing less.`);
+        if (t) heads.push(`${cap(t)}, by design.`);
+        if (p.name) heads.push(`${cap(p.name)}, distilled.`);
+        let headline = (heads.length ? heads[seed % heads.length] : cap(p.name) || "").trim();
+        const hw = headline.split(/\s+/);
+        if (hw.length > 6) headline = hw.slice(0, 6).join(" ").replace(/[,.;:]+$/, "") + ".";
+
+        // SUBHEAD (one line) — a DIFFERENT combination, never the description sentence.
+        const subs = [];
+        if (product && audShort)
+          subs.push(`${cap(product)} made for ${audShort.toLowerCase()}${value ? `, ${value.toLowerCase()} to the core` : ""}.`);
+        if (t && t2 && t !== t2) subs.push(`Where ${t.toLowerCase()} and ${t2.toLowerCase()} come together.`);
+        if (product && value) subs.push(`${cap(value)} ${product.toLowerCase()}, crafted with intent.`);
+        if (audShort && t) subs.push(`For ${audShort.toLowerCase()} who expect ${t.toLowerCase()}.`);
+        if (t) subs.push(`${cap(t)}, considered down to the detail.`);
+        let subhead = (subs.length ? subs[(seed + 1) % subs.length] : "").trim();
+        if (subhead.length > 88) subhead = subhead.slice(0, 85).trim() + "…";
+        return { headline, subhead };
+      }
+      // Back-compat helper: a synthesised subhead (delegates to the copywriter above).
       function fallbackSubhead(p) {
-        const src = (p.agenda || p.description || "").trim();
-        if (src) {
-          let s =
-            src
-              .split(/[.\n;]/)
-              .map((x) => x.trim())
-              .filter(Boolean)[0] || "";
-          if (s) {
-            s = s[0].toUpperCase() + s.slice(1);
-            return s.length > 64 ? s.slice(0, 61).trim() + "…" : s;
-          }
-        }
-        const prod = (p.products || "").split(/[,\n]/)[0].trim();
-        return prod ? prod[0].toUpperCase() + prod.slice(1) + "." : "";
+        return composeCopy(p).subhead;
       }
       function briefSummaryHtml(p) {
         const rows = [
@@ -4901,9 +4964,10 @@
       async function reviewRegenCopy() {
         const key = getTextKey();
         if (!key) {
-          $("#revHeadline").value = (audienceOf(current) || current.name || "").trim();
-          if (!$("#revSubhead").value.trim()) $("#revSubhead").value = fallbackSubhead(current);
-          setRev("#revCopyStatus", "No text key — add a free Gemini text key for AI copy; using your brief for now.");
+          const c = composeCopy(current); // synthesised from the whole brief, not a copy of it
+          $("#revHeadline").value = c.headline;
+          $("#revSubhead").value = c.subhead;
+          setRev("#revCopyStatus", "Composed from your brief — add a free Gemini key for full AI copy.");
           return;
         }
         setRev("#revCopyStatus", "Writing copy…");
