@@ -1188,6 +1188,136 @@
       .filenote.attached {
         color: var(--ink);
       }
+      .customer-demo {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        padding: 14px;
+        margin-top: -4px;
+      }
+      .customer-demo-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .customer-demo-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .customer-demo-step {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .customer-demo-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .customer-demo-card {
+        min-height: 98px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fafaf8;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        opacity: 0.42;
+        transform: translateY(4px);
+        transition:
+          opacity 0.28s,
+          transform 0.28s,
+          border-color 0.28s,
+          background 0.28s,
+          box-shadow 0.28s;
+      }
+      .customer-demo-card.on {
+        opacity: 1;
+        transform: translateY(0);
+        border-color: rgba(0, 0, 0, 0.35);
+        background: #fff;
+        box-shadow: 0 0 0 1px var(--ink) inset;
+      }
+      .customer-demo-card.done {
+        opacity: 0.82;
+      }
+      .customer-demo-card b {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .customer-demo-card span {
+        font-size: 12px;
+        line-height: 1.32;
+        color: var(--muted);
+      }
+      .customer-demo-table {
+        display: grid;
+        grid-template-columns: 0.8fr 0.9fr 1fr;
+        gap: 4px;
+      }
+      .customer-demo-table i,
+      .customer-demo-pill,
+      .customer-demo-line {
+        display: block;
+        border-radius: 999px;
+        background: #e9e7e2;
+      }
+      .customer-demo-table i {
+        height: 7px;
+      }
+      .customer-demo-pill {
+        width: fit-content;
+        padding: 3px 8px;
+        background: var(--ink);
+        color: #fff;
+        font-size: 10px;
+        line-height: 1.2;
+      }
+      .customer-demo-line {
+        height: 7px;
+      }
+      .customer-demo-line.short {
+        width: 68%;
+      }
+      .customer-demo-persona {
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        padding: 6px 8px;
+        font-size: 11px;
+        color: var(--muted);
+        background: #fff;
+      }
+      .customer-demo-card.on .customer-demo-persona {
+        border-color: var(--ink);
+        color: var(--ink);
+      }
+      .customer-demo-card.on .customer-demo-pulse {
+        animation: customerPulse 0.9s ease infinite alternate;
+      }
+      @keyframes customerPulse {
+        to {
+          opacity: 0.45;
+          transform: scaleX(0.92);
+        }
+      }
+      @media (max-width: 760px) {
+        .customer-demo-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 460px) {
+        .customer-demo-grid {
+          grid-template-columns: 1fr;
+        }
+      }
       /* persona picker inside the generate review */
       .personas {
         display: flex;
@@ -1906,6 +2036,11 @@
         .demo-copysub {
           animation: none;
           opacity: 1;
+          transform: none;
+        }
+        .customer-demo-card,
+        .customer-demo-card.on .customer-demo-pulse {
+          animation: none;
           transform: none;
         }
       }
@@ -2644,6 +2779,39 @@
                 <span class="dropbox-sub">CSV, Excel (.xlsx / .xls) or database (.db / .sqlite) — click or drop a file</span>
               </label>
               <div class="filenote muted" id="customerDataNote"></div>
+              <div class="customer-demo" id="customerDemo" aria-label="Demo customer database flow">
+                <div class="customer-demo-head">
+                  <span class="customer-demo-title">Try it yourself — demo customer database</span>
+                  <span class="customer-demo-step" id="customerDemoStep">Step 1 of 4</span>
+                </div>
+                <div class="customer-demo-grid">
+                  <div class="customer-demo-card" data-customer-demo="0">
+                    <b>Upload</b>
+                    <div class="customer-demo-table" aria-hidden="true">
+                      <i></i><i></i><i></i>
+                      <i></i><i></i><i></i>
+                      <i></i><i></i><i></i>
+                    </div>
+                    <span>customers.csv, Excel, or database</span>
+                  </div>
+                  <div class="customer-demo-card" data-customer-demo="1">
+                    <b>Read fields</b>
+                    <span class="customer-demo-pill">24 rows</span>
+                    <span>age, city, interest, purchase history</span>
+                  </div>
+                  <div class="customer-demo-card" data-customer-demo="2">
+                    <b>Find personas</b>
+                    <div class="customer-demo-line customer-demo-pulse"></div>
+                    <div class="customer-demo-line short customer-demo-pulse"></div>
+                    <span>cluster customers by shared signals</span>
+                  </div>
+                  <div class="customer-demo-card" data-customer-demo="3">
+                    <b>Pick target</b>
+                    <div class="customer-demo-persona">Persona 1 · 42%</div>
+                    <span>copy and image prompt adapt to this group</span>
+                  </div>
+                </div>
+              </div>
               <button type="button" class="linklike" id="noDataToggle" onclick="toggleAudienceManual()">
                 Got no customer data?
               </button>
@@ -4801,6 +4969,8 @@
         $("#btnBack").style.visibility = curStep === 1 ? "hidden" : "visible";
         $("#btnNext").classList.toggle("hidden", curStep === 3);
         $("#wizActions").classList.toggle("hidden", curStep !== 3); // actions only on the final step
+        if (curStep === 1) customerDemoPlay();
+        else customerDemoStop();
       }
       function step(d) {
         showStep(curStep + d);
@@ -5292,6 +5462,7 @@
         _editing = false;
         showEditBar(false);
         demoStop();
+        customerDemoStop();
         $("#editor").classList.add("hidden");
         $("#demo").classList.add("hidden");
         $("#gallery").classList.remove("hidden");
@@ -5309,6 +5480,7 @@
         navActive("create");
         if (location.hash !== "#create") location.hash = "#create";
         renderBrandKit();
+        customerDemoPlay();
       }
 
       /* ---------- demo page: the whole pipeline on synthetic data ---------- */
@@ -5339,6 +5511,7 @@
         _demoTypeTimer = null;
       function showDemo() {
         demoStop();
+        customerDemoStop();
         $("#gallery").classList.add("hidden");
         $("#editor").classList.add("hidden");
         $("#demo").classList.remove("hidden");
@@ -5411,6 +5584,33 @@
         (navigator.clipboard ? navigator.clipboard.writeText(DEMO_PROMPT) : Promise.reject())
           .then(() => setStatus && setStatus("prompt copied"))
           .catch(() => {});
+      }
+
+      /* ---------- customer database mini-demo in the project brief ---------- */
+      const CUSTOMER_DEMO_LABELS = ["Step 1 of 4", "Step 2 of 4", "Step 3 of 4", "Step 4 of 4"];
+      let _customerDemoStep = 0,
+        _customerDemoTimer = null;
+      function customerDemoGo(i) {
+        const cards = document.querySelectorAll("[data-customer-demo]");
+        if (!cards.length) return;
+        _customerDemoStep = (i + cards.length) % cards.length;
+        cards.forEach((card) => {
+          const idx = +card.dataset.customerDemo;
+          card.classList.toggle("on", idx === _customerDemoStep);
+          card.classList.toggle("done", idx < _customerDemoStep);
+        });
+        const stepLabel = $("#customerDemoStep");
+        if (stepLabel) stepLabel.textContent = CUSTOMER_DEMO_LABELS[_customerDemoStep] || "";
+      }
+      function customerDemoPlay() {
+        if ($("#editor")?.classList.contains("hidden") || curStep !== 1) return;
+        customerDemoGo(_customerDemoStep);
+        clearInterval(_customerDemoTimer);
+        _customerDemoTimer = setInterval(() => customerDemoGo(_customerDemoStep + 1), 2200);
+      }
+      function customerDemoStop() {
+        clearInterval(_customerDemoTimer);
+        _customerDemoTimer = null;
       }
 
       /* ---------- brand kit: save & reuse a brand across projects ---------- */
