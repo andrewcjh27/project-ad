@@ -2777,7 +2777,7 @@
         <div id="revPersona" class="hidden">
           <div class="rev-step" id="revPersonaStep">Step 1 of 4 — Persona</div>
           <h2 class="rev-title">Pick the persona to design for</h2>
-          <p class="rev-status">Grouped from your customer data — edit any, then choose one. The copy and image prompt build from it.</p>
+          <p class="rev-status">Grouped from your customer data — edit any, then choose one or more. The copy and image prompt build from your selection.</p>
           <div id="personaList" class="personas"></div>
           <div class="rev-actions">
             <button class="btn" onclick="reviewAcceptPersona()">Continue &rarr;</button>
@@ -3434,6 +3434,7 @@
           }
           current.targetSegment = null;
           current.personaPick = null;
+          current.personaPicks = null;
           if (summary) {
             $("#f_audience").value = summary; // feeds generation through collect()
             _customerRows = parsed;
@@ -3513,6 +3514,16 @@
         if (locH) parts.push("mostly " + top(locH, 3).map((x) => x.v).join(", "));
         const intH = find(/interest|hobby|category|segment|preference|style|taste/i);
         if (intH) parts.push("interests: " + top(intH, 3).map((x) => x.v).join(", "));
+        const avg = (h) => {
+          const nums = vals(h).map(Number).filter((x) => !isNaN(x));
+          return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+        };
+        const spendH = find(/spend|revenue|value|purchase|order/i),
+          visitH = find(/visit|frequency|trips/i);
+        const habits = [];
+        if (spendH && avg(spendH) != null) habits.push("~" + Math.round(avg(spendH)) + "/mo spend");
+        if (visitH && avg(visitH) != null) habits.push(Math.round(avg(visitH) * 10) / 10 + " visits/wk");
+        if (habits.length) parts.push(habits.join(" · "));
         if (!parts.length) return n + " customers · columns: " + headers.slice(0, 6).join(", ");
         return n + " customers — " + parts.join("; ") + ".";
       }
@@ -3626,29 +3637,45 @@
         }
         return top1(find(ROLE_RE.gender)) + "|" + top1(find(ROLE_RE.interest)) + "|" + band;
       }
-      // Cluster the rows into up-to-4 audience segments, each with a readable profile.
-      function segmentRows(headers, rows, k) {
+      // Cluster the rows into audience segments: try several k and keep the k that yields
+      // the MOST distinct groups (after merging near-identical clusters) — i.e. cluster as
+      // much as the data supports while every group stays genuinely different.
+      function segmentRows(headers, rows, forceK) {
         const n = rows.length;
         if (n < 8) return null; // too few to segment meaningfully
-        k = Math.max(2, Math.min(k || Math.min(4, Math.floor(n / 6)), 4));
         const { vecs, dims } = buildFeatures(headers, rows);
         if (!dims) return null;
-        let best = null;
-        for (let r = 0; r < 5; r++) {
-          const res = kmeans(vecs, k, 1234 + r * 97);
-          if (!best || res.inertia < best.inertia) best = res;
+        const kMax = Math.max(2, Math.min(forceK || 6, Math.floor(n / 6), 6));
+        const runK = (k) => {
+          let best = null;
+          for (let r = 0; r < 5; r++) {
+            const res = kmeans(vecs, k, 1234 + r * 97);
+            if (!best || res.inertia < best.inertia) best = res;
+          }
+          const groups = Array.from({ length: k }, () => []);
+          best.assign.forEach((c, i) => groups[c].push(rows[i]));
+          // merge clusters with the same coarse signature (avoids over-segmenting),
+          // then fold tiny fragments (<3%) into the largest group so output stays useful
+          const merged = {};
+          groups
+            .filter((g) => g.length)
+            .forEach((g) => {
+              const sig = segSignature(headers, g);
+              (merged[sig] = merged[sig] || []).push(...g);
+            });
+          let segs = Object.values(merged).sort((a, b) => b.length - a.length);
+          const tiny = segs.filter((g) => g.length / n < 0.03);
+          segs = segs.filter((g) => g.length / n >= 0.03);
+          if (segs.length && tiny.length) tiny.forEach((g) => segs[0].push(...g));
+          return { segs, inertia: best.inertia };
+        };
+        let bestRun = null;
+        for (let k = 2; k <= kMax; k++) {
+          const run = runK(k);
+          if (!bestRun || run.segs.length > bestRun.segs.length || (run.segs.length === bestRun.segs.length && run.inertia < bestRun.inertia))
+            bestRun = run;
         }
-        const groups = Array.from({ length: k }, () => []);
-        best.assign.forEach((c, i) => groups[c].push(rows[i]));
-        // merge clusters with the same coarse signature
-        const merged = {};
-        groups
-          .filter((g) => g.length)
-          .forEach((g) => {
-            const sig = segSignature(headers, g);
-            (merged[sig] = merged[sig] || []).push(...g);
-          });
-        return Object.values(merged)
+        return bestRun.segs
           .map((g) => ({ size: g.length, pct: Math.round((100 * g.length) / n), summary: summarizeRows({ headers, rows: g }) }))
           .sort((a, b) => b.size - a.size);
       }
@@ -3754,40 +3781,55 @@
         const back = $("#revFmtBack");
         if (back) back.classList.toggle("hidden", !hasP);
       }
-      // Persona step: editable segment cards; the chosen one becomes the audience.
+      // Persona step: editable segment cards; choose ONE OR MORE — the selection becomes
+      // the audience the copy and image prompt build from.
       function renderPersonaChoices() {
         const el = $("#personaList");
         if (!el) return;
         const segs = current.segments || [];
-        if (current.personaPick == null) current.personaPick = current.targetSegment || 0;
+        if (!Array.isArray(current.personaPicks) || !current.personaPicks.length)
+          current.personaPicks = [current.personaPick != null ? current.personaPick : current.targetSegment || 0];
+        const on = (i) => current.personaPicks.includes(i);
         el.innerHTML = segs
           .map((s, i) => {
             const desc = (s.summary || "").replace(/^\d+ customers — /, "");
             return (
-              `<div class="persona-card${current.personaPick === i ? " on" : ""}" data-p="${i}">` +
-              `<label class="persona-head"><input type="radio" name="persona"${current.personaPick === i ? " checked" : ""} onchange="pickPersona(${i})">` +
+              `<div class="persona-card${on(i) ? " on" : ""}" data-p="${i}">` +
+              `<label class="persona-head"><input type="checkbox"${on(i) ? " checked" : ""} onchange="pickPersona(${i}, this.checked)">` +
               `<span>Persona ${i + 1}</span><span class="persona-pct">${s.pct}% of customers</span></label>` +
               `<textarea class="persona-edit" rows="2" oninput="editPersona(${i}, this.value)">${esc(desc)}</textarea></div>`
             );
           })
           .join("");
       }
-      function pickPersona(i) {
-        current.personaPick = i;
-        document.querySelectorAll("#personaList .persona-card").forEach((c) => c.classList.toggle("on", +c.dataset.p === i));
+      function pickPersona(i, checked) {
+        const picks = new Set(current.personaPicks || []);
+        if (checked) picks.add(i);
+        else picks.delete(i);
+        current.personaPicks = [...picks].sort((a, b) => a - b);
+        document.querySelectorAll("#personaList .persona-card").forEach((c) =>
+          c.classList.toggle("on", current.personaPicks.includes(+c.dataset.p)),
+        );
       }
       function editPersona(i, val) {
         const s = (current.segments || [])[i];
         if (s) s.summary = val.trim(); // store the edited profile (drives audience on accept)
       }
-      // Persona accepted → its profile becomes the audience that copy + prompt build from.
+      // Persona(s) accepted → their profiles become the audience copy + prompt build from.
       function reviewAcceptPersona() {
-        const i = current.personaPick || 0;
-        const s = (current.segments || [])[i];
-        if (s) {
-          current.audience = s.summary;
-          if ($("#f_audience")) $("#f_audience").value = s.summary;
-        }
+        const segs = current.segments || [];
+        let picks = (current.personaPicks || []).filter((i) => segs[i]);
+        if (!picks.length) picks = [0]; // fall back to the largest segment
+        const audience =
+          picks.length === 1
+            ? segs[picks[0]].summary
+            : "Blend of " +
+              picks.length +
+              " personas — " +
+              picks.map((i, j) => "(" + (j + 1) + ") " + (segs[i].summary || "").replace(/^\d+ customers — /, "").replace(/\.$/, "")).join("; ") +
+              ".";
+        current.audience = audience;
+        if ($("#f_audience")) $("#f_audience").value = audience;
         revStage("format");
         renderFmtChoices();
       }
