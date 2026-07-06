@@ -255,28 +255,43 @@
       }
       .card-actions {
         position: absolute;
-        top: -8px;
-        right: -6px;
+        left: 6px;
+        right: 6px;
         display: flex;
         gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
         opacity: 0;
-        transition: opacity 0.18s;
+        transform: translateY(6px);
+        transition:
+          opacity 0.18s,
+          transform 0.18s;
+        z-index: 2;
+      }
+      /* project actions sit at the BOTTOM of the poster preview (clear of the size badge) */
+      .thumb .card-actions {
+        bottom: 8px;
+      }
+      /* folder actions sit over the folder icon */
+      .folder-item .card-actions {
+        top: 8px;
       }
       .fileitem:hover .card-actions,
       .fileitem:focus-within .card-actions {
         opacity: 1;
+        transform: translateY(0);
       }
       .card-actions button {
         font: inherit;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
-        padding: 5px 9px;
+        padding: 4px 8px;
         border: none;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.94);
+        background: rgba(255, 255, 255, 0.95);
         color: var(--ink);
         cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
       }
       .card-actions button:hover {
         background: var(--ink);
@@ -4863,8 +4878,8 @@
           `<div role="button" tabindex="0" class="fileitem card project-item" draggable="true" data-pid="${p.id}" onclick="openProject('${p.id}')">` +
           `<div class="thumb"><img src="${p.poster || ""}" alt="">` +
           `<span class="card-ratio">${fmtLabel(p.format)}</span>` +
-          `</div>` +
           projectActions(p) +
+          `</div>` +
           `<span class="fileitem-name rename-ready" data-project-id="${p.id}" onclick="event.stopPropagation()" ondblclick="beginInlineRename('project','${p.id}', event)">${esc(p.name || "Untitled")}</span>` +
           `</div>`
         );
