@@ -6068,7 +6068,9 @@
         g.innerHTML =
           folderHtml +
           projectHtml +
-          dropZoneHtml();
+          // Skip the "+ Add project" dropzone in the empty state — the "Start one
+          // now" button in the empty box already covers creating the first project.
+          (list.length || folders.length ? dropZoneHtml() : "");
         if (list.length && !shown.length && _folderFilter !== "all") {
           g.insertAdjacentHTML("afterbegin", '<p class="muted" style="width:100%">Nothing in this folder yet — drag posters or image files here.</p>');
         }
