@@ -1226,6 +1226,25 @@
       #audienceManual:not(.hidden) {
         display: flex;
       }
+      #imageryGen {
+        flex-direction: column;
+        gap: 12px;
+      }
+      #imageryGen:not(.hidden) {
+        display: flex;
+      }
+      .genrow {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        font-size: 13px;
+        line-height: 1.45;
+        cursor: pointer;
+      }
+      .genrow input {
+        margin-top: 3px;
+        flex: 0 0 auto;
+      }
       .hintrow {
         display: flex;
         flex-wrap: wrap;
@@ -3763,6 +3782,26 @@
                 >Product cutout <span class="muted">(transparent PNG, optional)</span
                 ><input type="file" id="f_product" accept="image/*"
               /></label>
+              <button type="button" class="linklike" id="noProductToggle" onclick="toggleImageryGen()">
+                No product image? Generate imagery instead
+              </button>
+              <div id="imageryGen" class="hidden">
+                <label class="genrow">
+                  <input type="checkbox" id="f_genImagery" onchange="onGenImageryToggle()" />
+                  <span
+                    >Design relevant imagery on the poster — for a non-tangible product (an app, a service, an event) or
+                    when you have no product photo. The AI invents on-brand visuals instead of leaving it text-only.</span
+                  >
+                </label>
+                <label
+                  >Describe the imagery <span class="muted">(optional)</span
+                  ><textarea
+                    id="f_imageryNote"
+                    rows="2"
+                    placeholder="e.g. abstract soundwaves over a warm gradient for a music app — or leave blank and the AI decides from your brief."
+                  ></textarea>
+                </label>
+              </div>
               <p class="muted tiny">
                 The ad is generated with AI by default (copy + background) using the Gemini key in the top bar. If the
                 API is unavailable — no key, quota, or error — it falls back to a preset background you can pick after
@@ -4278,6 +4317,19 @@
       const NO_WATERMARK =
         "Absolutely no watermarks, no signatures, no captions, no UI, and no generator or app logo — " +
         "in particular no Gemini / Google sparkle mark or badge anywhere in the image. Clean edge-to-edge artwork only.";
+      // "Generate imagery" is on when the user asked for AI-designed visuals and gave no
+      // product cutout (e.g. a non-tangible product). The model then invents on-brand
+      // imagery instead of leaving the poster as text on an empty background.
+      const wantsImagery = (p) => !!p.genImagery && !p.product;
+      function imageryClause(p) {
+        const note = (p.imageryNote || "").trim();
+        const of = (p.products || "").trim() || (p.name || "").trim() || "the offering";
+        return (
+          `There is no product photo — invent tasteful, on-brand imagery to carry the poster: illustration, graphic motifs, symbolic objects, or an art-directed abstract scene that expresses ${of}` +
+          (note ? `; specifically: ${note}` : "") +
+          `. Make it the visual focal point and keep the palette monochromatic within the brand hue. `
+        );
+      }
       function bgPrompt(p, hasRefs) {
         const sec = p.brand_secondary || "a darker shade";
         const feel = [p.values, p.identity].filter(Boolean).join(", ");
@@ -4285,8 +4337,11 @@
         // monochromatic single-hue palette, one soft focal glow, a single light source,
         // generous negative space, low-to-balanced contrast, restrained and premium.
         return (
-          `A premium, extremely minimal, flat 2D abstract poster background (${fmtAspect()}) in a MONOCHROMATIC scheme — two or three tones from a single hue family drawn from ${p.brand_primary || "#1f6f54"} and ${sec}${feel ? `; brand feel: ${feel}` : ""}. ` +
-          `Composition: one calm focal glow or soft organic shape, a single gentle light source, generous empty negative space, low-to-balanced contrast, fine subtle grain. Keep uncluttered areas for text (upper-centre for a headline; lower third kept light for dark text). Restrained and elegant — no text, no logos, no objects, no people. ` +
+          `A premium, extremely minimal, flat 2D poster background (${fmtAspect()}) in a MONOCHROMATIC scheme — two or three tones from a single hue family drawn from ${p.brand_primary || "#1f6f54"} and ${sec}${feel ? `; brand feel: ${feel}` : ""}. ` +
+          (wantsImagery(p)
+            ? imageryClause(p) +
+              `Keep calm areas for text (upper-centre for a headline; lower third kept light for dark text). No logos, no people, no text baked in. `
+            : `Composition: one calm focal glow or soft organic shape, a single gentle light source, generous empty negative space, low-to-balanced contrast, fine subtle grain. Keep uncluttered areas for text (upper-centre for a headline; lower third kept light for dark text). Restrained and elegant — no text, no logos, no objects, no people. `) +
           NO_WATERMARK +
           (hasRefs
             ? " Match the visual STYLE, palette and mood of the provided reference images — never copy their content."
@@ -4542,9 +4597,11 @@
         agenda: "f_agenda",
         headline: "f_headline",
         subhead: "f_subhead",
+        imageryNote: "f_imageryNote",
       };
       function collect() {
         for (const k in FIELDS) current[k] = $("#" + FIELDS[k]).value;
+        current.genImagery = !!($("#f_genImagery") && $("#f_genImagery").checked);
       }
       function fill(p) {
         for (const k in FIELDS) {
@@ -4552,6 +4609,11 @@
           el.value = p[k] != null && p[k] !== "" ? p[k] : el.type === "color" ? el.value : "";
         }
         if (p.audience == null && p.target_interest) $("#f_audience").value = p.target_interest;
+        const gi = $("#f_genImagery");
+        if (gi) gi.checked = !!p.genImagery;
+        // Reveal the imagery option if it was enabled or described on this project.
+        if ((p.genImagery || (p.imageryNote || "").trim()) && $("#imageryGen") && $("#imageryGen").classList.contains("hidden"))
+          toggleImageryGen();
       }
       // Show/hide the "no customer data" guided description box.
       function toggleAudienceManual() {
@@ -4564,6 +4626,17 @@
           const ta = $("#f_audience");
           if (ta) ta.focus();
         }
+      }
+      // Show/hide the "no product image — generate imagery" option (Step 3).
+      function toggleImageryGen() {
+        const m = $("#imageryGen"),
+          t = $("#noProductToggle");
+        if (!m) return;
+        const open = !m.classList.toggle("hidden");
+        if (t) t.textContent = open ? "Hide imagery option" : "No product image? Generate imagery instead";
+      }
+      function onGenImageryToggle() {
+        current.genImagery = !!($("#f_genImagery") && $("#f_genImagery").checked);
       }
       // Customer data upload: parse CSV/TSV/JSON/SQLite in-browser into a compact
       // audience summary that feeds copy/prompt generation.
@@ -5291,7 +5364,9 @@
         "and typography feel. Follow the brief's mode_instruction exactly (full poster vs. background-only). Keep it " +
         "minimal, premium and restrained. If a product image is attached, feature THAT exact product as the hero and " +
         "describe it faithfully from the image; if a logo is attached, place it small and tasteful; match the mood and " +
-        "palette of any reference ads without copying them. Any headline/subhead must be typeset EXACTLY as given with " +
+        "palette of any reference ads without copying them. If the brief sets generate_imagery, there is no product photo — " +
+        "design original, on-brand imagery/illustration/graphic elements (following imagery_note if present) as the focal " +
+        "visual, integrated with the text; never leave the poster as text on an empty background. Any headline/subhead must be typeset EXACTLY as given with " +
         "no other words. No watermarks, no app/generator marks. Return ONLY the prompt text — no preamble, no JSON, no markdown.";
       // The brief the Art Director reads: every wizard field + the approved copy, colours,
       // aspect, chosen mode, and which images are attached.
@@ -5311,6 +5386,12 @@
           p.logo && "brand logo — place small and tasteful",
           (p.refs || []).length && "style reference ads — match mood/palette, never copy",
         ].filter(Boolean);
+        if (wantsImagery(p)) {
+          b.generate_imagery = true;
+          b.imagery_note = (p.imageryNote || "").trim() || null;
+          b.imagery_instruction =
+            "No product photo is provided. Design original, on-brand imagery — illustration, graphic motifs, symbolic objects or an art-directed abstract scene (follow imagery_note if given) — and compose it WITH the headline and subhead. Do NOT leave the poster as text on an empty background.";
+        }
         return b;
       }
       // Fill #revPrompt: the Art Director LLM when a text key is present (reading the brief +
@@ -5361,6 +5442,7 @@
           (p.product
             ? `Feature the provided product image as the hero product, integrated naturally with a soft shadow or reflection. `
             : ``) +
+          (wantsImagery(p) ? imageryClause(p) : ``) +
           (p.logo ? `Place the provided brand logo small and tasteful in a corner. ` : ``) +
           (inputs.length ? `Provided images, in order: ${inputs.join(", ")}. ` : ``) +
           `A balanced, editorial, agency-quality composition. No placeholder/lorem text, no words beyond the headline and subhead. ` +
