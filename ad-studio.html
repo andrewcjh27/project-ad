@@ -1226,6 +1226,44 @@
       #audienceManual:not(.hidden) {
         display: flex;
       }
+      #imageryGen {
+        flex-direction: column;
+        gap: 12px;
+      }
+      #imageryGen:not(.hidden) {
+        display: flex;
+      }
+      .genrow {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        font-size: 13px;
+        line-height: 1.45;
+        cursor: pointer;
+      }
+      .genrow input {
+        margin-top: 3px;
+        flex: 0 0 auto;
+      }
+      .imagery-level {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .level-head {
+        font-size: 13px;
+      }
+      .imagery-level input[type="range"] {
+        width: 100%;
+        accent-color: var(--ink);
+        cursor: pointer;
+      }
+      .level-scale {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--muted);
+      }
       .hintrow {
         display: flex;
         flex-wrap: wrap;
@@ -3188,6 +3226,104 @@
           animation: none;
         }
       }
+
+      /* ---------- mobile (phones) ────────────────────────────────────────────
+         One consolidated pass so every feature stays reachable and well-scaled
+         on a ~360–430px viewport. Desktop rules above are untouched. */
+      @media (max-width: 700px) {
+        /* compact single-row header — labels never wrap; nav scrolls sideways
+           as a last resort instead of stacking into a tall header */
+        header {
+          padding: 10px 3%;
+          gap: 8px;
+        }
+        .brand {
+          font-size: 12px;
+          letter-spacing: 0.08em;
+          flex: 0 0 auto;
+        }
+        .nav {
+          gap: 0;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -webkit-overflow-scrolling: touch;
+        }
+        .nav::-webkit-scrollbar {
+          display: none;
+        }
+        .navlink {
+          font-size: 12px;
+          padding: 8px 7px;
+          white-space: nowrap;
+        }
+        .navcreate {
+          padding: 8px 10px;
+        }
+        /* the key popover escapes the scrolling nav (which would clip it) */
+        .keypanel {
+          position: fixed;
+          top: 58px;
+          left: 3%;
+          right: 3%;
+          width: auto;
+          max-width: none;
+        }
+        /* prevent iOS auto-zoom on focus (needs >=16px inputs) */
+        input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+        textarea,
+        select {
+          font-size: 16px;
+        }
+        main {
+          padding: 36px 4% 72px;
+        }
+        /* review overlay: tighter card, roomier content */
+        .review-card {
+          padding: 24px 18px 20px;
+        }
+        /* ad-size cards: adaptive columns instead of a fixed 4-up row */
+        .fmtgrid {
+          grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+        }
+        /* demo walkthrough: let tall scenes scroll instead of clipping, and
+           free up room (smaller paddings, narrower label column) */
+        .demo-stage {
+          min-height: 480px;
+        }
+        .demo-scene {
+          align-items: flex-start;
+          overflow-y: auto;
+          padding: 16px 12px;
+        }
+        .demo-panel {
+          padding: 16px 14px;
+        }
+        .demo-kv {
+          gap: 10px;
+        }
+        .demo-kv span {
+          flex-basis: 84px;
+        }
+        /* design editor top bar: drop the hover hint, keep actions on-screen */
+        .designer-top {
+          flex-wrap: wrap;
+          gap: 8px 12px;
+          padding: 10px 3%;
+        }
+        .designer-hint {
+          display: none;
+        }
+        .designer-actions {
+          margin-left: auto;
+          gap: 8px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+        }
+        .designer-actions .btn {
+          padding: 9px 14px;
+          font-size: 13px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -3763,6 +3899,33 @@
                 >Product cutout <span class="muted">(transparent PNG, optional)</span
                 ><input type="file" id="f_product" accept="image/*"
               /></label>
+              <button type="button" class="linklike" id="noProductToggle" onclick="toggleImageryGen()">
+                No product image? Generate imagery instead
+              </button>
+              <div id="imageryGen" class="hidden">
+                <label class="genrow">
+                  <input type="checkbox" id="f_genImagery" onchange="onGenImageryToggle()" />
+                  <span
+                    >Design relevant imagery on the poster — for a non-tangible product (an app, a service, an event) or
+                    when you have no product photo. The AI invents on-brand visuals instead of leaving it text-only.</span
+                  >
+                </label>
+                <label
+                  >Describe the imagery <span class="muted">(optional)</span
+                  ><textarea
+                    id="f_imageryNote"
+                    rows="2"
+                    placeholder="e.g. abstract soundwaves over a warm gradient for a music app — or leave blank and the AI decides from your brief."
+                  ></textarea>
+                </label>
+                <div class="imagery-level">
+                  <div class="level-head">
+                    Design intensity <span class="muted" id="imageryLevelVal">3 — balanced</span>
+                  </div>
+                  <input type="range" id="f_imageryLevel" min="1" max="5" step="1" value="3" oninput="onImageryLevel()" />
+                  <div class="level-scale"><span>1 · subtle</span><span>5 · maximal</span></div>
+                </div>
+              </div>
               <p class="muted tiny">
                 The ad is generated with AI by default (copy + background) using the Gemini key in the top bar. If the
                 API is unavailable — no key, quota, or error — it falls back to a preset background you can pick after
@@ -3777,7 +3940,6 @@
               <div class="actions hidden" id="wizActions">
                 <button class="btn ghost" onclick="saveProject()">Save</button>
                 <button class="btn ghost" onclick="exportSpec()">Export spec</button>
-                <button class="btn ghost" onclick="figmaHandoff()">Send to Figma</button>
                 <button class="btn" onclick="generate(false)">Generate</button>
               </div>
             </div>
@@ -3841,7 +4003,6 @@
               <span class="editbar-hint">Want to tweak the design?</span>
               <div class="editbar-btns">
                 <button class="btn ghost" onclick="openDesigner()">Edit design</button>
-                <button class="btn ghost" onclick="figmaHandoff()">Send to Figma</button>
                 <button class="btn" onclick="finishLayeredAd()">Finish &amp; save</button>
               </div>
             </div>
@@ -3858,6 +4019,7 @@
         <div class="brand">Design editor</div>
         <span class="designer-hint">Drag to move · drag a corner handle to resize</span>
         <div class="designer-actions">
+          <button class="btn ghost" onclick="figmaHandoff()">Send to Figma</button>
           <button class="btn ghost" onclick="designerCancel()">Cancel</button>
           <button class="btn" onclick="designerSave()">Save changes</button>
         </div>
@@ -3962,6 +4124,7 @@
             </div>
             <p class="rev-status" id="revModeNote"></p>
             <label class="rev-label">Prompt<textarea id="revPrompt" rows="9"></textarea></label>
+            <div class="rev-status" id="revPromptStatus"></div>
             <div class="rev-label" style="margin-bottom: 10px">
               Background style
               <span class="muted">— used when the ad is composed locally (no image key)</span>
@@ -3969,6 +4132,7 @@
             <div class="stylebar" id="styleBar"></div>
             <div class="rev-actions">
               <button class="btn ghost" onclick="revStage('copy')">&larr; Copy</button>
+              <button class="btn ghost" onclick="regenAdPrompt()">Regenerate</button>
               <button class="btn" onclick="reviewGenerateAd()">Generate &rarr;</button>
             </div>
           </div>
@@ -4213,17 +4377,31 @@
         const m = /^data:(.*?);base64,(.*)$/.exec(d || "");
         return m ? { inline_data: { mime_type: m[1], data: m[2] } } : null;
       }
-      async function geminiText(system, user, key) {
+      // Multimodal-capable: pass data-URL images to let the model read the product,
+      // logo and reference ads alongside the text brief (used by the Art Director).
+      async function geminiText(system, user, key, images) {
+        const parts = [{ text: user }];
+        (images || []).forEach((d) => {
+          const p = dataUrlPart(d);
+          if (p) parts.push(p);
+        });
         const r = await fetch(`${API}/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             system_instruction: { parts: [{ text: system }] },
-            contents: [{ parts: [{ text: user }] }],
+            contents: [{ parts }],
             generationConfig: { temperature: 0.8 },
           }),
         });
-        if (!r.ok) throw new Error("HTTP " + r.status);
+        if (!r.ok) {
+          let detail = "";
+          try {
+            const err = await r.json();
+            detail = err?.error?.message || "";
+          } catch (e) {}
+          throw new Error("HTTP " + r.status + (detail ? " — " + detail : ""));
+        }
         const j = await r.json();
         return ((j.candidates || [])[0]?.content?.parts || []).map((p) => p.text || "").join("");
       }
@@ -4270,6 +4448,28 @@
       const NO_WATERMARK =
         "Absolutely no watermarks, no signatures, no captions, no UI, and no generator or app logo — " +
         "in particular no Gemini / Google sparkle mark or badge anywhere in the image. Clean edge-to-edge artwork only.";
+      // "Generate imagery" is on when the user asked for AI-designed visuals and gave no
+      // product cutout (e.g. a non-tangible product). The model then invents on-brand
+      // imagery instead of leaving the poster as text on an empty background.
+      const wantsImagery = (p) => !!p.genImagery && !p.product;
+      const imageryLevelOf = (p) => Math.min(5, Math.max(1, p.imageryLevel || 3));
+      // How dominant the generated imagery should be (1 subtle … 5 maximal).
+      const IMAGERY_LEVEL_PROMPT = {
+        1: "Keep the imagery extremely subtle — a faint accent only; lean on generous negative space and keep the poster minimal and text-forward.",
+        2: "Keep the imagery light and restrained — a small, understated visual accent with plenty of empty space.",
+        3: "Balanced — a clear focal visual motif that shares the poster evenly with the text.",
+        4: "Rich and prominent — bold, detailed imagery that leads the composition while leaving clear room for the text.",
+        5: "Maximal — a fully art-directed, imagery-led poster; visuals fill the frame edge-to-edge with only enough clear space to keep the text legible.",
+      };
+      function imageryClause(p) {
+        const note = (p.imageryNote || "").trim();
+        const of = (p.products || "").trim() || (p.name || "").trim() || "the offering";
+        return (
+          `There is no product photo — invent tasteful, on-brand imagery to carry the poster: illustration, graphic motifs, symbolic objects, or an art-directed abstract scene that expresses ${of}` +
+          (note ? `; specifically: ${note}` : "") +
+          `. ${IMAGERY_LEVEL_PROMPT[imageryLevelOf(p)]} Keep the palette monochromatic within the brand hue. `
+        );
+      }
       function bgPrompt(p, hasRefs) {
         const sec = p.brand_secondary || "a darker shade";
         const feel = [p.values, p.identity].filter(Boolean).join(", ");
@@ -4277,8 +4477,11 @@
         // monochromatic single-hue palette, one soft focal glow, a single light source,
         // generous negative space, low-to-balanced contrast, restrained and premium.
         return (
-          `A premium, extremely minimal, flat 2D abstract poster background (${fmtAspect()}) in a MONOCHROMATIC scheme — two or three tones from a single hue family drawn from ${p.brand_primary || "#1f6f54"} and ${sec}${feel ? `; brand feel: ${feel}` : ""}. ` +
-          `Composition: one calm focal glow or soft organic shape, a single gentle light source, generous empty negative space, low-to-balanced contrast, fine subtle grain. Keep uncluttered areas for text (upper-centre for a headline; lower third kept light for dark text). Restrained and elegant — no text, no logos, no objects, no people. ` +
+          `A premium, extremely minimal, flat 2D poster background (${fmtAspect()}) in a MONOCHROMATIC scheme — two or three tones from a single hue family drawn from ${p.brand_primary || "#1f6f54"} and ${sec}${feel ? `; brand feel: ${feel}` : ""}. ` +
+          (wantsImagery(p)
+            ? imageryClause(p) +
+              `Keep calm areas for text (upper-centre for a headline; lower third kept light for dark text). No logos, no people, no text baked in. `
+            : `Composition: one calm focal glow or soft organic shape, a single gentle light source, generous empty negative space, low-to-balanced contrast, fine subtle grain. Keep uncluttered areas for text (upper-centre for a headline; lower third kept light for dark text). Restrained and elegant — no text, no logos, no objects, no people. `) +
           NO_WATERMARK +
           (hasRefs
             ? " Match the visual STYLE, palette and mood of the provided reference images — never copy their content."
@@ -4534,9 +4737,12 @@
         agenda: "f_agenda",
         headline: "f_headline",
         subhead: "f_subhead",
+        imageryNote: "f_imageryNote",
       };
       function collect() {
         for (const k in FIELDS) current[k] = $("#" + FIELDS[k]).value;
+        current.genImagery = !!($("#f_genImagery") && $("#f_genImagery").checked);
+        current.imageryLevel = +($("#f_imageryLevel") && $("#f_imageryLevel").value) || 3;
       }
       function fill(p) {
         for (const k in FIELDS) {
@@ -4544,6 +4750,16 @@
           el.value = p[k] != null && p[k] !== "" ? p[k] : el.type === "color" ? el.value : "";
         }
         if (p.audience == null && p.target_interest) $("#f_audience").value = p.target_interest;
+        const gi = $("#f_genImagery");
+        if (gi) gi.checked = !!p.genImagery;
+        const lv = $("#f_imageryLevel");
+        if (lv) {
+          lv.value = p.imageryLevel || 3;
+          onImageryLevel();
+        }
+        // Reveal the imagery option if it was enabled or described on this project.
+        if ((p.genImagery || (p.imageryNote || "").trim()) && $("#imageryGen") && $("#imageryGen").classList.contains("hidden"))
+          toggleImageryGen();
       }
       // Show/hide the "no customer data" guided description box.
       function toggleAudienceManual() {
@@ -4556,6 +4772,24 @@
           const ta = $("#f_audience");
           if (ta) ta.focus();
         }
+      }
+      // Show/hide the "no product image — generate imagery" option (Step 3).
+      function toggleImageryGen() {
+        const m = $("#imageryGen"),
+          t = $("#noProductToggle");
+        if (!m) return;
+        const open = !m.classList.toggle("hidden");
+        if (t) t.textContent = open ? "Hide imagery option" : "No product image? Generate imagery instead";
+      }
+      function onGenImageryToggle() {
+        current.genImagery = !!($("#f_genImagery") && $("#f_genImagery").checked);
+      }
+      const IMAGERY_WORDS = { 1: "subtle", 2: "light", 3: "balanced", 4: "rich", 5: "maximal" };
+      function onImageryLevel() {
+        const v = Math.min(5, Math.max(1, +($("#f_imageryLevel") && $("#f_imageryLevel").value) || 3));
+        current.imageryLevel = v;
+        const lbl = $("#imageryLevelVal");
+        if (lbl) lbl.textContent = v + " — " + (IMAGERY_WORDS[v] || "balanced");
       }
       // Customer data upload: parse CSV/TSV/JSON/SQLite in-browser into a compact
       // audience summary that feeds copy/prompt generation.
@@ -5178,15 +5412,18 @@
           });
         return n ? out.slice(0, n) : out;
       }
-      function composeCopy(p) {
-        const seed = (p.seed || 1) >>> 0;
+      // `variant` advances the template/word choice so Regenerate yields NEW copy each
+      // click (base seed keeps it stable across reloads of the same variant).
+      function composeCopy(p, variant) {
+        const base = ((p.seed || 1) >>> 0) + (variant || 0);
         const product = firstItem(p.products);
         const value = firstItem(p.values);
         const value2 = nthItem(p.values, 1);
         const audShort = firstWords(audienceOf(p).replace(/\d+\s*[–-]\s*\d+/g, "").trim(), 4);
         const themes = themeWords(p, 6);
-        const t = themes[seed % (themes.length || 1)] || value || "";
-        const t2 = themes[1] || value2 || "";
+        const tn = themes.length || 1;
+        const t = themes[base % tn] || value || "";
+        const t2 = themes[(base + 1) % tn] || value2 || "";
 
         // HEADLINE (<=5 words) — pick a template whose source tokens exist.
         const heads = [];
@@ -5196,7 +5433,7 @@
         if (product) heads.push(`${cap(product)}. Nothing less.`);
         if (t) heads.push(`${cap(t)}, by design.`);
         if (p.name) heads.push(`${cap(p.name)}, distilled.`);
-        let headline = (heads.length ? heads[seed % heads.length] : cap(p.name) || "").trim();
+        let headline = (heads.length ? heads[base % heads.length] : cap(p.name) || "").trim();
         const hw = headline.split(/\s+/);
         if (hw.length > 6) headline = hw.slice(0, 6).join(" ").replace(/[,.;:]+$/, "") + ".";
 
@@ -5208,10 +5445,11 @@
         if (product && value) subs.push(`${cap(value)} ${product.toLowerCase()}, crafted with intent.`);
         if (audShort && t) subs.push(`For ${audShort.toLowerCase()} who expect ${t.toLowerCase()}.`);
         if (t) subs.push(`${cap(t)}, considered down to the detail.`);
-        let subhead = (subs.length ? subs[(seed + 1) % subs.length] : "").trim();
+        let subhead = (subs.length ? subs[(base + 1) % subs.length] : "").trim();
         if (subhead.length > 88) subhead = subhead.slice(0, 85).trim() + "…";
         return { headline, subhead };
       }
+      let _copyNonce = 0; // bumped on each Regenerate so offline copy actually changes
       // Back-compat helper: a synthesised subhead (delegates to the copywriter above).
       function fallbackSubhead(p) {
         return composeCopy(p).subhead;
@@ -5250,26 +5488,105 @@
       }
 
       async function reviewRegenCopy() {
+        const composed = composeCopy(current, ++_copyNonce); // fresh variant every click
         const key = getTextKey();
         if (!key) {
-          const c = composeCopy(current); // synthesised from the whole brief, not a copy of it
-          $("#revHeadline").value = c.headline;
-          $("#revSubhead").value = c.subhead;
-          setRev("#revCopyStatus", "Composed from your brief — add a free Gemini key for full AI copy.");
+          $("#revHeadline").value = composed.headline;
+          $("#revSubhead").value = composed.subhead;
+          setRev("#revCopyStatus", "Composed from your brief — click Regenerate for another, or add a Gemini key for full AI copy.");
           return;
         }
-        setRev("#revCopyStatus", "Writing copy…");
+        setRev("#revCopyStatus", "Writing copy with Gemini…");
         try {
           const j = extractJson(await geminiText(COPY_SYS, JSON.stringify(briefOf(current)), key));
-          $("#revHeadline").value = (j.headline || "").trim();
-          $("#revSubhead").value = (j.subhead || "").trim();
+          // Fill both fields; if the model omits one, keep the composed line so nothing blanks.
+          $("#revHeadline").value = (j.headline || "").trim() || composed.headline;
+          $("#revSubhead").value = (j.subhead || "").trim() || composed.subhead;
           setRev("#revCopyStatus", "Written by Gemini — edit if you like.");
         } catch (e) {
-          setRev("#revCopyStatus", "Copy error (" + e.message + ") — type one below.");
+          // API failed — still regenerate with composed copy so the button always works,
+          // and surface the real reason so a bad key / quota is visible.
+          $("#revHeadline").value = composed.headline;
+          $("#revSubhead").value = composed.subhead;
+          setRev("#revCopyStatus", "Gemini couldn’t generate (" + e.message + ") — showing composed copy. Check your key in the top-bar “AI key”.");
         }
       }
       // Prompt for the WHOLE finished ad — background style + exact text + product/logo
       // placement — so the image model composes the complete poster in one shot.
+      // ── Art Director (LLM image-prompt generation) ──────────────────────────────
+      // Reads the full brief + any attached images (product, logo, style refs) and
+      // writes a detailed image-generation prompt. Deterministic adPrompt/bgPrompt
+      // below stay as the offline fallback when no text key is present.
+      const PROMPT_SYS =
+        "You are an expert advertising Art Director at a top agency. You receive a JSON brand brief and, " +
+        "when provided, attached images: a product photo, a brand logo, and/or style-reference ads. STUDY the brief " +
+        "and every image, then write ONE detailed image-generation prompt for a single, finished, publish-ready " +
+        "advertising poster. Cover: the concept/idea, composition & focal point, how the product is treated, the " +
+        "palette (stay strictly within the brand colours given — never invent other hues), lighting, mood, texture, " +
+        "and typography feel. Follow the brief's mode_instruction exactly (full poster vs. background-only). Keep it " +
+        "minimal, premium and restrained. If a product image is attached, feature THAT exact product as the hero and " +
+        "describe it faithfully from the image; if a logo is attached, place it small and tasteful; match the mood and " +
+        "palette of any reference ads without copying them. If the brief sets generate_imagery, there is no product photo — " +
+        "design original, on-brand imagery/illustration/graphic elements (following imagery_note if present) as the focal " +
+        "visual, integrated with the text; never leave the poster as text on an empty background. Any headline/subhead must be typeset EXACTLY as given with " +
+        "no other words. No watermarks, no app/generator marks. Return ONLY the prompt text — no preamble, no JSON, no markdown.";
+      // The brief the Art Director reads: every wizard field + the approved copy, colours,
+      // aspect, chosen mode, and which images are attached.
+      function artDirectorBrief(p) {
+        const b = briefOf(p);
+        b.headline = firstLine(p.headline) || "";
+        b.subhead = firstLine(p.subhead) || "";
+        b.aspect = fmtAspect();
+        b.brand_colors = [p.brand_primary || "#1f6f54", p.brand_secondary].filter(Boolean);
+        b.mode = p.mode || "full_ai";
+        b.mode_instruction =
+          b.mode === "layered"
+            ? "Design ONLY the background artwork — NO text, NO logo, NO product, NO people. Leave calm negative space (upper-centre and a light lower third) where the headline, subhead and product will be composited later."
+            : "Compose the ENTIRE finished poster: background plus the headline and subhead typeset exactly as given, plus the product and logo if attached.";
+        b.attached_images = [
+          p.product && "product photo — the hero product; render this exact item",
+          p.logo && "brand logo — place small and tasteful",
+          (p.refs || []).length && "style reference ads — match mood/palette, never copy",
+        ].filter(Boolean);
+        if (wantsImagery(p)) {
+          b.generate_imagery = true;
+          b.imagery_note = (p.imageryNote || "").trim() || null;
+          b.imagery_level = imageryLevelOf(p); // 1 subtle … 5 maximal
+          b.imagery_level_instruction = IMAGERY_LEVEL_PROMPT[imageryLevelOf(p)];
+          b.imagery_instruction =
+            "No product photo is provided. Design original, on-brand imagery — illustration, graphic motifs, symbolic objects or an art-directed abstract scene (follow imagery_note if given) — and compose it WITH the headline and subhead, at the intensity in imagery_level_instruction. Do NOT leave the poster as text on an empty background.";
+        }
+        return b;
+      }
+      // Fill #revPrompt: the Art Director LLM when a text key is present (reading the brief +
+      // attached images), otherwise the deterministic template for the current mode.
+      async function regenAdPrompt() {
+        const m = current.mode || "full_ai";
+        const template = m === "layered" ? bgPrompt(current, (current.refs || []).length > 0) : adPrompt(current);
+        const key = getTextKey();
+        const apply = (txt, status) => {
+          current._adPrompt = txt;
+          if ($("#revPrompt")) $("#revPrompt").value = txt;
+          setRev("#revPromptStatus", status);
+        };
+        if (!key) {
+          apply(template, "Built from your brief — add a Gemini text key for an AI Art-Director prompt.");
+          return;
+        }
+        setRev("#revPromptStatus", "Art Director is writing the prompt…");
+        try {
+          const imgs = [current.product, current.logo].concat(current.refs || []).filter(Boolean).slice(0, 6);
+          let out = (await geminiText(PROMPT_SYS, JSON.stringify(artDirectorBrief(current)), key, imgs)).trim();
+          out = out.replace(/^```[a-z]*\n?/i, "").replace(/```$/, "").trim();
+          if (!out) throw new Error("empty response");
+          apply(
+            out,
+            "Written by the Art Director (Gemini) from your brief" + (imgs.length ? " + your images" : "") + " — edit if you like."
+          );
+        } catch (e) {
+          apply(template, "Prompt error (" + e.message + ") — using the built-in prompt; edit below.");
+        }
+      }
       function adPrompt(p) {
         const sec = p.brand_secondary || "a darker shade";
         const feel = [p.values, p.identity].filter(Boolean).join(", ");
@@ -5289,6 +5606,7 @@
           (p.product
             ? `Feature the provided product image as the hero product, integrated naturally with a soft shadow or reflection. `
             : ``) +
+          (wantsImagery(p) ? imageryClause(p) : ``) +
           (p.logo ? `Place the provided brand logo small and tasteful in a corner. ` : ``) +
           (inputs.length ? `Provided images, in order: ${inputs.join(", ")}. ` : ``) +
           `A balanced, editorial, agency-quality composition. No placeholder/lorem text, no words beyond the headline and subhead. ` +
@@ -5302,22 +5620,22 @@
         $("#f_subhead").value = current.subhead;
         revStage("bg");
         if (!current.mode) current.mode = "full_ai";
-        setMode(current.mode); // fills the prompt for the chosen mode
-        showPromptView(); // approve/edit the prompt first; generate only on click
+        showPromptView(); // reveal the prompt step first (shows the "writing…" status)
+        await setMode(current.mode); // Art Director writes the prompt for the chosen mode
       }
       // Full-AI = model composes the whole ad. Layered = AI (or preset) background only,
       // with your text/product/logo composited crisply and draggable on the canvas.
-      function setMode(m) {
+      async function setMode(m) {
         current.mode = m;
         document.querySelectorAll(".modebtn").forEach((b) => b.classList.toggle("on", b.dataset.mode === m));
-        current._adPrompt = m === "layered" ? bgPrompt(current, (current.refs || []).length > 0) : adPrompt(current);
-        $("#revPrompt").value = current._adPrompt;
         setRev(
           "#revModeNote",
           m === "layered"
             ? "Layered: generate a background first, then Render adds your headline, subhead, product and logo — drag, move and resize them on the canvas, then Finish & save."
             : "Full-AI: the model composes the entire ad (background + text + product + logo) in one image.",
         );
+        // The prompt differs by mode (whole poster vs. background-only), so (re)write it here.
+        await regenAdPrompt();
       }
       function showPromptView() {
         $("#revPromptView").classList.remove("hidden");
@@ -5917,6 +6235,17 @@
           setTimeout(() => URL.revokeObjectURL(specUrl), 4000);
         }, 350);
         setStatus("Downloaded " + base + ".png + " + base + ".spec.json — open the Figma plugin, paste the spec, choose the PNG, then Build in Figma.");
+        // The #status line lives under the preview, hidden behind the full-screen design
+        // editor — surface a brief confirmation on the editor when the handoff runs there.
+        const dh = document.querySelector(".designer-hint");
+        if (dh && $("#designer") && !$("#designer").classList.contains("hidden")) {
+          const prev = dh.dataset.hint || dh.textContent;
+          dh.dataset.hint = prev;
+          dh.textContent = "Exported " + base + ".png + spec — open the Figma plugin, paste the spec, choose the PNG.";
+          setTimeout(() => {
+            dh.textContent = dh.dataset.hint || prev;
+          }, 6000);
+        }
       }
 
       /* ---------- ad-spec (v0.2) — the studio's canonical model + export ---------- */
