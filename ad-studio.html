@@ -681,6 +681,22 @@
         color: var(--ink);
         white-space: nowrap;
       }
+      .keyfield {
+        display: block;
+        margin-top: 11px;
+      }
+      .keyfield > span {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .keyfield > span em {
+        font-style: normal;
+        font-weight: 400;
+        color: var(--muted);
+      }
       .keypanel input {
         width: 100%;
         padding: 9px 11px;
@@ -710,11 +726,18 @@
       }
       .keystatus {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 7px;
-        margin-top: 12px;
+        margin-top: 10px;
         font-size: 12.5px;
+        line-height: 1.4;
         color: var(--muted);
+      }
+      .keystatus .keydot {
+        margin-top: 4px;
+      }
+      .keystatus + .keystatus {
+        margin-top: 6px;
       }
       .preview {
         position: sticky;
@@ -3179,18 +3202,25 @@
             <span class="keydot" id="keyDot"></span>AI key
           </button>
           <div class="keypanel hidden" id="keyPanel">
-            <h4>Gemini API key</h4>
+            <h4>Gemini API keys</h4>
             <p>
-              Paste your own free Gemini key to turn on AI-written headlines &amp; subheads. It’s stored only in this
-              browser (localStorage) — never uploaded, and never committed to the public file.
-              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a free key ↗</a>
+              Stored only in this browser (localStorage) — never uploaded, and never committed to the public file.
+              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a key ↗</a>
             </p>
-            <input id="keyInput" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false" />
+            <label class="keyfield">
+              <span>Text copy <em>· Gemini free tier</em></span>
+              <input id="keyTextInput" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false" />
+            </label>
+            <label class="keyfield">
+              <span>Images <em>· Gemini (billed)</em></span>
+              <input id="keyImageInput" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false" />
+            </label>
             <div class="keyrow">
-              <button class="primary" onclick="saveTextKey()">Save</button>
-              <button onclick="clearTextKey()">Clear</button>
+              <button class="primary" onclick="saveKeys()">Save</button>
+              <button onclick="clearKeys()">Clear</button>
             </div>
-            <div class="keystatus" id="keyStatus"><span class="keydot"></span>…</div>
+            <div class="keystatus" id="keyStatusText"><span class="keydot"></span>…</div>
+            <div class="keystatus" id="keyStatusImage"><span class="keydot"></span>…</div>
           </div>
         </span>
       </nav>
@@ -4143,14 +4173,26 @@
       /* ---------- Gemini API (online-first; offline fallback on any error) ---------- */
       const API = "https://generativelanguage.googleapis.com/v1beta/models";
       // ── API keys ────────────────────────────────────────────────────────────────
-      // Paste your own Gemini keys here so the studio works without asking each time.
-      // SECURITY: do NOT commit a real key to a shared/public repo — keep it in your
-      // local copy and rotate any key that has been exposed.
-      const TEXT_KEY = ""; // free-tier key (gemini-2.5-flash) → AI copy
-      const IMAGE_KEY = ""; // billed key (gemini-2.5-flash-image) → full-AI images
+      // Two independent Gemini keys, entered per-user via the top-bar "AI key" panel:
+      //   • pa_textkey  — free-tier key (gemini-2.5-flash)       → AI copy
+      //   • pa_imgkey   — billed key   (gemini-2.5-flash-image)  → full-AI images
+      // They are kept separate on purpose: text runs on the free tier, images on the
+      // paid API, so each capability bills to its own key.
+      //
+      // SECURITY: keys live only in the user's browser (localStorage) — never commit a
+      // real key to this public file, and rotate any key that has been exposed.
+      //
+      // FUTURE (SaaS deploy): move to a server-side proxy (Option 2). A small serverless
+      // function holds BOTH keys as secret env vars and forwards requests, so the public
+      // site can offer AI copy + images without ever shipping a key to the browser. When
+      // that lands, getTextKey/getImageKey point at the proxy instead of localStorage and
+      // the client keys become an optional "bring your own key" override. Add rate-limiting
+      // / auth on the proxy so visitors can't drain the quota.
+      const TEXT_KEY = ""; // optional hardcoded free-tier key (leave empty on the public file)
+      const IMAGE_KEY = ""; // optional hardcoded billed key (leave empty on the public file)
       const getImageKey = () => (IMAGE_KEY || localStorage.getItem("pa_imgkey") || "").trim();
-      // A Gemini key entered for images works for text too — reuse it so copy is
-      // AI-generated whenever ANY key is present, not only a dedicated text key.
+      // Text prefers its own free-tier key; falls back to the image key only if no text
+      // key is set, so a single pasted key still enables copy.
       const getTextKey = () =>
         (TEXT_KEY || localStorage.getItem("pa_textkey") || localStorage.getItem("pa_key") || getImageKey() || "").trim();
       const setStatus = (t) => {
@@ -6912,18 +6954,27 @@
       else showGallery();
 
       /* ---------- Gemini key panel (top-bar) ---------- */
-      // Reflect whether AI copy is active (any usable key present) in the dot + status line.
+      // Reflect each capability in its own status line; nav dot lights if either key is set.
       function refreshKeyStatus() {
-        const on = !!getTextKey();
+        const textOn = !!getTextKey(),
+          imgOn = !!getImageKey();
         const dot = $("#keyDot");
-        if (dot) dot.classList.toggle("on", on);
-        const st = $("#keyStatus");
-        if (st)
-          st.innerHTML =
-            `<span class="keydot ${on ? "on" : ""}"></span>` +
-            (on
-              ? "AI copy is ON — Gemini writes the headline &amp; subhead."
-              : "AI copy is OFF — using built-in copy. Add a key to switch on.");
+        if (dot) dot.classList.toggle("on", textOn || imgOn);
+        const line = (on, onMsg, offMsg) => `<span class="keydot ${on ? "on" : ""}"></span>${on ? onMsg : offMsg}`;
+        const t = $("#keyStatusText"),
+          im = $("#keyStatusImage");
+        if (t)
+          t.innerHTML = line(
+            textOn,
+            "AI copy is ON — Gemini writes the headline &amp; subhead.",
+            "AI copy is OFF — using built-in copy."
+          );
+        if (im)
+          im.innerHTML = line(
+            imgOn,
+            "AI images are ON — Gemini renders the poster.",
+            "AI images are OFF — using the procedural fallback."
+          );
       }
       function toggleKeyPanel(e) {
         if (e) e.stopPropagation();
@@ -6932,25 +6983,33 @@
         const opening = panel.classList.contains("hidden");
         panel.classList.toggle("hidden");
         if (opening) {
-          const inp = $("#keyInput");
-          if (inp) {
-            inp.value = (localStorage.getItem("pa_textkey") || localStorage.getItem("pa_key") || "").trim();
-            inp.focus();
-          }
+          const ti = $("#keyTextInput"),
+            ii = $("#keyImageInput");
+          if (ti) ti.value = (localStorage.getItem("pa_textkey") || localStorage.getItem("pa_key") || "").trim();
+          if (ii) ii.value = (localStorage.getItem("pa_imgkey") || "").trim();
+          if (ti) ti.focus();
           refreshKeyStatus();
         }
       }
-      function saveTextKey() {
-        const inp = $("#keyInput");
-        const v = (inp ? inp.value : "").trim();
-        if (v) localStorage.setItem("pa_textkey", v);
-        else localStorage.removeItem("pa_textkey");
+      // Save/clear the two keys independently (empty field removes that key).
+      function saveKeys() {
+        const put = (sel, k) => {
+          const el = $(sel),
+            v = (el ? el.value : "").trim();
+          if (v) localStorage.setItem(k, v);
+          else localStorage.removeItem(k);
+        };
+        put("#keyTextInput", "pa_textkey");
+        put("#keyImageInput", "pa_imgkey");
         refreshKeyStatus();
       }
-      function clearTextKey() {
+      function clearKeys() {
         localStorage.removeItem("pa_textkey");
-        const inp = $("#keyInput");
-        if (inp) inp.value = "";
+        localStorage.removeItem("pa_imgkey");
+        const ti = $("#keyTextInput"),
+          ii = $("#keyImageInput");
+        if (ti) ti.value = "";
+        if (ii) ii.value = "";
         refreshKeyStatus();
       }
       // Dismiss the panel on outside-click or Esc.
