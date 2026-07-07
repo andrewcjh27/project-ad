@@ -3961,6 +3961,7 @@
             </div>
             <p class="rev-status" id="revModeNote"></p>
             <label class="rev-label">Prompt<textarea id="revPrompt" rows="9"></textarea></label>
+            <div class="rev-status" id="revPromptStatus"></div>
             <div class="rev-label" style="margin-bottom: 10px">
               Background style
               <span class="muted">— used when the ad is composed locally (no image key)</span>
@@ -3968,6 +3969,7 @@
             <div class="stylebar" id="styleBar"></div>
             <div class="rev-actions">
               <button class="btn ghost" onclick="revStage('copy')">&larr; Copy</button>
+              <button class="btn ghost" onclick="regenAdPrompt()">Regenerate</button>
               <button class="btn" onclick="reviewGenerateAd()">Generate &rarr;</button>
             </div>
           </div>
@@ -4212,13 +4214,20 @@
         const m = /^data:(.*?);base64,(.*)$/.exec(d || "");
         return m ? { inline_data: { mime_type: m[1], data: m[2] } } : null;
       }
-      async function geminiText(system, user, key) {
+      // Multimodal-capable: pass data-URL images to let the model read the product,
+      // logo and reference ads alongside the text brief (used by the Art Director).
+      async function geminiText(system, user, key, images) {
+        const parts = [{ text: user }];
+        (images || []).forEach((d) => {
+          const p = dataUrlPart(d);
+          if (p) parts.push(p);
+        });
         const r = await fetch(`${API}/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             system_instruction: { parts: [{ text: system }] },
-            contents: [{ parts: [{ text: user }] }],
+            contents: [{ parts }],
             generationConfig: { temperature: 0.8 },
           }),
         });
@@ -5269,6 +5278,70 @@
       }
       // Prompt for the WHOLE finished ad — background style + exact text + product/logo
       // placement — so the image model composes the complete poster in one shot.
+      // ── Art Director (LLM image-prompt generation) ──────────────────────────────
+      // Reads the full brief + any attached images (product, logo, style refs) and
+      // writes a detailed image-generation prompt. Deterministic adPrompt/bgPrompt
+      // below stay as the offline fallback when no text key is present.
+      const PROMPT_SYS =
+        "You are an expert advertising Art Director at a top agency. You receive a JSON brand brief and, " +
+        "when provided, attached images: a product photo, a brand logo, and/or style-reference ads. STUDY the brief " +
+        "and every image, then write ONE detailed image-generation prompt for a single, finished, publish-ready " +
+        "advertising poster. Cover: the concept/idea, composition & focal point, how the product is treated, the " +
+        "palette (stay strictly within the brand colours given — never invent other hues), lighting, mood, texture, " +
+        "and typography feel. Follow the brief's mode_instruction exactly (full poster vs. background-only). Keep it " +
+        "minimal, premium and restrained. If a product image is attached, feature THAT exact product as the hero and " +
+        "describe it faithfully from the image; if a logo is attached, place it small and tasteful; match the mood and " +
+        "palette of any reference ads without copying them. Any headline/subhead must be typeset EXACTLY as given with " +
+        "no other words. No watermarks, no app/generator marks. Return ONLY the prompt text — no preamble, no JSON, no markdown.";
+      // The brief the Art Director reads: every wizard field + the approved copy, colours,
+      // aspect, chosen mode, and which images are attached.
+      function artDirectorBrief(p) {
+        const b = briefOf(p);
+        b.headline = firstLine(p.headline) || "";
+        b.subhead = firstLine(p.subhead) || "";
+        b.aspect = fmtAspect();
+        b.brand_colors = [p.brand_primary || "#1f6f54", p.brand_secondary].filter(Boolean);
+        b.mode = p.mode || "full_ai";
+        b.mode_instruction =
+          b.mode === "layered"
+            ? "Design ONLY the background artwork — NO text, NO logo, NO product, NO people. Leave calm negative space (upper-centre and a light lower third) where the headline, subhead and product will be composited later."
+            : "Compose the ENTIRE finished poster: background plus the headline and subhead typeset exactly as given, plus the product and logo if attached.";
+        b.attached_images = [
+          p.product && "product photo — the hero product; render this exact item",
+          p.logo && "brand logo — place small and tasteful",
+          (p.refs || []).length && "style reference ads — match mood/palette, never copy",
+        ].filter(Boolean);
+        return b;
+      }
+      // Fill #revPrompt: the Art Director LLM when a text key is present (reading the brief +
+      // attached images), otherwise the deterministic template for the current mode.
+      async function regenAdPrompt() {
+        const m = current.mode || "full_ai";
+        const template = m === "layered" ? bgPrompt(current, (current.refs || []).length > 0) : adPrompt(current);
+        const key = getTextKey();
+        const apply = (txt, status) => {
+          current._adPrompt = txt;
+          if ($("#revPrompt")) $("#revPrompt").value = txt;
+          setRev("#revPromptStatus", status);
+        };
+        if (!key) {
+          apply(template, "Built from your brief — add a Gemini text key for an AI Art-Director prompt.");
+          return;
+        }
+        setRev("#revPromptStatus", "Art Director is writing the prompt…");
+        try {
+          const imgs = [current.product, current.logo].concat(current.refs || []).filter(Boolean).slice(0, 6);
+          let out = (await geminiText(PROMPT_SYS, JSON.stringify(artDirectorBrief(current)), key, imgs)).trim();
+          out = out.replace(/^```[a-z]*\n?/i, "").replace(/```$/, "").trim();
+          if (!out) throw new Error("empty response");
+          apply(
+            out,
+            "Written by the Art Director (Gemini) from your brief" + (imgs.length ? " + your images" : "") + " — edit if you like."
+          );
+        } catch (e) {
+          apply(template, "Prompt error (" + e.message + ") — using the built-in prompt; edit below.");
+        }
+      }
       function adPrompt(p) {
         const sec = p.brand_secondary || "a darker shade";
         const feel = [p.values, p.identity].filter(Boolean).join(", ");
@@ -5301,22 +5374,22 @@
         $("#f_subhead").value = current.subhead;
         revStage("bg");
         if (!current.mode) current.mode = "full_ai";
-        setMode(current.mode); // fills the prompt for the chosen mode
-        showPromptView(); // approve/edit the prompt first; generate only on click
+        showPromptView(); // reveal the prompt step first (shows the "writing…" status)
+        await setMode(current.mode); // Art Director writes the prompt for the chosen mode
       }
       // Full-AI = model composes the whole ad. Layered = AI (or preset) background only,
       // with your text/product/logo composited crisply and draggable on the canvas.
-      function setMode(m) {
+      async function setMode(m) {
         current.mode = m;
         document.querySelectorAll(".modebtn").forEach((b) => b.classList.toggle("on", b.dataset.mode === m));
-        current._adPrompt = m === "layered" ? bgPrompt(current, (current.refs || []).length > 0) : adPrompt(current);
-        $("#revPrompt").value = current._adPrompt;
         setRev(
           "#revModeNote",
           m === "layered"
             ? "Layered: generate a background first, then Render adds your headline, subhead, product and logo — drag, move and resize them on the canvas, then Finish & save."
             : "Full-AI: the model composes the entire ad (background + text + product + logo) in one image.",
         );
+        // The prompt differs by mode (whole poster vs. background-only), so (re)write it here.
+        await regenAdPrompt();
       }
       function showPromptView() {
         $("#revPromptView").classList.remove("hidden");
