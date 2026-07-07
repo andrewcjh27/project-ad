@@ -630,6 +630,92 @@
         color: #fff;
         font-weight: 500;
       }
+      .keywrap {
+        position: relative;
+        display: inline-flex;
+      }
+      .navkey {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .keydot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--muted);
+        flex: 0 0 auto;
+        transition: background 0.2s;
+      }
+      .keydot.on {
+        background: #22a06b;
+      }
+      .keypanel {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        z-index: 40;
+        width: 320px;
+        max-width: 82vw;
+        padding: 16px;
+        text-align: left;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: 0 14px 44px rgba(0, 0, 0, 0.16);
+      }
+      .keypanel.hidden {
+        display: none;
+      }
+      .keypanel h4 {
+        margin: 0 0 5px;
+        font-size: 14px;
+      }
+      .keypanel p {
+        margin: 0 0 11px;
+        font-size: 12.5px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+      .keypanel a {
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      .keypanel input {
+        width: 100%;
+        padding: 9px 11px;
+        font: inherit;
+        font-size: 13px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .keyrow {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .keypanel button {
+        font: inherit;
+        font-size: 13px;
+        padding: 8px 15px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: none;
+        cursor: pointer;
+      }
+      .keypanel button.primary {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+      .keystatus {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 12px;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
       .preview {
         position: sticky;
         top: 100px;
@@ -3088,6 +3174,25 @@
         <button class="navlink" data-nav="home" onclick="showGallery()">Projects</button>
         <button class="navlink" data-nav="demo" onclick="showDemo()">How it works</button>
         <button class="navlink navcreate" data-nav="create" onclick="newProject()">+ New project</button>
+        <span class="keywrap">
+          <button class="navlink navkey" id="keyBtn" onclick="toggleKeyPanel(event)" title="Set your Gemini API key for AI copy">
+            <span class="keydot" id="keyDot"></span>AI key
+          </button>
+          <div class="keypanel hidden" id="keyPanel">
+            <h4>Gemini API key</h4>
+            <p>
+              Paste your own free Gemini key to turn on AI-written headlines &amp; subheads. It’s stored only in this
+              browser (localStorage) — never uploaded, and never committed to the public file.
+              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a free key ↗</a>
+            </p>
+            <input id="keyInput" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false" />
+            <div class="keyrow">
+              <button class="primary" onclick="saveTextKey()">Save</button>
+              <button onclick="clearTextKey()">Clear</button>
+            </div>
+            <div class="keystatus" id="keyStatus"><span class="keydot"></span>…</div>
+          </div>
+        </span>
       </nav>
     </header>
 
@@ -6805,6 +6910,62 @@
       if (location.hash === "#create") newProject();
       else if (location.hash === "#demo") showDemo();
       else showGallery();
+
+      /* ---------- Gemini key panel (top-bar) ---------- */
+      // Reflect whether AI copy is active (any usable key present) in the dot + status line.
+      function refreshKeyStatus() {
+        const on = !!getTextKey();
+        const dot = $("#keyDot");
+        if (dot) dot.classList.toggle("on", on);
+        const st = $("#keyStatus");
+        if (st)
+          st.innerHTML =
+            `<span class="keydot ${on ? "on" : ""}"></span>` +
+            (on
+              ? "AI copy is ON — Gemini writes the headline &amp; subhead."
+              : "AI copy is OFF — using built-in copy. Add a key to switch on.");
+      }
+      function toggleKeyPanel(e) {
+        if (e) e.stopPropagation();
+        const panel = $("#keyPanel");
+        if (!panel) return;
+        const opening = panel.classList.contains("hidden");
+        panel.classList.toggle("hidden");
+        if (opening) {
+          const inp = $("#keyInput");
+          if (inp) {
+            inp.value = (localStorage.getItem("pa_textkey") || localStorage.getItem("pa_key") || "").trim();
+            inp.focus();
+          }
+          refreshKeyStatus();
+        }
+      }
+      function saveTextKey() {
+        const inp = $("#keyInput");
+        const v = (inp ? inp.value : "").trim();
+        if (v) localStorage.setItem("pa_textkey", v);
+        else localStorage.removeItem("pa_textkey");
+        refreshKeyStatus();
+      }
+      function clearTextKey() {
+        localStorage.removeItem("pa_textkey");
+        const inp = $("#keyInput");
+        if (inp) inp.value = "";
+        refreshKeyStatus();
+      }
+      // Dismiss the panel on outside-click or Esc.
+      document.addEventListener("click", (e) => {
+        const panel = $("#keyPanel");
+        if (panel && !panel.classList.contains("hidden") && !e.target.closest("#keyPanel") && !e.target.closest("#keyBtn"))
+          panel.classList.add("hidden");
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const panel = $("#keyPanel");
+          if (panel) panel.classList.add("hidden");
+        }
+      });
+      refreshKeyStatus();
     </script>
   </body>
 </html>
