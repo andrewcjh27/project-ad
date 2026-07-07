@@ -5259,15 +5259,18 @@
           });
         return n ? out.slice(0, n) : out;
       }
-      function composeCopy(p) {
-        const seed = (p.seed || 1) >>> 0;
+      // `variant` advances the template/word choice so Regenerate yields NEW copy each
+      // click (base seed keeps it stable across reloads of the same variant).
+      function composeCopy(p, variant) {
+        const base = ((p.seed || 1) >>> 0) + (variant || 0);
         const product = firstItem(p.products);
         const value = firstItem(p.values);
         const value2 = nthItem(p.values, 1);
         const audShort = firstWords(audienceOf(p).replace(/\d+\s*[–-]\s*\d+/g, "").trim(), 4);
         const themes = themeWords(p, 6);
-        const t = themes[seed % (themes.length || 1)] || value || "";
-        const t2 = themes[1] || value2 || "";
+        const tn = themes.length || 1;
+        const t = themes[base % tn] || value || "";
+        const t2 = themes[(base + 1) % tn] || value2 || "";
 
         // HEADLINE (<=5 words) — pick a template whose source tokens exist.
         const heads = [];
@@ -5277,7 +5280,7 @@
         if (product) heads.push(`${cap(product)}. Nothing less.`);
         if (t) heads.push(`${cap(t)}, by design.`);
         if (p.name) heads.push(`${cap(p.name)}, distilled.`);
-        let headline = (heads.length ? heads[seed % heads.length] : cap(p.name) || "").trim();
+        let headline = (heads.length ? heads[base % heads.length] : cap(p.name) || "").trim();
         const hw = headline.split(/\s+/);
         if (hw.length > 6) headline = hw.slice(0, 6).join(" ").replace(/[,.;:]+$/, "") + ".";
 
@@ -5289,10 +5292,11 @@
         if (product && value) subs.push(`${cap(value)} ${product.toLowerCase()}, crafted with intent.`);
         if (audShort && t) subs.push(`For ${audShort.toLowerCase()} who expect ${t.toLowerCase()}.`);
         if (t) subs.push(`${cap(t)}, considered down to the detail.`);
-        let subhead = (subs.length ? subs[(seed + 1) % subs.length] : "").trim();
+        let subhead = (subs.length ? subs[(base + 1) % subs.length] : "").trim();
         if (subhead.length > 88) subhead = subhead.slice(0, 85).trim() + "…";
         return { headline, subhead };
       }
+      let _copyNonce = 0; // bumped on each Regenerate so offline copy actually changes
       // Back-compat helper: a synthesised subhead (delegates to the copywriter above).
       function fallbackSubhead(p) {
         return composeCopy(p).subhead;
@@ -5333,10 +5337,10 @@
       async function reviewRegenCopy() {
         const key = getTextKey();
         if (!key) {
-          const c = composeCopy(current); // synthesised from the whole brief, not a copy of it
+          const c = composeCopy(current, ++_copyNonce); // new variant each click, not a copy of the brief
           $("#revHeadline").value = c.headline;
           $("#revSubhead").value = c.subhead;
-          setRev("#revCopyStatus", "Composed from your brief — add a free Gemini key for full AI copy.");
+          setRev("#revCopyStatus", "Composed from your brief — click Regenerate for another, or add a Gemini key for full AI copy.");
           return;
         }
         setRev("#revCopyStatus", "Writing copy…");
