@@ -7,7 +7,7 @@ name: Deploy Ad Studio to GitHub Pages
 on:
   push:
     branches:
-      - claude/project-ad-onboarding-6lg98r
+      - main
       - master
     paths:
       - ad-studio.html
