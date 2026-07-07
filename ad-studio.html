@@ -3407,10 +3407,10 @@
 
           <h3>Next: database-backed persona building</h3>
           <p class="demo-data-lead">
-            For live customer databases, the stronger path is not to send raw rows to an LLM. The app can read the
-            database structure first, sample only useful fields, run a safe read-only query, then pass the resulting
-            audience table into the same deterministic persona engine. The LLM is reserved for naming and explaining
-            the segments after the math is done.
+            SQLite customer databases now follow this path in-browser: inspect the structure, pick the most
+            audience-like table, sample rows, then pass that table into the same deterministic persona engine. For live
+            Postgres/MySQL warehouses, the same pattern becomes a backend read-only connector. The LLM is reserved for
+            naming and explaining the segments after the math is done.
           </p>
           <div class="demo-how-wrap">
             <div>
@@ -3524,17 +3524,17 @@
                   placeholder="What the brand is, the campaign, and what this ad is for."
                 ></textarea>
               </label>
-              <div class="fieldcap">Customer data <span class="muted">(CSV, Excel, or database)</span></div>
+              <div class="fieldcap">Customer data <span class="muted">(CSV, JSON, or SQLite database)</span></div>
               <label class="dropbox" id="customerDrop" for="f_customerFile">
                 <input
                   type="file"
                   id="f_customerFile"
-                  accept=".csv,.tsv,.txt,.json,.xlsx,.xls,.db,.sqlite,.sqlite3"
+                  accept=".csv,.tsv,.txt,.json,.db,.sqlite,.sqlite3"
                   onchange="readCustomerData(this)"
                   hidden
                 />
                 <span class="dropbox-cta">Upload customer data</span>
-                <span class="dropbox-sub">CSV, Excel (.xlsx / .xls) or database (.db / .sqlite) — click or drop a file</span>
+                <span class="dropbox-sub">CSV, JSON, or SQLite database (.db / .sqlite) — click or drop a file</span>
               </label>
               <div class="filenote muted" id="customerDataNote"></div>
               <button type="button" class="linklike" id="noDataToggle" onclick="toggleAudienceManual()">
@@ -4400,13 +4400,13 @@
           if (ta) ta.focus();
         }
       }
-      // Customer data upload: parse CSV/TSV/JSON in-browser into a compact audience
-      // summary that feeds copy/prompt generation. Excel/DB are accepted and noted.
+      // Customer data upload: parse CSV/TSV/JSON/SQLite in-browser into a compact
+      // audience summary that feeds copy/prompt generation.
       function readCustomerData(input) {
         const f = input.files && input.files[0];
         if (f) handleCustomerFile(f);
       }
-      function handleCustomerFile(f) {
+      async function handleCustomerFile(f) {
         const name = f.name,
           ext = (name.split(".").pop() || "").toLowerCase();
         current.customerFile = name;
@@ -4417,9 +4417,21 @@
             note.textContent = t;
           }
         };
+        if (["db", "sqlite", "sqlite3"].includes(ext)) {
+          setNote("Reading " + name + " — inspecting tables and sampling audience rows...");
+          try {
+            const parsed = await parseSqliteDatabase(f);
+            applyParsedCustomerData(parsed, name, setNote, parsed.meta.note);
+          } catch (e) {
+            console.warn("SQLite customer database import failed", e);
+            current.segments = [];
+            setNote(name + " attached — couldn't read this SQLite database in the browser. Upload CSV/JSON or describe the audience below.");
+            if ($("#audienceManual").classList.contains("hidden")) toggleAudienceManual();
+          }
+          return;
+        }
         if (!["csv", "tsv", "txt", "json"].includes(ext)) {
-          // Excel / database — not parseable in-browser here
-          setNote("📎 " + name + " attached — Excel/database summaries run in the pipeline. Add a short description below if you like.");
+          setNote(name + " attached — Excel import is not active yet. Export it as CSV, or describe the audience below.");
           if ($("#audienceManual").classList.contains("hidden")) toggleAudienceManual();
           return;
         }
@@ -4429,26 +4441,36 @@
             summary = "";
           try {
             parsed = ext === "json" ? parseJsonRows(fr.result) : parseDelimited(fr.result);
-            summary = summarizeRows(parsed);
           } catch (e) {
-            summary = "";
+            parsed = null;
           }
-          current.targetSegment = null;
-          current.personaPick = null;
-          current.personaPicks = null;
-          if (summary) {
-            $("#f_audience").value = summary; // feeds generation through collect()
-            _customerRows = parsed;
-            current.segments = segmentRows(parsed.headers, parsed.rows) || [];
-            const n = current.segments.length;
-            setNote("✓ " + name + " — " + summary + (n ? " · " + n + " personas found — pick one when you Generate." : ""));
+          if (parsed) {
+            applyParsedCustomerData(parsed, name, setNote);
           } else {
             current.segments = [];
-            setNote("📎 " + name + " — couldn't read audience columns; describe your audience below.");
+            setNote(name + " — couldn't read audience columns; describe your audience below.");
             if ($("#audienceManual").classList.contains("hidden")) toggleAudienceManual();
           }
         };
         fr.readAsText(f);
+      }
+      function applyParsedCustomerData(parsed, name, setNote, sourceNote) {
+        const summary = summarizeRows(parsed);
+        current.targetSegment = null;
+        current.personaPick = null;
+        current.personaPicks = null;
+        if (summary) {
+          $("#f_audience").value = summary; // feeds generation through collect()
+          _customerRows = parsed;
+          current.segments = segmentRows(parsed.headers, parsed.rows) || [];
+          const n = current.segments.length;
+          const source = sourceNote ? sourceNote + " — " : "";
+          setNote(source + name + " — " + summary + (n ? " · " + n + " personas found — pick one when you Generate." : ""));
+        } else {
+          current.segments = [];
+          setNote(name + " — couldn't read audience columns; describe your audience below.");
+          if ($("#audienceManual").classList.contains("hidden")) toggleAudienceManual();
+        }
       }
       function parseDelimited(text) {
         const lines = text.replace(/\r/g, "").split("\n").filter((l) => l.trim() !== "");
@@ -4487,6 +4509,125 @@
         const j = JSON.parse(text);
         const arr = Array.isArray(j) ? j : Array.isArray(j.rows) ? j.rows : Array.isArray(j.data) ? j.data : [];
         return { headers: arr.length ? Object.keys(arr[0]) : [], rows: arr };
+      }
+      const SQLJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/";
+      let _sqlJsPromise = null;
+      function loadSqlJs() {
+        if (window.initSqlJs) return window.initSqlJs({ locateFile: (file) => SQLJS_CDN + file });
+        if (_sqlJsPromise) return _sqlJsPromise;
+        _sqlJsPromise = new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = SQLJS_CDN + "sql-wasm.js";
+          script.async = true;
+          script.onload = () => window.initSqlJs({ locateFile: (file) => SQLJS_CDN + file }).then(resolve, reject);
+          script.onerror = () => reject(new Error("Could not load SQLite reader"));
+          document.head.appendChild(script);
+        });
+        return _sqlJsPromise;
+      }
+      const sqliteIdent = (name) => '"' + String(name).replace(/"/g, '""') + '"';
+      function sqliteRows(db, sql, params) {
+        const stmt = db.prepare(sql);
+        const rows = [];
+        try {
+          if (params) stmt.bind(params);
+          while (stmt.step()) rows.push(stmt.getAsObject());
+        } finally {
+          stmt.free();
+        }
+        return rows;
+      }
+      async function parseSqliteDatabase(file) {
+        const SQL = await loadSqlJs();
+        const db = new SQL.Database(new Uint8Array(await file.arrayBuffer()));
+        try {
+          const tableRows = sqliteRows(
+            db,
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+          );
+          const tables = tableRows
+            .map((r) => String(r.name || ""))
+            .filter(Boolean)
+            .map((table) => inspectSqliteTable(db, table))
+            .filter((table) => table.columns.length && table.rowCount > 0);
+          if (!tables.length) throw new Error("No readable data tables");
+          const picked = tables.slice().sort((a, b) => scoreSqliteAudienceTable(b) - scoreSqliteAudienceTable(a))[0];
+          const headers = picked.columns.map((c) => c.name);
+          const rows = sqliteRows(db, "SELECT * FROM " + sqliteIdent(picked.name) + " LIMIT 5000");
+          return {
+            headers,
+            rows,
+            meta: {
+              tables,
+              pickedTable: picked.name,
+              note:
+                "SQLite table " +
+                picked.name +
+                " selected from " +
+                tables.length +
+                " table" +
+                (tables.length === 1 ? "" : "s") +
+                " (" +
+                rows.length +
+                " sampled rows)",
+            },
+          };
+        } finally {
+          db.close();
+        }
+      }
+      function inspectSqliteTable(db, table) {
+        const columns = sqliteRows(db, "PRAGMA table_info(" + sqliteIdent(table) + ")").map((c) => ({
+          name: String(c.name || ""),
+          type: String(c.type || ""),
+          primaryKey: !!c.pk,
+        }));
+        let rowCount = 0;
+        try {
+          rowCount = Number(sqliteRows(db, "SELECT COUNT(*) AS n FROM " + sqliteIdent(table))[0]?.n || 0);
+        } catch (_) {
+          rowCount = 0;
+        }
+        const foreignKeys = (() => {
+          try {
+            return sqliteRows(db, "PRAGMA foreign_key_list(" + sqliteIdent(table) + ")");
+          } catch (_) {
+            return [];
+          }
+        })();
+        const samples = {};
+        columns.slice(0, 24).forEach((col) => {
+          try {
+            samples[col.name] = sqliteRows(
+              db,
+              "SELECT DISTINCT " + sqliteIdent(col.name) + " AS v FROM " + sqliteIdent(table) + " WHERE " + sqliteIdent(col.name) + " IS NOT NULL LIMIT 6",
+            )
+              .map((r) => r.v)
+              .filter((v) => v !== null && v !== "");
+          } catch (_) {
+            samples[col.name] = [];
+          }
+        });
+        return { name: table, columns, rowCount, foreignKeys, samples };
+      }
+      function scoreSqliteAudienceTable(table) {
+        const names = table.columns.map((c) => c.name);
+        const joined = (table.name + " " + names.join(" ")).toLowerCase();
+        let score = Math.min(table.rowCount / 100, 30);
+        if (/customer|user|member|audience|profile|client/.test(table.name.toLowerCase())) score += 60;
+        if (/order|visit|event|purchase|transaction/.test(table.name.toLowerCase())) score += 18;
+        names.forEach((h) => {
+          if (ROLE_RE.age.test(h)) score += 12;
+          if (ROLE_RE.gender.test(h)) score += 10;
+          if (ROLE_RE.location.test(h)) score += 10;
+          if (ROLE_RE.interest.test(h)) score += 16;
+          if (/spend|revenue|value|purchase|order|price|amount/i.test(h)) score += 12;
+          if (/visit|frequency|trips|active|recency|days_since/i.test(h)) score += 10;
+          if (/segment|persona|archetype|lifecycle|channel|device|category/i.test(h)) score += 8;
+          if (/^id$|_id$|uuid|token|password|email|phone/i.test(h)) score -= 2;
+        });
+        if (!/age|gender|city|region|interest|segment|spend|visit|archetype|lifecycle|category|channel|device/.test(joined)) score -= 30;
+        return score;
       }
       // Build a short, human-readable audience profile from parsed rows.
       function summarizeRows({ headers, rows }) {
@@ -6224,7 +6365,7 @@
         "A balanced, editorial, agency-quality composition. No placeholder/lorem text, no words beyond the headline and subhead. " +
         NO_WATERMARK;
       const DEMO_CAPTIONS = [
-        ["Brief & data", "Enter the brand once — or upload customer data straight from a CSV, Excel or database."],
+        ["Brief & data", "Enter the brand once — or upload customer data straight from CSV, JSON or a SQLite database."],
         ["Personas", "The customers are clustered into personas; pick (or edit) the one to design for."],
         ["Size", "Choose the ad size first — the copy and image prompt are tailored to it."],
         ["Copy", "The copywriter agent writes the headline and subhead from the brief + persona."],
