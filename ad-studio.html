@@ -3777,7 +3777,6 @@
               <div class="actions hidden" id="wizActions">
                 <button class="btn ghost" onclick="saveProject()">Save</button>
                 <button class="btn ghost" onclick="exportSpec()">Export spec</button>
-                <button class="btn ghost" onclick="figmaHandoff()">Send to Figma</button>
                 <button class="btn" onclick="generate(false)">Generate</button>
               </div>
             </div>
@@ -3841,7 +3840,6 @@
               <span class="editbar-hint">Want to tweak the design?</span>
               <div class="editbar-btns">
                 <button class="btn ghost" onclick="openDesigner()">Edit design</button>
-                <button class="btn ghost" onclick="figmaHandoff()">Send to Figma</button>
                 <button class="btn" onclick="finishLayeredAd()">Finish &amp; save</button>
               </div>
             </div>
@@ -3858,6 +3856,7 @@
         <div class="brand">Design editor</div>
         <span class="designer-hint">Drag to move · drag a corner handle to resize</span>
         <div class="designer-actions">
+          <button class="btn ghost" onclick="figmaHandoff()">Send to Figma</button>
           <button class="btn ghost" onclick="designerCancel()">Cancel</button>
           <button class="btn" onclick="designerSave()">Save changes</button>
         </div>
@@ -5917,6 +5916,17 @@
           setTimeout(() => URL.revokeObjectURL(specUrl), 4000);
         }, 350);
         setStatus("Downloaded " + base + ".png + " + base + ".spec.json — open the Figma plugin, paste the spec, choose the PNG, then Build in Figma.");
+        // The #status line lives under the preview, hidden behind the full-screen design
+        // editor — surface a brief confirmation on the editor when the handoff runs there.
+        const dh = document.querySelector(".designer-hint");
+        if (dh && $("#designer") && !$("#designer").classList.contains("hidden")) {
+          const prev = dh.dataset.hint || dh.textContent;
+          dh.dataset.hint = prev;
+          dh.textContent = "Exported " + base + ".png + spec — open the Figma plugin, paste the spec, choose the PNG.";
+          setTimeout(() => {
+            dh.textContent = dh.dataset.hint || prev;
+          }, 6000);
+        }
       }
 
       /* ---------- ad-spec (v0.2) — the studio's canonical model + export ---------- */
