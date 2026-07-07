@@ -4270,7 +4270,14 @@
             generationConfig: { temperature: 0.8 },
           }),
         });
-        if (!r.ok) throw new Error("HTTP " + r.status);
+        if (!r.ok) {
+          let detail = "";
+          try {
+            const err = await r.json();
+            detail = err?.error?.message || "";
+          } catch (e) {}
+          throw new Error("HTTP " + r.status + (detail ? " — " + detail : ""));
+        }
         const j = await r.json();
         return ((j.candidates || [])[0]?.content?.parts || []).map((p) => p.text || "").join("");
       }
@@ -5335,22 +5342,27 @@
       }
 
       async function reviewRegenCopy() {
+        const composed = composeCopy(current, ++_copyNonce); // fresh variant every click
         const key = getTextKey();
         if (!key) {
-          const c = composeCopy(current, ++_copyNonce); // new variant each click, not a copy of the brief
-          $("#revHeadline").value = c.headline;
-          $("#revSubhead").value = c.subhead;
+          $("#revHeadline").value = composed.headline;
+          $("#revSubhead").value = composed.subhead;
           setRev("#revCopyStatus", "Composed from your brief — click Regenerate for another, or add a Gemini key for full AI copy.");
           return;
         }
-        setRev("#revCopyStatus", "Writing copy…");
+        setRev("#revCopyStatus", "Writing copy with Gemini…");
         try {
           const j = extractJson(await geminiText(COPY_SYS, JSON.stringify(briefOf(current)), key));
-          $("#revHeadline").value = (j.headline || "").trim();
-          $("#revSubhead").value = (j.subhead || "").trim();
+          // Fill both fields; if the model omits one, keep the composed line so nothing blanks.
+          $("#revHeadline").value = (j.headline || "").trim() || composed.headline;
+          $("#revSubhead").value = (j.subhead || "").trim() || composed.subhead;
           setRev("#revCopyStatus", "Written by Gemini — edit if you like.");
         } catch (e) {
-          setRev("#revCopyStatus", "Copy error (" + e.message + ") — type one below.");
+          // API failed — still regenerate with composed copy so the button always works,
+          // and surface the real reason so a bad key / quota is visible.
+          $("#revHeadline").value = composed.headline;
+          $("#revSubhead").value = composed.subhead;
+          setRev("#revCopyStatus", "Gemini couldn’t generate (" + e.message + ") — showing composed copy. Check your key in the top-bar “AI key”.");
         }
       }
       // Prompt for the WHOLE finished ad — background style + exact text + product/logo
