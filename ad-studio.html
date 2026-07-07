@@ -1245,6 +1245,25 @@
         margin-top: 3px;
         flex: 0 0 auto;
       }
+      .imagery-level {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .level-head {
+        font-size: 13px;
+      }
+      .imagery-level input[type="range"] {
+        width: 100%;
+        accent-color: var(--ink);
+        cursor: pointer;
+      }
+      .level-scale {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--muted);
+      }
       .hintrow {
         display: flex;
         flex-wrap: wrap;
@@ -3801,6 +3820,13 @@
                     placeholder="e.g. abstract soundwaves over a warm gradient for a music app — or leave blank and the AI decides from your brief."
                   ></textarea>
                 </label>
+                <div class="imagery-level">
+                  <div class="level-head">
+                    Design intensity <span class="muted" id="imageryLevelVal">3 — balanced</span>
+                  </div>
+                  <input type="range" id="f_imageryLevel" min="1" max="5" step="1" value="3" oninput="onImageryLevel()" />
+                  <div class="level-scale"><span>1 · subtle</span><span>5 · maximal</span></div>
+                </div>
               </div>
               <p class="muted tiny">
                 The ad is generated with AI by default (copy + background) using the Gemini key in the top bar. If the
@@ -4328,13 +4354,22 @@
       // product cutout (e.g. a non-tangible product). The model then invents on-brand
       // imagery instead of leaving the poster as text on an empty background.
       const wantsImagery = (p) => !!p.genImagery && !p.product;
+      const imageryLevelOf = (p) => Math.min(5, Math.max(1, p.imageryLevel || 3));
+      // How dominant the generated imagery should be (1 subtle … 5 maximal).
+      const IMAGERY_LEVEL_PROMPT = {
+        1: "Keep the imagery extremely subtle — a faint accent only; lean on generous negative space and keep the poster minimal and text-forward.",
+        2: "Keep the imagery light and restrained — a small, understated visual accent with plenty of empty space.",
+        3: "Balanced — a clear focal visual motif that shares the poster evenly with the text.",
+        4: "Rich and prominent — bold, detailed imagery that leads the composition while leaving clear room for the text.",
+        5: "Maximal — a fully art-directed, imagery-led poster; visuals fill the frame edge-to-edge with only enough clear space to keep the text legible.",
+      };
       function imageryClause(p) {
         const note = (p.imageryNote || "").trim();
         const of = (p.products || "").trim() || (p.name || "").trim() || "the offering";
         return (
           `There is no product photo — invent tasteful, on-brand imagery to carry the poster: illustration, graphic motifs, symbolic objects, or an art-directed abstract scene that expresses ${of}` +
           (note ? `; specifically: ${note}` : "") +
-          `. Make it the visual focal point and keep the palette monochromatic within the brand hue. `
+          `. ${IMAGERY_LEVEL_PROMPT[imageryLevelOf(p)]} Keep the palette monochromatic within the brand hue. `
         );
       }
       function bgPrompt(p, hasRefs) {
@@ -4609,6 +4644,7 @@
       function collect() {
         for (const k in FIELDS) current[k] = $("#" + FIELDS[k]).value;
         current.genImagery = !!($("#f_genImagery") && $("#f_genImagery").checked);
+        current.imageryLevel = +($("#f_imageryLevel") && $("#f_imageryLevel").value) || 3;
       }
       function fill(p) {
         for (const k in FIELDS) {
@@ -4618,6 +4654,11 @@
         if (p.audience == null && p.target_interest) $("#f_audience").value = p.target_interest;
         const gi = $("#f_genImagery");
         if (gi) gi.checked = !!p.genImagery;
+        const lv = $("#f_imageryLevel");
+        if (lv) {
+          lv.value = p.imageryLevel || 3;
+          onImageryLevel();
+        }
         // Reveal the imagery option if it was enabled or described on this project.
         if ((p.genImagery || (p.imageryNote || "").trim()) && $("#imageryGen") && $("#imageryGen").classList.contains("hidden"))
           toggleImageryGen();
@@ -4644,6 +4685,13 @@
       }
       function onGenImageryToggle() {
         current.genImagery = !!($("#f_genImagery") && $("#f_genImagery").checked);
+      }
+      const IMAGERY_WORDS = { 1: "subtle", 2: "light", 3: "balanced", 4: "rich", 5: "maximal" };
+      function onImageryLevel() {
+        const v = Math.min(5, Math.max(1, +($("#f_imageryLevel") && $("#f_imageryLevel").value) || 3));
+        current.imageryLevel = v;
+        const lbl = $("#imageryLevelVal");
+        if (lbl) lbl.textContent = v + " — " + (IMAGERY_WORDS[v] || "balanced");
       }
       // Customer data upload: parse CSV/TSV/JSON/SQLite in-browser into a compact
       // audience summary that feeds copy/prompt generation.
@@ -5405,8 +5453,10 @@
         if (wantsImagery(p)) {
           b.generate_imagery = true;
           b.imagery_note = (p.imageryNote || "").trim() || null;
+          b.imagery_level = imageryLevelOf(p); // 1 subtle … 5 maximal
+          b.imagery_level_instruction = IMAGERY_LEVEL_PROMPT[imageryLevelOf(p)];
           b.imagery_instruction =
-            "No product photo is provided. Design original, on-brand imagery — illustration, graphic motifs, symbolic objects or an art-directed abstract scene (follow imagery_note if given) — and compose it WITH the headline and subhead. Do NOT leave the poster as text on an empty background.";
+            "No product photo is provided. Design original, on-brand imagery — illustration, graphic motifs, symbolic objects or an art-directed abstract scene (follow imagery_note if given) — and compose it WITH the headline and subhead, at the intensity in imagery_level_instruction. Do NOT leave the poster as text on an empty background.";
         }
         return b;
       }
