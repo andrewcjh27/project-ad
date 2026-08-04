@@ -3227,6 +3227,109 @@
         }
       }
 
+      /* ---------- trend searcher ---------- */
+      .trend-bar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 4px;
+      }
+      .trend-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+      }
+      .trend-card {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        padding: 15px 16px 14px;
+        transition: border-color 0.12s;
+      }
+      .trend-card:hover {
+        border-color: #000;
+      }
+      .trend-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .trend-term {
+        margin: 0;
+        font-size: 15.5px;
+        font-weight: 600;
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+        text-transform: none;
+        color: var(--ink);
+      }
+      .trend-fit {
+        margin-left: auto;
+        flex: 0 0 auto;
+        font-size: 9px;
+        letter-spacing: 1px;
+        color: var(--ink);
+      }
+      .trend-fit-off {
+        color: rgba(0, 0, 0, 0.16);
+      }
+      .trend-meta {
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .trend-angle {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .trend-facts {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        font-size: 12px;
+      }
+      .trend-facts > div {
+        display: flex;
+        gap: 7px;
+      }
+      .trend-facts dt {
+        flex: 0 0 62px;
+        color: var(--muted);
+      }
+      .trend-facts dd {
+        margin: 0;
+        color: var(--ink);
+      }
+      .trend-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: auto;
+        padding-top: 4px;
+      }
+      .trend-actions .btn {
+        padding: 8px 15px;
+        font-size: 13px;
+      }
+      .trend-picklist {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 54vh;
+        overflow: auto;
+        margin-bottom: 16px;
+      }
+      .trend-picklist .trend-card {
+        padding: 12px 13px;
+      }
+
       /* ---------- mobile (phones) ────────────────────────────────────────────
          One consolidated pass so every feature stays reachable and well-scaled
          on a ~360–430px viewport. Desktop rules above are untouched. */
@@ -3252,12 +3355,12 @@
           display: none;
         }
         .navlink {
-          font-size: 12px;
-          padding: 8px 7px;
+          font-size: 11.5px;
+          padding: 8px 5px;
           white-space: nowrap;
         }
         .navcreate {
-          padding: 8px 10px;
+          padding: 8px 9px;
         }
         /* the key popover escapes the scrolling nav (which would clip it) */
         .keypanel {
@@ -3323,6 +3426,18 @@
           padding: 9px 14px;
           font-size: 13px;
         }
+        /* trends: single column, and the picker gets room to breathe */
+        .trend-grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+        .trend-bar {
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .trend-picklist {
+          max-height: 48vh;
+        }
       }
     </style>
   </head>
@@ -3332,6 +3447,7 @@
       <nav class="nav">
         <button class="navlink" data-nav="home" onclick="showGallery()">Projects</button>
         <button class="navlink" data-nav="demo" onclick="showDemo()">How it works</button>
+        <button class="navlink" data-nav="trends" onclick="showTrends()">Trends</button>
         <button class="navlink navcreate" data-nav="create" onclick="newProject()">+ New project</button>
         <span class="keywrap">
           <button class="navlink navkey" id="keyBtn" onclick="toggleKeyPanel(event)" title="Set your Gemini API key for AI copy">
@@ -3775,6 +3891,21 @@
         </div>
       </section>
 
+      <!-- ═══ Trend searcher ═════════════════════════════════════════════════ -->
+      <section id="trends" class="hidden">
+        <h1>Trend searcher</h1>
+        <p class="lead">
+          What the internet is paying attention to right now, filtered for brand safety and scored for whether an ad
+          could actually be built on it. Pick one and it becomes the start of a brief.
+        </p>
+        <div class="trend-bar">
+          <button class="btn ghost" onclick="refreshTrends(true)">Refresh</button>
+          <span class="trend-note muted tiny" id="trendTier"></span>
+        </div>
+        <div class="rev-status" id="trendStatus"></div>
+        <div class="trend-grid" id="trendGrid"></div>
+      </section>
+
       <section id="editor" class="hidden">
         <button class="back" onclick="showGallery()">&larr; All projects</button>
         <h1 id="editorTitle">Add project</h1>
@@ -3795,6 +3926,9 @@
                   placeholder="What the brand is, the campaign, and what this ad is for."
                 ></textarea>
               </label>
+              <button type="button" class="linklike" id="trendSuggestBtn" onclick="openTrendPicker()">
+                Use a current trend
+              </button>
               <div class="fieldcap">Customer data <span class="muted">(CSV, JSON, or SQLite database)</span></div>
               <label class="dropbox" id="customerDrop" for="f_customerFile">
                 <input
@@ -4152,6 +4286,20 @@
         </div>
       </div>
     </div>
+    <!-- Trend picker (wizard shortcut) — its own overlay, not a #review stage, so it
+         can't interfere with the Generate flow's staged steps. -->
+    <div id="trendPick" class="review-overlay hidden" onclick="if (event.target === this) closeTrendPicker();">
+      <div class="review-card">
+        <button class="review-close" onclick="closeTrendPicker()" title="Close">&times;</button>
+        <h2 class="rev-title">Trending now</h2>
+        <p class="rev-status">Pick one to fold its angle into your brief. Your brand name and product stay as you typed them.</p>
+        <div class="trend-picklist" id="trendPickList"></div>
+        <div class="rev-actions">
+          <button class="btn ghost" onclick="closeTrendPicker()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <div id="studioDialog" class="studio-dialog hidden" onclick="if (event.target === this) closeDialog(false);">
       <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
         <h2 id="dialogTitle"></h2>
@@ -6872,6 +7020,7 @@
         dbDemoStop();
         $("#editor").classList.add("hidden");
         $("#demo").classList.add("hidden");
+        $("#trends").classList.add("hidden");
         $("#gallery").classList.remove("hidden");
         setHome(true);
         navActive("home");
@@ -6884,6 +7033,7 @@
         dbDemoStop();
         $("#gallery").classList.add("hidden");
         $("#demo").classList.add("hidden");
+        $("#trends").classList.add("hidden");
         $("#editor").classList.remove("hidden");
         setHome(false);
         navActive("create");
@@ -6921,6 +7071,7 @@
         demoStop();
         $("#gallery").classList.add("hidden");
         $("#editor").classList.add("hidden");
+        $("#trends").classList.add("hidden");
         $("#demo").classList.remove("hidden");
         setHome(false);
         navActive("demo");
@@ -7268,18 +7419,521 @@
         c.addEventListener("pointerup", end);
         c.addEventListener("pointercancel", end);
       })();
+      /* ═══ TREND SEARCHER ══════════════════════════════════════════════════════
+         Finds what the world is paying attention to right now and turns it into
+         ad-usable angles. Three tiers, one record shape, so the UI never branches:
+           1. ./trends.json   — same-origin, published by a scheduled job (optional)
+           2. live fetch      — Wikipedia most-read + Hacker News (free, keyless, CORS)
+           3. seasonalTrends  — deterministic, derived from TODAY'S DATE (offline)
+         Per CLAUDE.md's stand-in rule the offline tier recomputes from real data
+         (the calendar) rather than replaying a frozen list, and it is always
+         labelled as not-live so it is never passed off as a real trend.
+         NOTE: browser fetches need an http(s) origin — from file:// they fail CORS
+         and the page correctly falls back to tier 3.                              */
+
+      // raw record:      { term, blurb, source, url, volume, when }
+      // after enrichment: + { angle, audience, why, fit }
+      const TREND_CACHE_KEY = "projectad_trends";
+      const TREND_TTL_MS = 6 * 60 * 60 * 1000; // 6h — keeps the free APIs unhammered
+      let _trends = []; // rendered records (index-addressed by the card handlers)
+      let _trendTier = "";
+      let _trendHidden = 0;
+      let _trendNonce = 0;
+
+      // Stable string→int so offline angles vary per term yet stay reproducible
+      // (trends have no `seed`, unlike projects — same idea as composeCopy's base).
+      function hashStr(s) {
+        let h = 2166136261;
+        for (let i = 0; i < (s || "").length; i++) {
+          h ^= s.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return h >>> 0;
+      }
+      const pad2 = (n) => String(n).padStart(2, "0");
+      function timeAgo(ts) {
+        const s = Math.max(0, (Date.now() - ts) / 1000);
+        if (s < 90) return "just now";
+        const m = Math.round(s / 60);
+        if (m < 60) return m + "m ago";
+        const h = Math.round(m / 60);
+        if (h < 24) return h + "h ago";
+        return Math.round(h / 24) + "d ago";
+      }
+
+      /* ---------- hard brand-safety rule (deterministic, pre-LLM) ----------
+         Brand hard-rules are deterministic in this codebase (see CLAUDE.md); the
+         LLM only does the nuanced judgement afterwards. Word-boundary matching so
+         titles like "Battlefield 6" or "Killers of the Flower Moon" aren't nuked
+         by a bare substring. Runs BEFORE the model so unusable topics never reach
+         the user and never burn quota. */
+      const TREND_BLOCK =
+        /\b(died?|death|deaths|dead|obituary|killed|kills|killing|murder|shooting|shooter|stabb\w*|assault|rape|terror\w*|bomb\w*|war|invasion|troops|massacre|genocide|hostage|crash|earthquake|hurricane|wildfire|flood|famine|outbreak|pandemic|virus|cancer|overdose|suicide|arrest\w*|indict\w*|lawsuit|convicted|fraud|scandal|abuse|election|senate|parliament|president|prime minister|congress|republican|democrat|verdict|trial|shooting)\b/i;
+      // Titles that trip the blocklist but are ordinary entertainment. Over-blocking is
+      // the right failure direction for a hard rule, so this list stays short.
+      const TREND_ALLOW =
+        /\b(deadpool|god of war|call of duty|warframe|warhammer|star wars|the crown|house of cards|killers of the flower moon|murder on the orient express|only murders)\b/i;
+      const isAdSafe = (r) => {
+        const hay = `${r.term} ${r.blurb || ""}`;
+        return TREND_ALLOW.test(hay) || !TREND_BLOCK.test(hay);
+      };
+
+      /* ---------- tier 2: live sources (free, keyless, CORS-enabled) ---------- */
+      // Each adapter is failure-isolated by Promise.allSettled — one dead API must
+      // never blank the page. NOTE: plain GET with NO custom headers on purpose —
+      // adding one (e.g. Api-User-Agent) would force a CORS preflight these hosts
+      // may not answer, turning a working request into a failing one.
+      const TREND_TIMEOUT = 8000;
+      async function trendFetch(url) {
+        const ac = new AbortController();
+        const t = setTimeout(() => ac.abort(), TREND_TIMEOUT);
+        try {
+          return await fetch(url, { signal: ac.signal, mode: "cors", credentials: "omit" });
+        } finally {
+          clearTimeout(t);
+        }
+      }
+      // Wikipedia's feed is full of structural pages that are always top-viewed but
+      // are not trends at all — drop them before anything else sees them.
+      const WIKI_NOISE = /^(main page|special:|wikipedia:|portal:|category:|help:|talk:|list of |deaths in )/i;
+      async function fetchWikipediaTrends() {
+        // Yesterday's feed: today's is often not published yet. Step back once more on 404.
+        let lastErr = new Error("no feed");
+        for (let back = 1; back <= 2; back++) {
+          const d = new Date(Date.now() - back * 864e5);
+          const ymd = `${d.getUTCFullYear()}/${pad2(d.getUTCMonth() + 1)}/${pad2(d.getUTCDate())}`;
+          for (const host of [
+            `https://en.wikipedia.org/api/rest_v1/feed/featured/${ymd}`,
+            `https://api.wikimedia.org/feed/v1/wikipedia/en/featured/${ymd}`,
+          ]) {
+            try {
+              const r = await trendFetch(host);
+              if (r.status === 404) continue;
+              if (!r.ok) throw new Error("HTTP " + r.status);
+              const j = await r.json();
+              const arts = (j.mostread && j.mostread.articles) || [];
+              if (!arts.length) continue;
+              return arts
+                .map((a) => ({
+                  term: (a.titles && a.titles.normalized) || (a.title || "").replace(/_/g, " "),
+                  blurb: a.description || firstLine(a.extract || ""),
+                  source: "Wikipedia",
+                  url: (a.content_urls && a.content_urls.desktop && a.content_urls.desktop.page) || "",
+                  volume: a.views || 0,
+                  when: Date.now(),
+                }))
+                .filter((r) => r.term && !WIKI_NOISE.test(r.term))
+                .slice(0, 40);
+            } catch (e) {
+              lastErr = e;
+            }
+          }
+        }
+        throw lastErr;
+      }
+      async function fetchHackerNewsTrends() {
+        const r = await trendFetch("https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=30");
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const j = await r.json();
+        return (j.hits || [])
+          .map((h) => ({
+            term: (h.title || "").replace(/^(show|ask)\s+hn:\s*/i, "").trim(),
+            blurb: "",
+            source: "Hacker News",
+            url: /^https?:\/\//i.test(h.url || "") ? h.url : "https://news.ycombinator.com/item?id=" + h.objectID,
+            volume: h.points || 0,
+            when: Date.parse(h.created_at) || Date.now(),
+          }))
+          .filter((r) => r.term);
+      }
+      const TREND_SOURCES = [
+        { id: "wikipedia", label: "Wikipedia", fetch: fetchWikipediaTrends },
+        { id: "hn", label: "Hacker News", fetch: fetchHackerNewsTrends },
+      ];
+
+      /* ---------- tier 3: deterministic seasonal angles (offline) ----------
+         Derived from the real current date — season, month and days-until the next
+         recurring commercial moment — so it recomputes daily instead of being a
+         frozen list. Labelled non-live in the UI. */
+      function nthWeekdayOf(year, month, weekday, n) {
+        const first = new Date(Date.UTC(year, month, 1));
+        const shift = (weekday - first.getUTCDay() + 7) % 7;
+        return new Date(Date.UTC(year, month, 1 + shift + (n - 1) * 7));
+      }
+      function seasonalTrends(now) {
+        const d = now || new Date();
+        const y = d.getUTCFullYear();
+        const at = (m, day) => Date.UTC(y, m, day);
+        const moments = [
+          { term: "New year reset", m: at(0, 1), blurb: "Fresh-start intentions and self-improvement buying." },
+          { term: "Valentine's gifting", m: at(1, 14), blurb: "Gifting, couples and treat-yourself moments." },
+          { term: "Spring refresh", m: at(2, 20), blurb: "Renewal, lighter palettes, clearing out the old." },
+          { term: "Summer season", m: at(5, 21), blurb: "Outdoors, travel, long evenings and iced everything." },
+          { term: "Back to school", m: at(7, 25), blurb: "Routines restarting — students, parents, fresh kit." },
+          { term: "Autumn comfort", m: at(8, 22), blurb: "Warm spices, cosy rituals, darker evenings." },
+          { term: "Halloween", m: at(9, 31), blurb: "Playful, limited-edition and costume-led campaigns." },
+          { term: "Black Friday", m: nthWeekdayOf(y, 10, 5, 4).getTime(), blurb: "Peak discount attention and gift research." },
+          { term: "Year-end holidays", m: at(11, 20), blurb: "Gifting, gathering and end-of-year reflection." },
+        ];
+        // days-until (wrapping into next year) → nearest moments first
+        return moments
+          .map((x) => {
+            let days = Math.round((x.m - d.getTime()) / 864e5);
+            if (days < -14) days += 365; // just passed stays relevant; long past wraps
+            return { ...x, days };
+          })
+          .sort((a, b) => Math.abs(a.days) - Math.abs(b.days))
+          .slice(0, 6)
+          .map((x) => ({
+            term: x.term,
+            blurb: x.blurb,
+            source: "Seasonal",
+            url: "",
+            volume: 0,
+            when: Date.now(),
+            timing: x.days === 0 ? "today" : x.days > 0 ? `in ${x.days} days` : `${-x.days} days ago`,
+          }));
+      }
+
+      /* ---------- offline enrichment (no key / API failure) ----------
+         Builds an angle from the trend's own words — same push-guarded, modulo-
+         indexed idiom as composeCopy, keyed by hashStr so it's stable per term. */
+      function trendWords(r, n) {
+        const seen = new Set(),
+          out = [];
+        `${r.term} ${r.blurb || ""}`
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, " ")
+          .split(/\s+/)
+          .forEach((w) => {
+            if (w.length > 3 && !COPY_STOP.has(w) && !seen.has(w)) {
+              seen.add(w);
+              out.push(w);
+            }
+          });
+        return n ? out.slice(0, n) : out;
+      }
+      function composeTrendAngle(r, variant) {
+        const base = hashStr(r.term) + (variant || 0);
+        const w = trendWords(r, 4);
+        const t = w[0] || "";
+        const angles = [];
+        if (t) angles.push(`Borrow the attention around ${r.term} to talk about ${t}.`);
+        angles.push(`Tie the brand to a moment people are already talking about: ${r.term}.`);
+        if (w[1]) angles.push(`Play on the ${t}/${w[1]} mood of ${r.term} without naming it directly.`);
+        angles.push(`Use ${r.term} as the cultural backdrop; keep the product the hero.`);
+        if (t) angles.push(`One quiet visual that reads as ${t} — let ${r.term} do the rest.`);
+        angles.push(`Say the obvious thing about ${r.term} in the fewest possible words.`);
+        if (w[2]) angles.push(`Anchor on ${w[2]}: the detail people actually remember about ${r.term}.`);
+        const auds = [
+          "people following this story right now",
+          "culturally-online 18–34s",
+          "early adopters who spot references first",
+          "a broad audience aware of the moment",
+        ];
+        return {
+          angle: angles[base % angles.length],
+          audience: auds[base % auds.length],
+          why: r.timing ? `Timely — ${r.timing}.` : `Currently trending on ${r.source}.`,
+          fit: 3,
+        };
+      }
+
+      /* ---------- LLM enrichment (free-tier text key) ----------
+         NOTE the {"ideas":[...]} wrapper: extractJson slices first "{" to last "}",
+         so a top-level array would be corrupted. */
+      const TREND_SYS =
+        "You are a brand strategist. You receive a JSON list of topics currently getting attention. " +
+        "For EACH topic decide whether a tasteful consumer brand could build an ad around it, then write: " +
+        "`angle` — one concrete, non-obvious ad idea a brand could run (never just restate the topic); " +
+        "`audience` — who that ad would speak to; `why` — one short line on why it is timely; " +
+        "`fit` — 1-5 for how usable it is commercially (5 = easy, broad, positive). " +
+        "Set `safe` false for anything built on death, violence, disaster, crime, illness, politics or " +
+        "personal misfortune — brands must not advertise on those. Keep every field under 140 characters. " +
+        'Return ONLY JSON {"ideas":[{"term":..,"angle":..,"audience":..,"why":..,"fit":1-5,"safe":true}]} ' +
+        "with one entry per input topic, `term` copied exactly.";
+      async function enrichTrends(recs) {
+        const key = getTextKey();
+        const offline = (why) => {
+          recs.forEach((r) => Object.assign(r, composeTrendAngle(r, _trendNonce)));
+          return why;
+        };
+        if (!key) return offline("Angles composed offline — add a Gemini text key in “AI key” for AI ideas.");
+        try {
+          const payload = { trends: recs.map((r) => ({ term: r.term, blurb: r.blurb, source: r.source })) };
+          const j = extractJson(await geminiText(TREND_SYS, JSON.stringify(payload), key));
+          // A top-level array still parses here (extractJson slices {…} out of it), so an
+          // absent/empty `ideas` means the contract was not met — fail honestly rather
+          // than silently serving composed text under a "written by Gemini" label.
+          if (!Array.isArray(j.ideas) || !j.ideas.length) throw new Error("unexpected response shape");
+          const byTerm = new Map(j.ideas.map((i) => [String(i.term || "").toLowerCase(), i]));
+          recs.forEach((r) => {
+            const hit = byTerm.get(r.term.toLowerCase());
+            const fb = composeTrendAngle(r, _trendNonce);
+            // per-field fallback so a partial response never leaves blanks
+            r.angle = (hit && hit.angle) || fb.angle;
+            r.audience = (hit && hit.audience) || fb.audience;
+            r.why = (hit && hit.why) || fb.why;
+            r.fit = Math.max(1, Math.min(5, +(hit && hit.fit) || fb.fit));
+            r.unsafe = !!(hit && hit.safe === false);
+          });
+          return "Ideas written by Gemini from live trends.";
+        } catch (e) {
+          return offline("Gemini couldn’t score these (" + e.message + ") — showing offline angles.");
+        }
+      }
+
+      /* ---------- cache ---------- */
+      function loadTrendCache() {
+        try {
+          const c = JSON.parse(localStorage.getItem(TREND_CACHE_KEY) || "null");
+          return c && Array.isArray(c.items) && c.items.length ? c : null;
+        } catch (e) {
+          return null;
+        }
+      }
+      const storeTrendCache = (c) => {
+        try {
+          localStorage.setItem(TREND_CACHE_KEY, JSON.stringify(c));
+        } catch (e) {}
+      };
+
+      /* ---------- orchestrator ---------- */
+      let _trendBusy = false;
+      let _trendLastNet = 0;
+      async function refreshTrends(force) {
+        if (_trendBusy) return; // ignore re-entry while a fetch is in flight
+        if (force && Date.now() - _trendLastNet < 30000) return; // button-mash floor
+        const cached = loadTrendCache();
+        if (!force && cached && Date.now() - cached.fetchedAt < TREND_TTL_MS) {
+          _trends = cached.items;
+          _trendTier = cached.tier;
+          _trendHidden = cached.hidden || 0;
+          renderTrends("Cached — updated " + timeAgo(cached.fetchedAt) + ".");
+          return;
+        }
+        if (force) _trendNonce++;
+        _trendBusy = true;
+        _trendLastNet = Date.now();
+        renderTrends("Looking for what’s trending…", true);
+        try {
+          await runTrendRefresh();
+        } finally {
+          _trendBusy = false;
+        }
+      }
+      async function runTrendRefresh() {
+        let raw = [],
+          tier = "",
+          notes = [];
+
+        // tier 1 — same-origin trends.json (published by the optional scheduled job)
+        try {
+          const r = await fetch("./trends.json", { cache: "no-store" });
+          if (r.ok) {
+            const j = await r.json();
+            const items = Array.isArray(j) ? j : j.items || [];
+            if (items.length) {
+              raw = items;
+              tier = "file";
+            }
+          }
+        } catch (e) {}
+
+        // tier 2 — live public APIs, failure-isolated
+        if (!raw.length) {
+          const settled = await Promise.allSettled(TREND_SOURCES.map((s) => s.fetch()));
+          settled.forEach((s, i) => {
+            if (s.status === "fulfilled") raw = raw.concat(s.value);
+            else notes.push(TREND_SOURCES[i].label + " unavailable");
+          });
+          if (raw.length) tier = "live";
+        }
+
+        // tier 3 — deterministic seasonal angles
+        if (!raw.length) {
+          raw = seasonalTrends(new Date());
+          tier = "seasonal";
+        }
+
+        // hard safety rule + dedupe + rank, before the model sees anything
+        const before = raw.length;
+        const seen = new Set();
+        let recs = raw.filter((r) => r && r.term && isAdSafe(r)).filter((r) => {
+          const k = r.term.toLowerCase();
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+        _trendHidden = before - recs.length;
+        // Wikipedia views (~10^5) and HN points (~10^2) are NOT the same scale, so a
+        // single global sort would bury one source entirely. Rank WITHIN each source,
+        // then round-robin interleave; `fit` (a real judgement) is the only
+        // cross-source ranking applied later.
+        const bySource = new Map();
+        recs.forEach((r) => {
+          if (!bySource.has(r.source)) bySource.set(r.source, []);
+          bySource.get(r.source).push(r);
+        });
+        const lists = [...bySource.values()].map((l) => l.sort((a, b) => (b.volume || 0) - (a.volume || 0)));
+        const merged = [];
+        for (let i = 0; merged.length < 12 && lists.some((l) => i < l.length); i++)
+          lists.forEach((l) => {
+            if (i < l.length && merged.length < 12) merged.push(l[i]);
+          });
+        recs = merged;
+
+        const note = await enrichTrends(recs);
+        // Defence in depth: the model can veto (`unsafe`), and the deterministic rule
+        // also re-runs over the GENERATED text in case an angle reintroduces something.
+        const kept = recs.filter((r) => !r.unsafe && isAdSafe({ term: r.term, blurb: `${r.angle} ${r.why}` }));
+        _trendHidden += recs.length - kept.length;
+        kept.sort((a, b) => (b.fit || 0) - (a.fit || 0));
+
+        _trends = kept;
+        _trendTier = tier;
+        storeTrendCache({ fetchedAt: Date.now(), tier, items: kept, hidden: _trendHidden });
+        renderTrends([note].concat(notes).filter(Boolean).join(" "));
+      }
+
+      /* ---------- rendering ----------
+         Handlers are INDEX-based on purpose: esc() does not escape apostrophes and
+         real trend terms contain them ("Valentine's Day"), so interpolating the
+         term into an inline handler would break the markup. */
+      const TIER_NOTE = {
+        file: "Published trend feed.",
+        live: "Live from Wikipedia’s most-read and Hacker News.",
+        seasonal: "Seasonal angles — live sources unavailable, so these come from the calendar, not the news.",
+      };
+      function trendCardHtml(r, i, compact) {
+        const meta = [r.source, r.volume ? Number(r.volume).toLocaleString() + (r.source === "Hacker News" ? " pts" : " views") : "", r.timing || ""]
+          .filter(Boolean)
+          .join(" · ");
+        return (
+          `<article class="trend-card">` +
+          `<div class="trend-top"><h3 class="trend-term">${esc(r.term)}</h3>` +
+          (r.fit ? `<span class="trend-fit" title="How usable this is for an ad">${"●".repeat(r.fit)}<span class="trend-fit-off">${"●".repeat(5 - r.fit)}</span></span>` : "") +
+          `</div>` +
+          `<div class="trend-meta">${esc(meta)}</div>` +
+          (r.angle ? `<p class="trend-angle">${esc(r.angle)}</p>` : "") +
+          (compact
+            ? ""
+            : `<dl class="trend-facts">` +
+              (r.audience ? `<div><dt>Audience</dt><dd>${esc(r.audience)}</dd></div>` : "") +
+              (r.why ? `<div><dt>Why now</dt><dd>${esc(r.why)}</dd></div>` : "") +
+              `</dl>`) +
+          `<div class="trend-actions">` +
+          `<button class="btn" onclick="${compact ? `applyTrendToBrief(${i})` : `useTrend(${i})`}">${compact ? "Use this" : "Use this trend"} &rarr;</button>` +
+          (r.url && !compact ? `<a class="btn ghost" href="${esc(r.url)}" target="_blank" rel="noopener">Source ↗</a>` : "") +
+          `</div></article>`
+        );
+      }
+      function renderTrends(status, busy) {
+        const grid = $("#trendGrid");
+        if (!grid) return;
+        if (busy && !_trends.length) grid.innerHTML = `<p class="muted">Fetching…</p>`;
+        else grid.innerHTML = _trends.map((r, i) => trendCardHtml(r, i, false)).join("") || `<p class="muted">No usable trends right now — try Refresh.</p>`;
+        const bits = [TIER_NOTE[_trendTier] || "", status || "", _trendHidden ? _trendHidden + " hidden as not brand-safe." : ""].filter(Boolean);
+        setRev("#trendStatus", bits.join(" "));
+        const c = loadTrendCache();
+        setRev("#trendTier", c ? "Updated " + timeAgo(c.fetchedAt) : "");
+      }
+
+      /* ---------- hand-off into the wizard ----------
+         Fills only what's empty and appends the angle to the description, so a
+         trend never destroys facts the user typed. Brand name and products are
+         always left alone — those are the user's, not the trend's. */
+      function trendPatch(r, p) {
+        const patch = {};
+        const line = `Tie-in with ${r.term}: ${r.angle || r.blurb || ""}`.trim();
+        const desc = (p.description || "").trim();
+        patch.description = desc ? desc + "\n" + line : line;
+        if (!(p.audience || "").trim() && r.audience) patch.audience = r.audience;
+        if (!(p.agenda || "").trim()) patch.agenda = `Ride the ${r.term} moment.`;
+        return patch;
+      }
+      // A written audience lives inside the collapsed "no customer data" block —
+      // reveal it, or the user never sees what was filled in.
+      function revealAudienceIfFilled() {
+        const m = $("#audienceManual");
+        if ((current.audience || "").trim() && m && m.classList.contains("hidden")) toggleAudienceManual();
+      }
+      function useTrend(i) {
+        const r = _trends[i];
+        if (!r) return;
+        newProject();
+        Object.assign(current, trendPatch(r, current));
+        fill(current);
+        revealAudienceIfFilled();
+        setStatus(`Started from the “${r.term}” trend — add your brand name and product, then Generate.`);
+      }
+      function openTrendPicker() {
+        const el = $("#trendPickList");
+        if (!el) return;
+        $("#trendPick").classList.remove("hidden");
+        if (!_trends.length) {
+          const c = loadTrendCache();
+          if (c) {
+            _trends = c.items;
+            _trendTier = c.tier;
+          }
+        }
+        el.innerHTML = _trends.length
+          ? _trends.map((r, i) => trendCardHtml(r, i, true)).join("")
+          : `<p class="muted">No trends loaded yet — open the Trends page to fetch them.</p>`;
+      }
+      const closeTrendPicker = () => $("#trendPick").classList.add("hidden");
+      document.addEventListener("keydown", (e) => {
+        const p = $("#trendPick");
+        if (e.key === "Escape" && p && !p.classList.contains("hidden")) closeTrendPicker();
+      });
+      function applyTrendToBrief(i) {
+        const r = _trends[i];
+        if (!r) return;
+        collect(); // capture what's typed BEFORE patching, then write state back
+        Object.assign(current, trendPatch(r, current));
+        fill(current);
+        revealAudienceIfFilled();
+        closeTrendPicker();
+        setStatus(`Added the “${r.term}” angle to your brief.`);
+      }
+
+      /* ---------- page ---------- */
+      function showTrends() {
+        demoStop();
+        customerDemoStop();
+        dbDemoStop();
+        $("#gallery").classList.add("hidden");
+        $("#editor").classList.add("hidden");
+        $("#demo").classList.add("hidden");
+        $("#trends").classList.remove("hidden");
+        setHome(false);
+        navActive("trends");
+        if (location.hash !== "#trends") location.hash = "#trends";
+        const c = loadTrendCache();
+        if (c) {
+          _trends = c.items;
+          _trendTier = c.tier;
+          _trendHidden = c.hidden || 0;
+        }
+        refreshTrends(false);
+      }
+
       // Hash-based pages: #projects (home + past work), #create (project creation) and
       // #demo (how it works). Back/forward navigate; guards keep switches idempotent.
       window.addEventListener("hashchange", () => {
         const h = location.hash,
           onCreate = !$("#editor").classList.contains("hidden"),
-          onDemo = !$("#demo").classList.contains("hidden");
+          onDemo = !$("#demo").classList.contains("hidden"),
+          onTrends = !$("#trends").classList.contains("hidden");
         if (h === "#create" && !onCreate) newProject();
         else if (h === "#demo" && !onDemo) showDemo();
-        else if (h !== "#create" && h !== "#demo" && (onCreate || onDemo)) showGallery();
+        else if (h === "#trends" && !onTrends) showTrends();
+        else if (h !== "#create" && h !== "#demo" && h !== "#trends" && (onCreate || onDemo || onTrends)) showGallery();
       });
       if (location.hash === "#create") newProject();
       else if (location.hash === "#demo") showDemo();
+      else if (location.hash === "#trends") showTrends();
       else showGallery();
 
       /* ---------- Gemini key panel (top-bar) ---------- */
