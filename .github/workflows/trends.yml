@@ -1,0 +1,59 @@
+name: Refresh trends.json
+
+# Builds trends.json server-side, where there is no CORS — so it can read the
+# sources the static page cannot (Google Trends, Google News, Reddit) on top of
+# Wikipedia and Hacker News. ad-studio.html prefers ./trends.json (tier 1) and
+# falls back to its own browser fetches when the file is missing or stale, so
+# this workflow is purely additive — nothing breaks if a run fails.
+#
+# Free: GitHub-hosted runner minutes are unlimited on public repositories.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *" # every 6h, off-the-hour to avoid the scheduler rush
+  workflow_dispatch:
+
+permissions:
+  contents: write # commit trends.json
+  actions: write # dispatch the Pages deploy afterwards
+
+concurrency:
+  group: trends
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # stdlib only — no pip install step needed
+      - name: Fetch trends
+        run: python3 scripts/fetch_trends.py trends.json
+
+      - name: Commit if changed
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- trends.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "trends.json unchanged — nothing to commit."
+          else
+            git add trends.json
+            git commit -m "chore: refresh trends.json [skip ci]"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A push made with GITHUB_TOKEN does NOT trigger other workflows, so the
+      # Pages deploy has to be asked for explicitly.
+      - name: Deploy the refreshed feed to Pages
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run pages.yml --ref "${{ github.ref_name }}"
