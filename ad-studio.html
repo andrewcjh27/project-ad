@@ -3362,6 +3362,16 @@
         .navcreate {
           padding: 8px 9px;
         }
+        /* Six items (Trends included) no longer fit beside the wordmark on a 390px
+           phone, and the item pushed off the right edge was "AI key" — the entry
+           point for the whole AI path. Padding is already minimal, so below 400px
+           the wordmark yields to the controls; "Projects" still returns home, and
+           the nav keeps its swipe-scroll as a last resort on very narrow screens. */
+        @media (max-width: 400px) {
+          .brand {
+            display: none;
+          }
+        }
         /* the key popover escapes the scrolling nav (which would clip it) */
         .keypanel {
           position: fixed;
@@ -7805,10 +7815,22 @@
         live: "Live from Wikipedia’s most-read and Hacker News.",
         seasonal: "Seasonal angles — live sources unavailable, so these come from the calendar, not the news.",
       };
+      // `volume` means something different per source, so it can't share one label.
+      // A source with no meaningful magnitude maps to "" and prints NO number —
+      // Google News only carries a synthetic feed rank, and showing "99 views" for
+      // it would be inventing a statistic. Unknown sources fall through to "" too,
+      // which is the safe direction for anything added later.
+      const TREND_UNIT = {
+        Wikipedia: "views",
+        "Hacker News": "pts",
+        Reddit: "upvotes",
+        "Google Trends": "searches",
+        "Google News": "",
+      };
       function trendCardHtml(r, i, compact) {
-        const meta = [r.source, r.volume ? Number(r.volume).toLocaleString() + (r.source === "Hacker News" ? " pts" : " views") : "", r.timing || ""]
-          .filter(Boolean)
-          .join(" · ");
+        const unit = TREND_UNIT[r.source] || "";
+        const vol = unit && r.volume ? Number(r.volume).toLocaleString() + " " + unit : "";
+        const meta = [r.source, vol, r.timing || ""].filter(Boolean).join(" · ");
         return (
           `<article class="trend-card">` +
           `<div class="trend-top"><h3 class="trend-term">${esc(r.term)}</h3>` +

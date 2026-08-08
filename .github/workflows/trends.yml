@@ -31,6 +31,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      # The safety rule is duplicated (browser JS + CI Python) out of necessity.
+      # Fail before fetching rather than publish a feed laxer than the page allows.
+      - name: Check brand-safety lists are in sync
+        run: python3 scripts/check_safety_sync.py
+
       # stdlib only — no pip install step needed
       - name: Fetch trends
         run: python3 scripts/fetch_trends.py trends.json
