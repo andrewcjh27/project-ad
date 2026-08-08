@@ -11,6 +11,7 @@ on:
       - master
     paths:
       - ad-studio.html
+      - trends.json
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -38,6 +39,9 @@ jobs:
           mkdir -p _site
           cp ad-studio.html _site/ad-studio.html
           cp ad-studio.html _site/index.html
+          # Optional trend feed (refreshed by trends.yml). Absent on a fresh repo —
+          # the studio falls back to its own browser fetches, so this is best-effort.
+          cp trends.json _site/trends.json 2>/dev/null || echo "no trends.json yet — studio will fetch live"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
