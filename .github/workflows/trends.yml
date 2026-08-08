@@ -32,8 +32,9 @@ jobs:
           python-version: "3.11"
 
       # The safety rule is duplicated (browser JS + CI Python) out of necessity.
-      # Fail before fetching rather than publish a feed laxer than the page allows.
-      - name: Check brand-safety lists are in sync
+      # Fail before fetching rather than publish a feed that is laxer than the page
+      # allows, or that derives a different hashtag than the page would.
+      - name: Check browser/CI copies are in sync
         run: python3 scripts/check_safety_sync.py
 
       # stdlib only — no pip install step needed
