@@ -6,19 +6,28 @@ whole point: server-side there is no CORS, so this can read the sources the
 static page cannot — Google Trends and Reddit — on top of the ones the browser
 can already reach (Apple's charts and Wikipedia most-read).
 
-MEDIA-FIRST, KEYWORD-FIRST
---------------------------
-The searcher is for building *social* creative, so the sources are what culture
-is playing/watching/posting — music, film, TV, podcasts and pop-culture forums —
-not general or tech news. Google News and Hacker News were dropped for exactly
-that reason: front-page news is the wrong raw material for a brand Reel.
+SUBJECTS, NOT JUST TITLES
+-------------------------
+Apple's charts can only ever emit songs, films and podcasts, so a feed built on
+them alone reads as a list of people and movie titles — hard to build a brand ad
+around. The fix is subject-scoped forums: Reddit is asked for food, fashion,
+beauty, design, home, travel and fitness directly (see CATEGORY_SUBS), and the
+open-ended sources (Google Trends, Wikipedia) are classified into the same
+taxonomy. `category` is now a SUBJECT, not the name of the source it came from.
 
-Every record also carries a short `keyword` and a `hashtag`, because a
-sentence-long headline is not something a brand can build a post around.
+REGIONS
+-------
+Three sources take a region natively — Google Trends (`geo`), Apple (storefront)
+and Wikipedia (language edition) — so each is fetched once per region in REGIONS
+and every record carries the `region` it came from. Reddit's subject subs have no
+geo dimension, so they are fetched once and marked GLOBAL; the UI says so rather
+than implying a country's forums were read.
 
-    {"version": 2, "generated": "<iso>", "items": [
-       {"term", "keyword", "hashtag", "category", "formats", "rank",
+    {"version": 3, "generated": "<iso>", "items": [
+       {"term", "keyword", "hashtag", "category", "formats", "rank", "region",
         "blurb", "source", "url", "volume", "when"} ...],
+     "regions": [{"code", "label"} ...],
+     "categories": [...],
      "sources": [{"id", "label", "ok", "count", "error"} ...]}
 
 `keyword`, `hashtag` and `formats` are DERIVED from the trend's own text — they
@@ -27,21 +36,25 @@ keyless API exposes real Instagram/TikTok hashtag volume, so inventing a number
 for them would be exactly the frozen-stand-in the project forbids; the UI labels
 them as suggestions instead. `rank` and `volume`, where present, are real.
 
+The keyword classifier is English-only, so titles from a non-English Wikipedia or
+Google Trends region mostly land in the "Culture" catch-all. That is the honest
+floor; the page's Gemini pass re-classifies in any language when a key is set.
+
 Design notes
 ------------
 * stdlib only (urllib + xml.etree) so CI needs no pip install.
 * Every source is wrapped in try/except — one dead feed must never fail the run.
-* The brand-safety blocklist is a PORT OF THE CLIENT'S RULE and must stay in
-  sync with TREND_BLOCK / TREND_ALLOW in ad-studio.html; scripts/check_safety_sync.py
-  enforces that in CI. The page re-applies its own filter to whatever it loads,
-  so this is defence in depth, not a single point of trust.
-* Deterministic ordering (source, then volume) so an unchanged day produces an
-  unchanged file and the workflow commits nothing.
+* The safety lists, KW_STOP, the format map, the category list and the region
+  table are PORTS OF THE CLIENT'S COPIES and must stay in sync with
+  ad-studio.html; scripts/check_safety_sync.py enforces that in CI.
+* Deterministic ordering so an unchanged day produces an unchanged file and the
+  workflow commits nothing.
 """
 
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -49,8 +62,9 @@ from datetime import datetime, timedelta, timezone
 
 UA = "ProjectAD-TrendBot/1.0 (+https://github.com/andrewcjh27/project-ad)"
 TIMEOUT = 20
-MAX_ITEMS = 60          # per source, before merge
-MAX_TOTAL = 120         # written to trends.json
+MAX_ITEMS = 40          # per source call, before merge
+MAX_PER_REGION = 90     # keeps one busy region from crowding out the rest
+POLITE_DELAY = 0.7      # seconds between calls — many small feeds, be a good citizen
 
 # ── brand safety — keep in sync with ad-studio.html ───────────────────────────
 BLOCK = re.compile(
@@ -75,6 +89,85 @@ def is_ad_safe(rec):
     return bool(ALLOW.search(hay)) or not BLOCK.search(hay)
 
 
+# ── regions — keep in sync with ad-studio.html ────────────────────────────────
+# `geo` = Google Trends code, `store` = Apple storefront, `wiki` = Wikipedia
+# language edition. GLOBAL is deliberately absent: it is not a place, so it is
+# rendered as "no region filter" rather than being faked with US data.
+REGIONS = {
+    "US": {"label": "United States", "geo": "US", "store": "us", "wiki": "en"},
+    "GB": {"label": "United Kingdom", "geo": "GB", "store": "gb", "wiki": "en"},
+    "KR": {"label": "South Korea", "geo": "KR", "store": "kr", "wiki": "ko"},
+    "JP": {"label": "Japan", "geo": "JP", "store": "jp", "wiki": "ja"},
+    "FR": {"label": "France", "geo": "FR", "store": "fr", "wiki": "fr"},
+    "DE": {"label": "Germany", "geo": "DE", "store": "de", "wiki": "de"},
+    "BR": {"label": "Brazil", "geo": "BR", "store": "br", "wiki": "pt"},
+    "IN": {"label": "India", "geo": "IN", "store": "in", "wiki": "en"},
+}
+GLOBAL = "GLOBAL"   # region value for sources with no geo dimension (Reddit)
+
+# ── subject taxonomy — keep in sync with ad-studio.html ───────────────────────
+CATEGORIES = [
+    "Food & Drink", "Fashion", "Beauty", "Colour & Design", "Home", "Travel",
+    "Fitness", "Tech", "Gaming", "Music", "Film & TV", "Sport", "People", "Culture",
+]
+FALLBACK_CATEGORY = "Culture"
+
+# Content formats to suggest per category. Short-form video first — that is what
+# the searcher is feeding — with one non-video option so a static poster brief
+# is still served.
+FORMATS = {
+    "Food & Drink": ["Reel", "TikTok", "Carousel"],
+    "Fashion": ["Reel", "TikTok", "Lookbook"],
+    "Beauty": ["Reel", "TikTok", "Tutorial"],
+    "Colour & Design": ["Carousel", "Poster", "Reel"],
+    "Home": ["Reel", "Carousel", "Poster"],
+    "Travel": ["Reel", "Story", "Carousel"],
+    "Fitness": ["Reel", "Shorts", "Carousel"],
+    "Tech": ["Shorts", "Carousel", "Poster"],
+    "Gaming": ["Shorts", "TikTok", "Poster"],
+    "Music": ["Reel", "TikTok", "Shorts"],
+    "Film & TV": ["Reel", "Shorts", "Poster"],
+    "Sport": ["Reel", "Shorts", "Story"],
+    "People": ["Reel", "TikTok", "Carousel"],
+    "Culture": ["Reel", "TikTok", "Carousel"],
+}
+DEFAULT_FORMATS = ["Reel", "Carousel", "Story"]
+
+# First match wins, so the specific patterns lead. English-only by design — see
+# the module docstring; the LLM pass handles other languages.
+CLASSIFIERS = [
+    ("Food & Drink", r"\b(recipe|restaurant|chef|menu|coffee|caf[eé]|bakery|cook(ing|ed)?|dish|cuisine|"
+                     r"snack|drink|cocktail|beer|wine|whisky|pizza|burger|ramen|kimchi|sushi|taco|"
+                     r"dessert|chocolate|matcha|brunch|michelin)\b"),
+    ("Beauty", r"\b(skincare|skin care|makeup|lipstick|mascara|serum|sunscreen|fragrance|perfume|"
+               r"haircare|shampoo|beauty|cosmetic\w*|manicure|nail art)\b"),
+    ("Fashion", r"\b(fashion|outfit|sneaker\w*|streetwear|runway|lookbook|handbag|denim|couture|"
+                r"wardrobe|thrift\w*|capsule collection|met gala|fashion week)\b"),
+    ("Colour & Design", r"\b(colou?r of the year|pantone|palette|typeface|typograph\w+|graphic design|"
+                        r"branding|logo redesign|poster design|interior design|architect\w+)\b"),
+    ("Home", r"\b(interior|furniture|home decor|apartment tour|kitchen remodel|renovation|ikea)\b"),
+    ("Travel", r"\b(travel|flight|airline|hotel|itinerary|destination|tourism|resort|airbnb|backpack\w*)\b"),
+    ("Fitness", r"\b(workout|marathon|gym|fitness|yoga|pilates|running|nutrition|protein|hyrox|crossfit)\b"),
+    ("Sport", r"\b(football|soccer|nba|nfl|mlb|olympic\w*|world cup|tennis|golf|formula 1|f1|league|"
+              r"premier league|champions league)\b"),
+    ("Gaming", r"\b(gaming|nintendo|playstation|xbox|steam deck|esports|speedrun|dlc|roguelike)\b"),
+    ("Tech", r"\b(iphone|android|chatgpt|openai|gadget|laptop|startup|software|robot\w*|semiconductor|"
+             r"electric vehicle|smartphone)\b"),
+    ("Music", r"\b(album|single|tour|concert|band|rapper|singer|song|billboard|k-?pop|setlist|grammy)\b"),
+    ("Film & TV", r"\b(film|movie|series|season \d|episode|trailer|box office|netflix|drama|actor|"
+                  r"actress|oscars|streaming)\b"),
+]
+COMPILED_CLASSIFIERS = [(cat, re.compile(pat, re.I)) for cat, pat in CLASSIFIERS]
+
+
+def classify(text, default=FALLBACK_CATEGORY):
+    """Deterministic subject classification. The floor, not the ceiling."""
+    for cat, rx in COMPILED_CLASSIFIERS:
+        if rx.search(text or ""):
+            return cat
+    return default
+
+
 def get(url, accept=None):
     req = urllib.request.Request(url, headers={"User-Agent": UA, **({"Accept": accept} if accept else {})})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
@@ -92,7 +185,8 @@ def clean(s, limit=180):
 
 
 # ── keyword / hashtag / format derivation — keep in sync with ad-studio.html ───
-# Short connective words that must never survive into a keyword or a hashtag.
+# A headline is not postable; a keyword is. See the module docstring on why these
+# are labelled as suggestions in the UI.
 KW_STOP = {
     "the", "a", "an", "and", "or", "but", "for", "with", "from", "that", "this", "these", "those",
     "into", "onto", "your", "you", "our", "their", "his", "her", "its", "it", "is", "are", "was",
@@ -100,19 +194,6 @@ KW_STOP = {
     "what", "when", "who", "all", "out", "off", "up", "down", "over", "after", "before", "about",
     "official", "video", "feat", "featuring", "remix", "version", "edition", "season", "episode",
 }
-
-# Content formats to suggest per category. Short-form video first — that is what
-# the searcher is feeding — with one non-video option so a static poster brief
-# is still served.
-FORMATS = {
-    "Music": ["Reel", "TikTok", "Shorts"],
-    "Film & TV": ["Reel", "Shorts", "Poster"],
-    "Podcast": ["Audiogram", "Shorts", "Carousel"],
-    "Gaming": ["Shorts", "TikTok", "Poster"],
-    "Culture": ["Reel", "TikTok", "Carousel"],
-    "Search": ["Reel", "Carousel", "Story"],
-}
-DEFAULT_FORMATS = ["Reel", "Carousel", "Story"]
 
 
 def _best_proper_run(words):
@@ -122,14 +203,20 @@ def _best_proper_run(words):
     else "the" breaks the run, which is what stops "X and The Y" fusing.
     """
     proper, best = [], []
-    for i, w in enumerate(words):
-        keep_article = i == 0 and w.lower() == "the"
-        if re.match(r"^[A-Z][\w'&-]*$", w) and (keep_article or w.lower() not in KW_STOP):
+    for w in words:
+        # A CAPITALISED stopword stays in the run: "New Balance" and "New York" are
+        # brands, not a stopword followed by a word. Lowercase words still break it,
+        # which is what stops "X and the Y" fusing.
+        if re.match(r"^[A-Z][\w'&-]*$", w):
             proper.append(w)
             if len(proper) > len(best):
                 best = proper[:]
         else:
             proper = []
+    while best and best[-1].lower() in KW_STOP:   # "Stranger Things Season" -> "Stranger Things"
+        best.pop()
+    if not any(w.lower() not in KW_STOP for w in best):
+        return []                                  # "The best kimchi…" must not become #The
     return best
 
 
@@ -147,7 +234,8 @@ def to_keyword(text, limit=3):
 
     # Split on dash/pipe/comma separators FIRST. Without this, "Song — Artist"
     # reads as one capitalised run and yields the nonsense "Song Artist".
-    best, segments = [], [seg for seg in re.split(r"[—–|·,/]+", s) if seg.strip()]
+    # "/" splits only when spaced: "Song / Artist" is two fields, "HUNTR/X" is a name.
+    best, segments = [], [seg for seg in re.split(r"[—–|·,]+|\s+/\s+", s) if seg and seg.strip()]
     for seg in segments:
         words = [w for w in re.split(r"\s+", re.sub(r"[^\w\s'&-]", " ", seg)) if w]
         run = _best_proper_run(words)
@@ -166,12 +254,17 @@ def to_hashtag(keyword):
     parts = [p for p in re.split(r"[^\w]+", keyword or "") if p]
     if not parts:
         return ""
-    return "#" + "".join(p[:1].upper() + p[1:] for p in parts)[:40]
+    # Keep deliberate inner caps ("iPhone", "XCX", "ROSÉ"); title-case only words
+    # that are entirely lowercase, so #iPhoneLeak does not become #IPhoneLeak.
+    parts = [p if p != p.lower() else p[:1].upper() + p[1:] for p in parts]
+    return "#" + "".join(parts)[:40]
 
 
 def enrich(rec):
     """Attach keyword / hashtag / formats. One place, so every source matches."""
-    rec.setdefault("category", "")
+    cat = rec.get("category") or FALLBACK_CATEGORY
+    rec["category"] = cat if cat in CATEGORIES else FALLBACK_CATEGORY
+    rec.setdefault("region", GLOBAL)
     kw = rec.get("keyword") or to_keyword(rec.get("term", ""))
     rec["keyword"] = kw
     rec["hashtag"] = rec.get("hashtag") or to_hashtag(kw)
@@ -179,12 +272,16 @@ def enrich(rec):
     return rec
 
 
-# ── sources the BROWSER CANNOT reach (no CORS) — the reason this script exists ──
-def src_google_trends(geo="US"):
+def now_ms():
+    return int(datetime.now(timezone.utc).timestamp() * 1000)
+
+
+# ── region-aware sources ──────────────────────────────────────────────────────
+def src_google_trends(region):
     """Google Trends daily search trends RSS — already keyword-shaped (it IS the
-    search query), and flatly unavailable to a browser."""
-    xml = get(f"https://trends.google.com/trending/rss?geo={geo}")
-    root = ET.fromstring(xml)
+    search query), regional by `geo`, and flatly unavailable to a browser."""
+    geo = REGIONS[region]["geo"]
+    root = ET.fromstring(get(f"https://trends.google.com/trending/rss?geo={geo}"))
     ns = {"ht": "https://trends.google.com/trending/rss"}
     out = []
     for item in root.iter("item"):
@@ -198,58 +295,24 @@ def src_google_trends(geo="US"):
         out.append({
             "term": title,
             "keyword": title,           # the query itself is the keyword
-            "category": "Search",
+            "category": classify(f"{title} {blurb}"),
+            "region": region,
             "blurb": blurb,
             "source": "Google Trends",
             "url": (item.findtext("link") or "").strip(),
             "volume": volume or 1,
-            "when": int(datetime.now(timezone.utc).timestamp() * 1000),
+            "when": now_ms(),
         })
     return out[:MAX_ITEMS]
 
 
-# Pop-culture and media forums rather than r/all. r/all is dominated by news and
-# politics, which the safety filter then throws away — this asks for the right
-# material in the first place instead of filtering the wrong material afterwards.
-MEDIA_SUBS = "popculturechat+Music+movies+television+popheads+letterboxd+BoxOffice+gaming"
-
-
-def src_reddit():
-    """Anonymous browser CORS is blocked here, but a server with a real
-    User-Agent is fine."""
-    j = get_json(f"https://www.reddit.com/r/{MEDIA_SUBS}/top.json?t=day&limit=60")
-    sub_cat = {
-        "music": "Music", "popheads": "Music",
-        "movies": "Film & TV", "television": "Film & TV", "letterboxd": "Film & TV", "boxoffice": "Film & TV",
-        "gaming": "Gaming",
-    }
-    out = []
-    for c in j.get("data", {}).get("children", []):
-        d = c.get("data", {})
-        if d.get("over_18") or d.get("stickied"):
-            continue
-        title = clean(d.get("title", ""), 140)
-        if not title:
-            continue
-        sub = d.get("subreddit", "") or ""
-        out.append({
-            "term": title,
-            "category": sub_cat.get(sub.lower(), "Culture"),
-            "blurb": "r/" + sub,
-            "source": "Reddit",
-            "url": "https://www.reddit.com" + d.get("permalink", ""),
-            "volume": int(d.get("score") or 0),
-            "when": int(float(d.get("created_utc") or 0) * 1000),
-        })
-    return out[:MAX_ITEMS]
-
-
-# ── media charts (also CORS-enabled, so the browser tier can use them too) ─────
-def _apple(kind, feed, media_type, category, label, limit=25):
-    """Apple's marketing RSS: free, keyless, CORS-enabled, and a genuine
-    what-is-being-consumed-right-now signal. Chart position is real; there are no
-    play counts in this feed, so `volume` stays 0 and `rank` carries the meaning."""
-    url = f"https://rss.applemarketingtools.com/api/v2/us/{kind}/{feed}/{limit}/{media_type}.json"
+def _apple(region, kind, feed, media_type, category, label, limit=25):
+    """Apple's marketing RSS: free, keyless, CORS-enabled, regional by storefront,
+    and a genuine what-is-being-consumed-right-now signal. Chart position is real;
+    the feed carries no play counts, so `volume` stays 0 and `rank` carries the
+    meaning — fabricating a play count would be inventing a statistic."""
+    store = REGIONS[region]["store"]
+    url = f"https://rss.applemarketingtools.com/api/v2/{store}/{kind}/{feed}/{limit}/{media_type}.json"
     results = (get_json(url).get("feed", {}) or {}).get("results", []) or []
     # `i` counts every row, so a skipped malformed entry leaves a gap rather than
     # renumbering the chart — the position stays the real one.
@@ -266,34 +329,32 @@ def _apple(kind, feed, media_type, category, label, limit=25):
             "term": f"{name} — {artist}" if artist else name,
             "keyword": keyword,
             "category": category,
+            "region": region,
             "blurb": ", ".join(g.get("name", "") for g in (r.get("genres") or []) if g.get("name") != "Music")[:120],
             "source": label,
             "url": r.get("url", "") or "",
             "volume": 0,
             "rank": i + 1,
-            "when": int(datetime.now(timezone.utc).timestamp() * 1000),
+            "when": now_ms(),
         })
     return out
 
 
-def src_apple_music():
-    return _apple("music", "most-played", "songs", "Music", "Apple Music")
+def src_apple_music(region):
+    return _apple(region, "music", "most-played", "songs", "Music", "Apple Music")
 
 
-def src_apple_movies():
-    return _apple("movies", "top-movies", "movies", "Film & TV", "Apple Movies")
+def src_apple_movies(region):
+    return _apple(region, "movies", "top-movies", "movies", "Film & TV", "Apple Movies")
 
 
-def src_apple_podcasts():
-    return _apple("podcasts", "top", "podcasts", "Podcast", "Apple Podcasts")
-
-
-# ── broad culture backstop (browser can also reach this one) ───────────────────
-def src_wikipedia():
+def src_wikipedia(region):
+    """Most-read from the region's own language edition."""
+    lang = REGIONS[region]["wiki"]
     last = None
     for back in (1, 2):
         d = datetime.now(timezone.utc) - timedelta(days=back)
-        url = f"https://en.wikipedia.org/api/rest_v1/feed/featured/{d.year}/{d.month:02d}/{d.day:02d}"
+        url = f"https://{lang}.wikipedia.org/api/rest_v1/feed/featured/{d.year}/{d.month:02d}/{d.day:02d}"
         try:
             arts = get_json(url).get("mostread", {}).get("articles", [])
         except Exception as e:  # noqa: BLE001
@@ -304,11 +365,13 @@ def src_wikipedia():
             term = (a.get("titles", {}) or {}).get("normalized") or (a.get("title") or "").replace("_", " ")
             if not term or WIKI_NOISE.match(term):
                 continue
+            desc = clean(a.get("description") or (a.get("extract") or "").split(". ")[0])
             out.append({
                 "term": term,
                 "keyword": term,        # article titles are already noun-shaped
-                "category": "Culture",
-                "blurb": clean(a.get("description") or (a.get("extract") or "").split(". ")[0]),
+                "category": classify(f"{term} {desc}"),
+                "region": region,
+                "blurb": desc,
                 "source": "Wikipedia",
                 "url": ((a.get("content_urls", {}) or {}).get("desktop", {}) or {}).get("page", ""),
                 "volume": int(a.get("views") or 0),
@@ -316,61 +379,127 @@ def src_wikipedia():
             })
         if out:
             return out[:MAX_ITEMS]
-    raise last or RuntimeError("no Wikipedia feed for the last 2 days")
+    raise last or RuntimeError(f"no {lang} Wikipedia feed for the last 2 days")
 
 
-SOURCES = [
+REGION_SOURCES = [
     ("google_trends", "Google Trends", src_google_trends),
     ("apple_music", "Apple Music", src_apple_music),
     ("apple_movies", "Apple Movies", src_apple_movies),
-    ("apple_podcasts", "Apple Podcasts", src_apple_podcasts),
-    ("reddit", "Reddit", src_reddit),
     ("wikipedia", "Wikipedia", src_wikipedia),
 ]
 
 
+# ── subject-scoped forums (global only — a subreddit has no geo) ──────────────
+# THIS is what stops the feed being a list of people and film titles: the subject
+# is chosen by which subs are asked, not inferred afterwards.
+CATEGORY_SUBS = {
+    "Food & Drink": "food+FoodPorn+recipes+Cooking+Coffee+cocktails",
+    "Fashion": "streetwear+femalefashionadvice+malefashionadvice+fashion",
+    "Beauty": "SkincareAddiction+MakeupAddiction+FragranceCirclejerk",
+    "Colour & Design": "design+DesignPorn+graphic_design+InteriorDesign",
+    "Home": "HomeDecorating+CozyPlaces+malelivingspace",
+    "Travel": "travel+solotravel+backpacking",
+    "Fitness": "Fitness+running+xxfitness",
+    "Tech": "gadgets+technology",
+    "Gaming": "gaming+pcgaming",
+    "Music": "Music+popheads",
+    "Film & TV": "movies+television+Letterboxd",
+    "People": "popculturechat+entertainment",
+}
+
+
+def src_reddit_category(category):
+    """Anonymous browser CORS is blocked here, but a server with a real
+    User-Agent is fine. One call per subject, so the category is known, not guessed."""
+    subs = CATEGORY_SUBS[category]
+    j = get_json(f"https://www.reddit.com/r/{subs}/top.json?t=day&limit=25")
+    out = []
+    for c in j.get("data", {}).get("children", []):
+        d = c.get("data", {})
+        if d.get("over_18") or d.get("stickied"):
+            continue
+        title = clean(d.get("title", ""), 140)
+        if not title:
+            continue
+        out.append({
+            "term": title,
+            "category": category,
+            "region": GLOBAL,
+            "blurb": "r/" + (d.get("subreddit", "") or ""),
+            "source": "Reddit",
+            "url": "https://www.reddit.com" + d.get("permalink", ""),
+            "volume": int(d.get("score") or 0),
+            "when": int(float(d.get("created_utc") or 0) * 1000),
+        })
+    return out[:MAX_ITEMS]
+
+
 def main(out_path="trends.json"):
     items, meta = [], []
-    for sid, label, fn in SOURCES:
+
+    def record(sid, label, fn):
+        nonlocal items
         try:
             got = fn()
             items += got
             meta.append({"id": sid, "label": label, "ok": True, "count": len(got), "error": ""})
-            print(f"  {label:<15} {len(got):>3} items")
-        except Exception as e:  # noqa: BLE001  — one bad feed must not fail the run
+            print(f"  {label:<28} {len(got):>3} items")
+        except Exception as e:  # noqa: BLE001 — one bad feed must not fail the run
             meta.append({"id": sid, "label": label, "ok": False, "count": 0, "error": str(e)[:200]})
-            print(f"  {label:<15}  -- failed: {e}", file=sys.stderr)
+            print(f"  {label:<28}  -- failed: {e}", file=sys.stderr)
+        time.sleep(POLITE_DELAY)
+
+    for region in REGIONS:
+        for sid, label, fn in REGION_SOURCES:
+            record(f"{sid}:{region}", f"{label} ({region})", lambda fn=fn, r=region: fn(r))
+    for category in CATEGORY_SUBS:
+        record(f"reddit:{category}", f"Reddit ({category})", lambda c=category: src_reddit_category(c))
 
     before = len(items)
     items = [enrich(r) for r in items if r.get("term") and is_ad_safe(r)]
-    # Dedupe on the KEYWORD, not the headline: three posts about the same artist
-    # are one trend, and keeping all three would crowd everything else off the page.
+
+    # Dedupe on (region, keyword): the same artist charting in two countries is two
+    # regional trends, but three posts about them in one region are one trend.
     seen, deduped = set(), []
     for r in items:
-        k = (r.get("keyword") or r["term"]).strip().lower()
+        k = (r["region"], (r.get("keyword") or r["term"]).strip().lower())
         if k in seen:
             continue
         seen.add(k)
         deduped.append(r)
 
-    # Deterministic order (source, then volume/rank) so an unchanged day yields an
-    # unchanged file — the workflow then commits nothing. The page re-ranks anyway.
-    deduped.sort(key=lambda r: (r["source"], r.get("rank") or 0, -int(r.get("volume") or 0), r["term"]))
-    deduped = deduped[:MAX_TOTAL]
+    # Cap per region so one busy country cannot crowd out the others.
+    per_region, capped = {}, []
+    for r in sorted(deduped, key=lambda r: (r["region"], r["source"], r.get("rank") or 0,
+                                            -int(r.get("volume") or 0), r["term"])):
+        n = per_region.get(r["region"], 0)
+        if n >= MAX_PER_REGION:
+            continue
+        per_region[r["region"]] = n + 1
+        capped.append(r)
 
     payload = {
-        "version": 2,
+        "version": 3,
         "generated": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-        "items": deduped,
+        "items": capped,
+        "regions": [{"code": c, "label": v["label"]} for c, v in REGIONS.items()],
+        "categories": CATEGORIES,
         "sources": meta,
-        "filtered": before - len(deduped),
+        "filtered": before - len(capped),
     }
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=1, sort_keys=True)
         f.write("\n")
+
     ok = sum(1 for m in meta if m["ok"])
-    print(f"wrote {out_path}: {len(deduped)} items from {ok}/{len(SOURCES)} sources "
-          f"({before - len(deduped)} filtered/deduped)")
+    by_cat = {}
+    for r in capped:
+        by_cat[r["category"]] = by_cat.get(r["category"], 0) + 1
+    print(f"\nwrote {out_path}: {len(capped)} items from {ok}/{len(meta)} source calls "
+          f"({before - len(capped)} filtered/deduped/capped)")
+    print("  regions   :", ", ".join(f"{k}={v}" for k, v in sorted(per_region.items())))
+    print("  categories:", ", ".join(f"{k}={v}" for k, v in sorted(by_cat.items())))
     return 0 if ok else 1
 
 
