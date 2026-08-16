@@ -3234,6 +3234,30 @@
         gap: 14px;
         margin-bottom: 4px;
       }
+      .trend-search {
+        flex: 1 1 260px;
+        min-width: 0;
+        max-width: 340px;
+        font: inherit;
+        font-size: 13px;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--ink);
+      }
+      .trend-search:focus {
+        outline: none;
+        border-color: #000;
+      }
+      /* Sits directly above the status line; the border keeps the two grey blocks
+         from reading as one paragraph. */
+      .trend-disclaimer {
+        margin: 10px 0 10px;
+        padding-bottom: 9px;
+        max-width: 62ch;
+        border-bottom: 1px solid var(--line);
+      }
       .trend-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -3266,6 +3290,34 @@
         letter-spacing: -0.01em;
         text-transform: none;
         color: var(--ink);
+      }
+      /* The hashtag is the card's headline, so it carries the weight; the original
+         title sits under it in a quieter register. */
+      .trend-sub {
+        margin: -4px 0 0;
+        font-size: 12.5px;
+        line-height: 1.35;
+        color: var(--muted);
+      }
+      .trend-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .trend-chip {
+        font-size: 10.5px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+      }
+      /* The one format the strategist actually picked for this trend. */
+      .trend-chip.on {
+        border-color: #000;
+        background: var(--ink);
+        color: #fff;
       }
       .trend-fit {
         margin-left: auto;
@@ -3905,13 +3957,26 @@
       <section id="trends" class="hidden">
         <h1>Trend searcher</h1>
         <p class="lead">
-          What the internet is paying attention to right now, filtered for brand safety and scored for whether an ad
+          What culture is playing, watching and posting right now — music, film, TV, podcasts, forums and search —
+          reduced to a keyword you can build a post around, filtered for brand safety and scored for whether an ad
           could actually be built on it. Pick one and it becomes the start of a brief.
         </p>
         <div class="trend-bar">
+          <input
+            id="trendFilter"
+            class="trend-search"
+            type="search"
+            placeholder="Filter by keyword, tag or format…"
+            aria-label="Filter trends by keyword"
+            oninput="setTrendFilter(this.value)"
+          />
           <button class="btn ghost" onclick="refreshTrends(true)">Refresh</button>
           <span class="trend-note muted tiny" id="trendTier"></span>
         </div>
+        <p class="muted tiny trend-disclaimer">
+          Hashtags and formats are suggestions derived from each trend — a starting point for the creative, not
+          measured platform data. Chart positions and view counts are real.
+        </p>
         <div class="rev-status" id="trendStatus"></div>
         <div class="trend-grid" id="trendGrid"></div>
       </section>
@@ -7430,18 +7495,25 @@
         c.addEventListener("pointercancel", end);
       })();
       /* ═══ TREND SEARCHER ══════════════════════════════════════════════════════
-         Finds what the world is paying attention to right now and turns it into
+         Finds what culture is playing/watching/posting right now and turns it into
          ad-usable angles. Three tiers, one record shape, so the UI never branches:
            1. ./trends.json   — same-origin, published by a scheduled job (optional)
-           2. live fetch      — Wikipedia most-read + Hacker News (free, keyless, CORS)
+           2. live fetch      — Apple charts + Wikipedia most-read (free, keyless, CORS)
            3. seasonalTrends  — deterministic, derived from TODAY'S DATE (offline)
          Per CLAUDE.md's stand-in rule the offline tier recomputes from real data
          (the calendar) rather than replaying a frozen list, and it is always
          labelled as not-live so it is never passed off as a real trend.
          NOTE: browser fetches need an http(s) origin — from file:// they fail CORS
-         and the page correctly falls back to tier 3.                              */
+         and the page correctly falls back to tier 3.
 
-      // raw record:      { term, blurb, source, url, volume, when }
+         MEDIA-FIRST, KEYWORD-FIRST: the sources are music / film / TV / podcasts /
+         pop-culture forums, not general or tech news — a front-page headline is the
+         wrong raw material for a brand Reel. Every record carries a short `keyword`
+         and a `hashtag` because a sentence-long headline is not something a brand
+         can post around.                                                          */
+
+      // raw record:      { term, blurb, source, url, volume, when, category, rank }
+      // after derivation: + { keyword, hashtag, formats }
       // after enrichment: + { angle, audience, why, fit }
       const TREND_CACHE_KEY = "projectad_trends";
       const TREND_TTL_MS = 6 * 60 * 60 * 1000; // 6h — keeps the free APIs unhammered
@@ -7449,6 +7521,8 @@
       let _trendTier = "";
       let _trendHidden = 0;
       let _trendNonce = 0;
+      let _trendFilter = "";
+      let _trendLastStatus = ""; // survives a filter re-render, which passes no status
 
       // Stable string→int so offline angles vary per term yet stay reproducible
       // (trends have no `seed`, unlike projects — same idea as composeCopy's base).
@@ -7488,6 +7562,79 @@
         return TREND_ALLOW.test(hay) || !TREND_BLOCK.test(hay);
       };
 
+      /* ---------- keyword / hashtag / formats — keep in sync with fetch_trends.py ----------
+         A headline is not postable; a keyword is. `keyword`, `hashtag` and `formats`
+         are DERIVED from the trend's own text — a starting point for the creative,
+         not measured platform data. No free keyless API exposes real Instagram or
+         TikTok hashtag volume, so attaching a number to them would be precisely the
+         frozen stand-in CLAUDE.md forbids; the UI labels them as suggestions. */
+      const KW_STOP = new Set(
+        ("the a an and or but for with from that this these those into onto your you our their his her its it is are was " +
+          "were be been being has have had will just new now how why what when who all out off up down over after before " +
+          "about official video feat featuring remix version edition season episode").split(" ")
+      );
+      // Short-form video first — that is what this feeds — plus one non-video option
+      // so a static poster brief is still served.
+      const TREND_FORMATS = {
+        Music: ["Reel", "TikTok", "Shorts"],
+        "Film & TV": ["Reel", "Shorts", "Poster"],
+        Podcast: ["Audiogram", "Shorts", "Carousel"],
+        Gaming: ["Shorts", "TikTok", "Poster"],
+        Culture: ["Reel", "TikTok", "Carousel"],
+        Search: ["Reel", "Carousel", "Story"],
+      };
+      const DEFAULT_FORMATS = ["Reel", "Carousel", "Story"];
+
+      // Longest run of capitalised non-stopword words; earliest run wins ties. A
+      // title-initial "The" is kept — the real tag is #TheBear, not #Bear — while
+      // "the" anywhere else breaks the run, which stops "X and The Y" fusing.
+      function bestProperRun(words) {
+        let proper = [],
+          best = [];
+        words.forEach((w, i) => {
+          const keepArticle = i === 0 && w.toLowerCase() === "the";
+          if (/^[A-Z][\w'&-]*$/.test(w) && (keepArticle || !KW_STOP.has(w.toLowerCase()))) {
+            proper.push(w);
+            if (proper.length > best.length) best = proper.slice();
+          } else proper = [];
+        });
+        return best;
+      }
+      function toKeyword(text, limit) {
+        limit = limit || 3;
+        let s = (text || "").replace(/\([^)]*\)|\[[^\]]*\]/g, " ").replace(/\s+-\s+[^-]{2,40}$/, "");
+        const head = s.split(":")[0];
+        s = head.length > 8 ? head : s; // keep short titles whole ("Dune: Part Two")
+        // Split on dash/pipe/comma separators FIRST: without it "Song — Artist" reads
+        // as one capitalised run and yields the nonsense "Song Artist".
+        let best = [];
+        s.split(/[—–|·,/]+/).forEach((seg) => {
+          if (!seg.trim()) return;
+          const words = seg.replace(/[^\w\s'&-]/g, " ").split(/\s+/).filter(Boolean);
+          const run = bestProperRun(words);
+          if (run.length > best.length) best = run;
+        });
+        if (best.length) return best.slice(0, limit).join(" ").trim();
+        const words = s
+          .replace(/[^\w\s'&-]/g, " ")
+          .split(/\s+/)
+          .filter((w) => w && !KW_STOP.has(w.toLowerCase()) && w.length > 2);
+        return words.slice(0, limit).join(" ").trim() || (text || "").slice(0, 40);
+      }
+      const toHashtag = (kw) => {
+        const parts = (kw || "").split(/[^\w]+/).filter(Boolean);
+        return parts.length ? "#" + parts.map((p) => p[0].toUpperCase() + p.slice(1)).join("").slice(0, 40) : "";
+      };
+      // One place, so records from every tier match — including tier 1, whose fields
+      // CI already computed and which must not be recomputed differently here.
+      function deriveTrendFields(r) {
+        r.category = r.category || "";
+        r.keyword = r.keyword || toKeyword(r.term || "");
+        r.hashtag = r.hashtag || toHashtag(r.keyword);
+        r.formats = r.formats && r.formats.length ? r.formats : TREND_FORMATS[r.category] || DEFAULT_FORMATS;
+        return r;
+      }
+
       /* ---------- tier 2: live sources (free, keyless, CORS-enabled) ---------- */
       // Each adapter is failure-isolated by Promise.allSettled — one dead API must
       // never blank the page. NOTE: plain GET with NO custom headers on purpose —
@@ -7524,14 +7671,19 @@
               const arts = (j.mostread && j.mostread.articles) || [];
               if (!arts.length) continue;
               return arts
-                .map((a) => ({
-                  term: (a.titles && a.titles.normalized) || (a.title || "").replace(/_/g, " "),
-                  blurb: a.description || firstLine(a.extract || ""),
-                  source: "Wikipedia",
-                  url: (a.content_urls && a.content_urls.desktop && a.content_urls.desktop.page) || "",
-                  volume: a.views || 0,
-                  when: Date.now(),
-                }))
+                .map((a) => {
+                  const term = (a.titles && a.titles.normalized) || (a.title || "").replace(/_/g, " ");
+                  return {
+                    term,
+                    keyword: term, // article titles are already noun-shaped
+                    category: "Culture",
+                    blurb: a.description || firstLine(a.extract || ""),
+                    source: "Wikipedia",
+                    url: (a.content_urls && a.content_urls.desktop && a.content_urls.desktop.page) || "",
+                    volume: a.views || 0,
+                    when: Date.now(),
+                  };
+                })
                 .filter((r) => r.term && !WIKI_NOISE.test(r.term))
                 .slice(0, 40);
             } catch (e) {
@@ -7541,24 +7693,49 @@
         }
         throw lastErr;
       }
-      async function fetchHackerNewsTrends() {
-        const r = await trendFetch("https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=30");
+      // Apple's marketing RSS: free, keyless, CORS-enabled, and a genuine
+      // what-is-being-consumed-right-now signal. Chart position is real; the feed
+      // carries no play counts, so `volume` stays 0 and `rank` carries the meaning —
+      // fabricating a play count here would be inventing a statistic.
+      async function fetchAppleChart(kind, feed, mediaType, category, label) {
+        const r = await trendFetch(
+          `https://rss.applemarketingtools.com/api/v2/us/${kind}/${feed}/25/${mediaType}.json`
+        );
         if (!r.ok) throw new Error("HTTP " + r.status);
         const j = await r.json();
-        return (j.hits || [])
-          .map((h) => ({
-            term: (h.title || "").replace(/^(show|ask)\s+hn:\s*/i, "").trim(),
-            blurb: "",
-            source: "Hacker News",
-            url: /^https?:\/\//i.test(h.url || "") ? h.url : "https://news.ycombinator.com/item?id=" + h.objectID,
-            volume: h.points || 0,
-            when: Date.parse(h.created_at) || Date.now(),
-          }))
-          .filter((r) => r.term);
+        return ((j.feed && j.feed.results) || [])
+          .map((x, i) => {
+            const name = (x.name || "").trim();
+            const artist = (x.artistName || "").trim();
+            // For music the artist is the durable cultural handle (#TaylorSwift
+            // outlives any one single); for film/podcasts the title is the handle.
+            return {
+              term: artist ? `${name} — ${artist}` : name,
+              keyword: toKeyword(category === "Music" && artist ? artist : name),
+              category,
+              blurb: (x.genres || [])
+                .map((g) => g.name)
+                .filter((n) => n && n !== "Music")
+                .join(", "),
+              source: label,
+              url: x.url || "",
+              volume: 0,
+              rank: i + 1,
+              when: Date.now(),
+            };
+          })
+          .filter((x) => x.term);
       }
+      const fetchAppleMusic = () => fetchAppleChart("music", "most-played", "songs", "Music", "Apple Music");
+      const fetchAppleMovies = () => fetchAppleChart("movies", "top-movies", "movies", "Film & TV", "Apple Movies");
+      const fetchApplePodcasts = () => fetchAppleChart("podcasts", "top", "podcasts", "Podcast", "Apple Podcasts");
+      // Media/culture only — Hacker News and Google News were dropped on purpose:
+      // front-page news is the wrong raw material for a social brief.
       const TREND_SOURCES = [
+        { id: "apple_music", label: "Apple Music", fetch: fetchAppleMusic },
+        { id: "apple_movies", label: "Apple Movies", fetch: fetchAppleMovies },
+        { id: "apple_podcasts", label: "Apple Podcasts", fetch: fetchApplePodcasts },
         { id: "wikipedia", label: "Wikipedia", fetch: fetchWikipediaTrends },
-        { id: "hn", label: "Hacker News", fetch: fetchHackerNewsTrends },
       ];
 
       /* ---------- tier 3: deterministic seasonal angles (offline) ----------
@@ -7574,16 +7751,18 @@
         const d = now || new Date();
         const y = d.getUTCFullYear();
         const at = (m, day) => Date.UTC(y, m, day);
+        // `kw` is explicit because these phrases only capitalise their first word,
+        // and the proper-noun heuristic would clip them to "#Back" and "#Autumn".
         const moments = [
-          { term: "New year reset", m: at(0, 1), blurb: "Fresh-start intentions and self-improvement buying." },
-          { term: "Valentine's gifting", m: at(1, 14), blurb: "Gifting, couples and treat-yourself moments." },
-          { term: "Spring refresh", m: at(2, 20), blurb: "Renewal, lighter palettes, clearing out the old." },
-          { term: "Summer season", m: at(5, 21), blurb: "Outdoors, travel, long evenings and iced everything." },
-          { term: "Back to school", m: at(7, 25), blurb: "Routines restarting — students, parents, fresh kit." },
-          { term: "Autumn comfort", m: at(8, 22), blurb: "Warm spices, cosy rituals, darker evenings." },
-          { term: "Halloween", m: at(9, 31), blurb: "Playful, limited-edition and costume-led campaigns." },
-          { term: "Black Friday", m: nthWeekdayOf(y, 10, 5, 4).getTime(), blurb: "Peak discount attention and gift research." },
-          { term: "Year-end holidays", m: at(11, 20), blurb: "Gifting, gathering and end-of-year reflection." },
+          { term: "New year reset", kw: "New Year", m: at(0, 1), blurb: "Fresh-start intentions and self-improvement buying." },
+          { term: "Valentine's gifting", kw: "Valentines Day", m: at(1, 14), blurb: "Gifting, couples and treat-yourself moments." },
+          { term: "Spring refresh", kw: "Spring", m: at(2, 20), blurb: "Renewal, lighter palettes, clearing out the old." },
+          { term: "Summer season", kw: "Summer", m: at(5, 21), blurb: "Outdoors, travel, long evenings and iced everything." },
+          { term: "Back to school", kw: "Back To School", m: at(7, 25), blurb: "Routines restarting — students, parents, fresh kit." },
+          { term: "Autumn comfort", kw: "Autumn", m: at(8, 22), blurb: "Warm spices, cosy rituals, darker evenings." },
+          { term: "Halloween", kw: "Halloween", m: at(9, 31), blurb: "Playful, limited-edition and costume-led campaigns." },
+          { term: "Black Friday", kw: "Black Friday", m: nthWeekdayOf(y, 10, 5, 4).getTime(), blurb: "Peak discount attention and gift research." },
+          { term: "Year-end holidays", kw: "Holidays", m: at(11, 20), blurb: "Gifting, gathering and end-of-year reflection." },
         ];
         // days-until (wrapping into next year) → nearest moments first
         return moments
@@ -7596,6 +7775,8 @@
           .slice(0, 6)
           .map((x) => ({
             term: x.term,
+            keyword: x.kw,
+            category: "Culture",
             blurb: x.blurb,
             source: "Seasonal",
             url: "",
@@ -7627,16 +7808,19 @@
         const base = hashStr(r.term) + (variant || 0);
         const w = trendWords(r, 4);
         const t = w[0] || "";
+        const k = r.keyword || r.term; // the postable handle, not the headline
+        const fmt = (r.formats && r.formats[base % r.formats.length]) || "Reel";
         const angles = [];
-        if (t) angles.push(`Borrow the attention around ${r.term} to talk about ${t}.`);
-        angles.push(`Tie the brand to a moment people are already talking about: ${r.term}.`);
-        if (w[1]) angles.push(`Play on the ${t}/${w[1]} mood of ${r.term} without naming it directly.`);
-        angles.push(`Use ${r.term} as the cultural backdrop; keep the product the hero.`);
-        if (t) angles.push(`One quiet visual that reads as ${t} — let ${r.term} do the rest.`);
-        angles.push(`Say the obvious thing about ${r.term} in the fewest possible words.`);
-        if (w[2]) angles.push(`Anchor on ${w[2]}: the detail people actually remember about ${r.term}.`);
+        angles.push(`Open the ${fmt} on ${k}, cut to the product by the second beat.`);
+        if (t) angles.push(`Borrow the attention around ${k} to talk about ${t}.`);
+        angles.push(`A ${fmt} that earns the ${r.hashtag || "#" + k} tag without shouting the brand.`);
+        if (w[1]) angles.push(`Play on the ${t}/${w[1]} mood of ${k} without naming it directly.`);
+        angles.push(`Use ${k} as the cultural backdrop; keep the product the hero.`);
+        if (t) angles.push(`One quiet visual that reads as ${t} — let ${k} do the rest.`);
+        angles.push(`Say the obvious thing about ${k} in the fewest possible words.`);
+        if (w[2]) angles.push(`Anchor on ${w[2]}: the detail people actually remember about ${k}.`);
         const auds = [
-          "people following this story right now",
+          "people posting about this right now",
           "culturally-online 18–34s",
           "early adopters who spot references first",
           "a broad audience aware of the moment",
@@ -7646,6 +7830,7 @@
           audience: auds[base % auds.length],
           why: r.timing ? `Timely — ${r.timing}.` : `Currently trending on ${r.source}.`,
           fit: 3,
+          pickedFormat: fmt,
         };
       }
 
@@ -7653,14 +7838,18 @@
          NOTE the {"ideas":[...]} wrapper: extractJson slices first "{" to last "}",
          so a top-level array would be corrupted. */
       const TREND_SYS =
-        "You are a brand strategist. You receive a JSON list of topics currently getting attention. " +
-        "For EACH topic decide whether a tasteful consumer brand could build an ad around it, then write: " +
-        "`angle` — one concrete, non-obvious ad idea a brand could run (never just restate the topic); " +
-        "`audience` — who that ad would speak to; `why` — one short line on why it is timely; " +
+        "You are a social creative strategist. You receive a JSON list of things culture is playing, " +
+        "watching or posting about right now — music, film, TV, podcasts, games, internet moments. " +
+        "For EACH topic decide whether a tasteful consumer brand could build a SOCIAL POST around it, then write: " +
+        "`angle` — one concrete, non-obvious short-form content idea (a Reel/TikTok/Short beat, not a slogan); " +
+        "never just restate the topic; " +
+        "`hashtag` — the single tag people actually use for this, in #CamelCase, no spaces; " +
+        "`format` — the one best format for it, chosen from the topic's `formats` list; " +
+        "`audience` — who that post would speak to; `why` — one short line on why it is timely; " +
         "`fit` — 1-5 for how usable it is commercially (5 = easy, broad, positive). " +
         "Set `safe` false for anything built on death, violence, disaster, crime, illness, politics or " +
         "personal misfortune — brands must not advertise on those. Keep every field under 140 characters. " +
-        'Return ONLY JSON {"ideas":[{"term":..,"angle":..,"audience":..,"why":..,"fit":1-5,"safe":true}]} ' +
+        'Return ONLY JSON {"ideas":[{"term":..,"angle":..,"hashtag":..,"format":..,"audience":..,"why":..,"fit":1-5,"safe":true}]} ' +
         "with one entry per input topic, `term` copied exactly.";
       async function enrichTrends(recs) {
         const key = getTextKey();
@@ -7670,7 +7859,16 @@
         };
         if (!key) return offline("Angles composed offline — add a Gemini text key in “AI key” for AI ideas.");
         try {
-          const payload = { trends: recs.map((r) => ({ term: r.term, blurb: r.blurb, source: r.source })) };
+          const payload = {
+            trends: recs.map((r) => ({
+              term: r.term,
+              keyword: r.keyword,
+              category: r.category,
+              formats: r.formats,
+              blurb: r.blurb,
+              source: r.source,
+            })),
+          };
           const j = extractJson(await geminiText(TREND_SYS, JSON.stringify(payload), key));
           // A top-level array still parses here (extractJson slices {…} out of it), so an
           // absent/empty `ideas` means the contract was not met — fail honestly rather
@@ -7685,6 +7883,15 @@
             r.audience = (hit && hit.audience) || fb.audience;
             r.why = (hit && hit.why) || fb.why;
             r.fit = Math.max(1, Math.min(5, +(hit && hit.fit) || fb.fit));
+            // The model knows real tag conventions better than the derivation does,
+            // so prefer its hashtag — but only if it IS a hashtag (one #token, no
+            // spaces), otherwise keep the derived one rather than print prose.
+            const tag = String((hit && hit.hashtag) || "").trim();
+            if (/^#[\w]{2,40}$/.test(tag)) r.hashtag = tag;
+            // Only accept a format we actually offered — never let a hallucinated
+            // channel ("Billboard", "TV spot") reach the card.
+            const fmt = String((hit && hit.format) || "").trim();
+            r.pickedFormat = fmt && r.formats.some((f) => f.toLowerCase() === fmt.toLowerCase()) ? fmt : fb.pickedFormat;
             r.unsafe = !!(hit && hit.safe === false);
           });
           return "Ideas written by Gemini from live trends.";
@@ -7766,26 +7973,34 @@
           tier = "seasonal";
         }
 
-        // hard safety rule + dedupe + rank, before the model sees anything
+        // hard safety rule + derive keywords + dedupe, before the model sees anything
         const before = raw.length;
         const seen = new Set();
-        let recs = raw.filter((r) => r && r.term && isAdSafe(r)).filter((r) => {
-          const k = r.term.toLowerCase();
-          if (seen.has(k)) return false;
-          seen.add(k);
-          return true;
-        });
+        let recs = raw
+          .filter((r) => r && r.term && isAdSafe(r))
+          .map(deriveTrendFields)
+          // Dedupe on the KEYWORD, not the headline: three posts about the same
+          // artist are one trend, and keeping all three crowds out everything else.
+          .filter((r) => {
+            const k = (r.keyword || r.term).toLowerCase();
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          });
         _trendHidden = before - recs.length;
-        // Wikipedia views (~10^5) and HN points (~10^2) are NOT the same scale, so a
-        // single global sort would bury one source entirely. Rank WITHIN each source,
-        // then round-robin interleave; `fit` (a real judgement) is the only
-        // cross-source ranking applied later.
+        // Wikipedia views (~10^5) and chart ranks are NOT the same scale, so a single
+        // global sort would bury one source entirely. Rank WITHIN each source, then
+        // round-robin interleave; `fit` (a real judgement) is the only cross-source
+        // ranking applied later. Chart sources carry `rank` (1 = top) and no volume,
+        // so they sort ascending by rank rather than descending by a constant 0.
         const bySource = new Map();
         recs.forEach((r) => {
           if (!bySource.has(r.source)) bySource.set(r.source, []);
           bySource.get(r.source).push(r);
         });
-        const lists = [...bySource.values()].map((l) => l.sort((a, b) => (b.volume || 0) - (a.volume || 0)));
+        const lists = [...bySource.values()].map((l) =>
+          l.sort((a, b) => (a.rank && b.rank ? a.rank - b.rank : (b.volume || 0) - (a.volume || 0)))
+        );
         const merged = [];
         for (let i = 0; merged.length < 12 && lists.some((l) => i < l.length); i++)
           lists.forEach((l) => {
@@ -7811,32 +8026,48 @@
          real trend terms contain them ("Valentine's Day"), so interpolating the
          term into an inline handler would break the markup. */
       const TIER_NOTE = {
-        file: "Published trend feed.",
-        live: "Live from Wikipedia’s most-read and Hacker News.",
-        seasonal: "Seasonal angles — live sources unavailable, so these come from the calendar, not the news.",
+        file: "Published trend feed — music, film, TV, podcasts, forums and search.",
+        live: "Live from Apple’s music, movie and podcast charts plus Wikipedia’s most-read.",
+        seasonal: "Seasonal angles — live sources unavailable, so these come from the calendar, not the charts.",
       };
       // `volume` means something different per source, so it can't share one label.
-      // A source with no meaningful magnitude maps to "" and prints NO number —
-      // Google News only carries a synthetic feed rank, and showing "99 views" for
-      // it would be inventing a statistic. Unknown sources fall through to "" too,
-      // which is the safe direction for anything added later.
+      // A source with no meaningful magnitude maps to "" and prints NO number: the
+      // Apple charts carry a real position but no play count, so they show `rank`
+      // below instead — printing "0 plays" would be inventing a statistic. Unknown
+      // sources fall through to "" too, the safe direction for anything added later.
       const TREND_UNIT = {
         Wikipedia: "views",
-        "Hacker News": "pts",
         Reddit: "upvotes",
         "Google Trends": "searches",
-        "Google News": "",
+        "Apple Music": "",
+        "Apple Movies": "",
+        "Apple Podcasts": "",
+        Seasonal: "",
       };
       function trendCardHtml(r, i, compact) {
         const unit = TREND_UNIT[r.source] || "";
         const vol = unit && r.volume ? Number(r.volume).toLocaleString() + " " + unit : "";
-        const meta = [r.source, vol, r.timing || ""].filter(Boolean).join(" · ");
+        // Chart position is real data; show it where a play count would otherwise go.
+        const rank = r.rank ? "#" + r.rank : "";
+        const meta = [r.source, rank, vol, r.timing || ""].filter(Boolean).join(" · ");
+        const tag = r.hashtag || toHashtag(r.keyword || r.term);
+        // The hashtag is the headline — it is the postable handle. The full title
+        // stays underneath so the card is still traceable to its source.
+        const sub = r.term && r.term !== r.keyword ? `<div class="trend-sub">${esc(r.term)}</div>` : "";
+        const chips = (r.formats || [])
+          .map(
+            (f) =>
+              `<span class="trend-chip${r.pickedFormat === f ? " on" : ""}">${esc(f)}</span>`
+          )
+          .join("");
         return (
           `<article class="trend-card">` +
-          `<div class="trend-top"><h3 class="trend-term">${esc(r.term)}</h3>` +
+          `<div class="trend-top"><h3 class="trend-term">${esc(tag)}</h3>` +
           (r.fit ? `<span class="trend-fit" title="How usable this is for an ad">${"●".repeat(r.fit)}<span class="trend-fit-off">${"●".repeat(5 - r.fit)}</span></span>` : "") +
           `</div>` +
+          sub +
           `<div class="trend-meta">${esc(meta)}</div>` +
+          (chips ? `<div class="trend-chips" title="Suggested formats — not measured platform data">${chips}</div>` : "") +
           (r.angle ? `<p class="trend-angle">${esc(r.angle)}</p>` : "") +
           (compact
             ? ""
@@ -7850,12 +8081,32 @@
           `</div></article>`
         );
       }
+      // Keyword filter. Matches across every searchable field, not just the term,
+      // so "reel", "music" and "#TheBear" all find something.
+      function trendMatches(r, q) {
+        if (!q) return true;
+        return `${r.hashtag || ""} ${r.keyword || ""} ${r.term || ""} ${r.category || ""} ${r.source || ""} ${r.angle || ""} ${(r.formats || []).join(" ")}`
+          .toLowerCase()
+          .includes(q);
+      }
+      function setTrendFilter(v) {
+        _trendFilter = (v || "").trim().toLowerCase();
+        renderTrends();
+      }
       function renderTrends(status, busy) {
         const grid = $("#trendGrid");
         if (!grid) return;
+        // Keep the ORIGINAL index: the card handlers address _trends by position, so
+        // filtering must not renumber them or "Use this" opens the wrong trend.
+        const shown = _trends.map((r, i) => [r, i]).filter(([r]) => trendMatches(r, _trendFilter));
         if (busy && !_trends.length) grid.innerHTML = `<p class="muted">Fetching…</p>`;
-        else grid.innerHTML = _trends.map((r, i) => trendCardHtml(r, i, false)).join("") || `<p class="muted">No usable trends right now — try Refresh.</p>`;
-        const bits = [TIER_NOTE[_trendTier] || "", status || "", _trendHidden ? _trendHidden + " hidden as not brand-safe." : ""].filter(Boolean);
+        else
+          grid.innerHTML =
+            shown.map(([r, i]) => trendCardHtml(r, i, false)).join("") ||
+            `<p class="muted">${_trends.length ? "Nothing matches “" + esc(_trendFilter) + "”." : "No usable trends right now — try Refresh."}</p>`;
+        if (status !== undefined) _trendLastStatus = status || "";
+        const filterNote = _trendFilter && _trends.length ? `${shown.length} of ${_trends.length} shown.` : "";
+        const bits = [TIER_NOTE[_trendTier] || "", _trendLastStatus, filterNote, _trendHidden ? _trendHidden + " hidden as not brand-safe." : ""].filter(Boolean);
         setRev("#trendStatus", bits.join(" "));
         const c = loadTrendCache();
         setRev("#trendTier", c ? "Updated " + timeAgo(c.fetchedAt) : "");
@@ -7867,13 +8118,23 @@
          always left alone — those are the user's, not the trend's. */
       function trendPatch(r, p) {
         const patch = {};
-        const line = `Tie-in with ${r.term}: ${r.angle || r.blurb || ""}`.trim();
+        const tag = r.hashtag || toHashtag(r.keyword || r.term);
+        const fmt = r.pickedFormat || (r.formats || [])[0] || "";
+        // Lead with the tag and format — those are what the post is built around —
+        // and keep the full title so the brief still says what the trend actually is.
+        const line = [
+          `${fmt ? fmt + " tie-in" : "Tie-in"} with ${tag}${r.term && r.term !== r.keyword ? ` (${r.term})` : ""}:`,
+          r.angle || r.blurb || "",
+        ]
+          .join(" ")
+          .trim();
         const desc = (p.description || "").trim();
         patch.description = desc ? desc + "\n" + line : line;
         if (!(p.audience || "").trim() && r.audience) patch.audience = r.audience;
-        if (!(p.agenda || "").trim()) patch.agenda = `Ride the ${r.term} moment.`;
+        if (!(p.agenda || "").trim()) patch.agenda = `Ride the ${tag} moment.`;
         return patch;
       }
+      const trendLabel = (r) => r.hashtag || r.keyword || r.term;
       // A written audience lives inside the collapsed "no customer data" block —
       // reveal it, or the user never sees what was filled in.
       function revealAudienceIfFilled() {
@@ -7887,7 +8148,7 @@
         Object.assign(current, trendPatch(r, current));
         fill(current);
         revealAudienceIfFilled();
-        setStatus(`Started from the “${r.term}” trend — add your brand name and product, then Generate.`);
+        setStatus(`Started from the “${trendLabel(r)}” trend — add your brand name and product, then Generate.`);
       }
       function openTrendPicker() {
         const el = $("#trendPickList");
@@ -7917,7 +8178,7 @@
         fill(current);
         revealAudienceIfFilled();
         closeTrendPicker();
-        setStatus(`Added the “${r.term}” angle to your brief.`);
+        setStatus(`Added the “${trendLabel(r)}” angle to your brief.`);
       }
 
       /* ---------- page ---------- */
