@@ -3,8 +3,14 @@ fetch_trends.py — build trends.json for the Ad Studio trend searcher
 ====================================================================
 Runs in CI (see .github/workflows/trends.yml), NOT in the browser. That is the
 whole point: server-side there is no CORS, so this can read the sources the
-static page cannot — Google Trends and Reddit — on top of the ones the browser
-can already reach (Apple's charts and Wikipedia most-read).
+static page cannot — Google Trends, Reddit and YouTube — on top of the ones the
+browser can already reach (Apple's charts and Wikipedia most-read).
+
+YouTube needs a free API key (YOUTUBE_API_KEY, a repo secret). It is the strongest
+signal here: real trending video, natively per-region AND natively categorised,
+which is exactly the two axes the page filters on. Absent the key it is skipped and
+the run still succeeds on everything else. The key is deliberately NOT in the page —
+the published site is public, so a key there could be lifted and its quota burned.
 
 SUBJECTS, NOT JUST TITLES
 -------------------------
@@ -52,6 +58,7 @@ Design notes
 """
 
 import json
+import os
 import re
 import sys
 import time
@@ -136,13 +143,14 @@ DEFAULT_FORMATS = ["Reel", "Carousel", "Story"]
 # First match wins, so the specific patterns lead. English-only by design — see
 # the module docstring; the LLM pass handles other languages.
 CLASSIFIERS = [
-    ("Food & Drink", r"\b(recipe|restaurant|chef|menu|coffee|caf[eé]|bakery|cook(ing|ed)?|dish|cuisine|"
-                     r"snack|drink|cocktail|beer|wine|whisky|pizza|burger|ramen|kimchi|sushi|taco|"
-                     r"dessert|chocolate|matcha|brunch|michelin)\b"),
+    ("Food & Drink", r"\b(recipe|restaurant|chef|menu|coffee|caf[eé]|bak(e|ed|ing|ery)|cook(ing|ed)?|dish|cuisine|"
+                     r"snack|drink|cocktail|beer|wine|whisky|pizza|burger|ramen|noodle|pasta|curry|bbq|"
+                     r"barbecue|grill|kimchi|sushi|taco|sourdough|bread|pastry|cake|cookie|smoothie|tofu|"
+                     r"salad|dessert|chocolate|matcha|brunch|michelin)\b"),
     ("Beauty", r"\b(skincare|skin care|makeup|lipstick|mascara|serum|sunscreen|fragrance|perfume|"
                r"haircare|shampoo|beauty|cosmetic\w*|manicure|nail art)\b"),
-    ("Fashion", r"\b(fashion|outfit|sneaker\w*|streetwear|runway|lookbook|handbag|denim|couture|"
-                r"wardrobe|thrift\w*|capsule collection|met gala|fashion week)\b"),
+    ("Fashion", r"\b(fashion|outfit|ootd|sneaker\w*|streetwear|runway|lookbook|handbag|denim|couture|"
+                r"wardrobe|thrift\w*|haul|vintage|capsule collection|met gala|fashion week)\b"),
     ("Colour & Design", r"\b(colou?r of the year|pantone|palette|typeface|typograph\w+|graphic design|"
                         r"branding|logo redesign|poster design|interior design|architect\w+)\b"),
     ("Home", r"\b(interior|furniture|home decor|apartment tour|kitchen remodel|renovation|ikea)\b"),
@@ -193,30 +201,41 @@ KW_STOP = {
     "were", "be", "been", "being", "has", "have", "had", "will", "just", "new", "now", "how", "why",
     "what", "when", "who", "all", "out", "off", "up", "down", "over", "after", "before", "about",
     "official", "video", "feat", "featuring", "remix", "version", "edition", "season", "episode",
+    # Sentence-openers. Video titles are sentences, not names, so without these a
+    # title like "My 5-minute skincare routine" tags as #My. A CAPITALISED stopword
+    # still survives inside a longer run, so "Top Gun" and "Best Buy" are unharmed.
+    "i", "me", "my", "we", "us", "he", "she", "they", "them", "every", "best", "top",
+    "tried", "try", "make", "made", "get", "got", "ever", "really",
 }
 
 
 def _best_proper_run(words):
-    """Longest run of capitalised non-stopword words, earliest run winning ties.
+    """Longest capitalised run that actually says something.
 
-    A title-initial "The" is kept: the real tag is #TheBear, not #Bear. Anywhere
-    else "the" breaks the run, which is what stops "X and The Y" fusing.
+    A CAPITALISED stopword stays inside a run ("New Balance", "Top Gun", "Best Buy"),
+    but a run made only of stopwords is discarded rather than winning on position —
+    otherwise "I love Tokyo" tags as #I instead of #Tokyo. Trailing stopwords are
+    trimmed, so "Stranger Things Season" becomes "Stranger Things".
     """
-    proper, best = [], []
+    runs, cur = [], []
     for w in words:
-        # A CAPITALISED stopword stays in the run: "New Balance" and "New York" are
-        # brands, not a stopword followed by a word. Lowercase words still break it,
-        # which is what stops "X and the Y" fusing.
         if re.match(r"^[A-Z][\w'&-]*$", w):
-            proper.append(w)
-            if len(proper) > len(best):
-                best = proper[:]
-        else:
-            proper = []
-    while best and best[-1].lower() in KW_STOP:   # "Stranger Things Season" -> "Stranger Things"
-        best.pop()
-    if not any(w.lower() not in KW_STOP for w in best):
-        return []                                  # "The best kimchi…" must not become #The
+            cur.append(w)
+        elif cur:
+            runs.append(cur)
+            cur = []
+    if cur:
+        runs.append(cur)
+
+    best = []
+    for run in runs:
+        r = run[:]
+        while r and r[-1].lower() in KW_STOP:
+            r.pop()
+        if not any(w.lower() not in KW_STOP for w in r):
+            continue                      # nothing but stopwords — not a keyword
+        if len(r) > len(best):
+            best = r
     return best
 
 
@@ -245,7 +264,11 @@ def to_keyword(text, limit=3):
         return " ".join(best[:limit]).strip()
 
     flat = re.sub(r"[^\w\s'&-]", " ", s)
-    words = [w for w in re.split(r"\s+", flat) if w and w.lower() not in KW_STOP and len(w) > 2]
+    # Leading numerals ("5-minute", "2002R") are not the subject of anything.
+    words = [
+        w for w in re.split(r"\s+", flat)
+        if w and w.lower() not in KW_STOP and len(w) > 2 and not w[0].isdigit()
+    ]
     return " ".join(words[:limit]).strip() or clean(text, 40)
 
 
@@ -390,6 +413,66 @@ REGION_SOURCES = [
 ]
 
 
+# ── YouTube trending (needs a free API key; skipped entirely without one) ─────
+# The strongest signal available here: real short-form/video trending, natively
+# per-region AND natively categorised, which is exactly the two axes this page
+# filters on. CI-only on purpose — the key lives in a GitHub secret, never in the
+# published page, where anyone could lift it and burn the quota.
+#
+# Quota: videos.list costs 1 unit per call against a 10,000/day default, so a full
+# sweep (regions x categories, every 6h) is a rounding error.
+YOUTUBE_KEY = os.environ.get("YOUTUBE_API_KEY", "").strip()
+
+# A prior is only set where YouTube's category means EXACTLY one of ours. "Howto &
+# Style" spans beauty, fashion, food and home, and "Entertainment" spans most of the
+# list, so those carry no prior: the text decides, and an unrecognised title lands in
+# the Culture catch-all rather than being confidently filed as Beauty. That matters
+# for non-English titles, where the English classifier finds nothing — better to say
+# "unknown" than to assert a subject the source never claimed.
+YOUTUBE_CATEGORIES = [
+    ("", "", "Trending"),
+    ("26", "", "Howto & Style"),
+    ("24", "", "Entertainment"),
+    ("10", "Music", "Music"),
+    ("20", "Gaming", "Gaming"),
+    ("17", "Sport", "Sport"),
+    ("19", "Travel", "Travel & Events"),
+]
+
+
+def src_youtube(region, cat_id, prior):
+    if not YOUTUBE_KEY:
+        raise RuntimeError("no YOUTUBE_API_KEY set — skipping")
+    url = (
+        "https://www.googleapis.com/youtube/v3/videos"
+        "?part=snippet,statistics&chart=mostPopular&maxResults=25"
+        f"&regionCode={region}&key={YOUTUBE_KEY}"
+    ) + (f"&videoCategoryId={cat_id}" if cat_id else "")
+    out = []
+    for i, v in enumerate((get_json(url).get("items") or [])):
+        sn = v.get("snippet") or {}
+        title = clean(sn.get("title", ""), 140)
+        if not title:
+            continue
+        channel = clean(sn.get("channelTitle", ""), 60)
+        # Refine the coarse prior with the title: "Howto & Style" becomes Food & Drink
+        # for a recipe and Fashion for a haul. classify() falls back to the prior, so
+        # a category we cannot sharpen keeps YouTube's own answer rather than "Culture".
+        category = classify(f"{title} {channel}", prior or FALLBACK_CATEGORY)
+        out.append({
+            "term": title,
+            "category": category,
+            "region": region,
+            "blurb": channel,
+            "source": "YouTube",
+            "url": "https://www.youtube.com/watch?v=" + (v.get("id") or ""),
+            "volume": int(((v.get("statistics") or {}).get("viewCount")) or 0),
+            "rank": i + 1,
+            "when": now_ms(),
+        })
+    return out[:MAX_ITEMS]
+
+
 # ── subject-scoped forums (global only — a subreddit has no geo) ──────────────
 # THIS is what stops the feed being a list of people and film titles: the subject
 # is chosen by which subs are asked, not inferred afterwards.
@@ -438,7 +521,7 @@ def src_reddit_category(category):
 def main(out_path="trends.json"):
     items, meta = [], []
 
-    def record(sid, label, fn):
+    def record(sid, label, fn, delay=None):
         nonlocal items
         try:
             got = fn()
@@ -448,11 +531,24 @@ def main(out_path="trends.json"):
         except Exception as e:  # noqa: BLE001 — one bad feed must not fail the run
             meta.append({"id": sid, "label": label, "ok": False, "count": 0, "error": str(e)[:200]})
             print(f"  {label:<28}  -- failed: {e}", file=sys.stderr)
-        time.sleep(POLITE_DELAY)
+        time.sleep(POLITE_DELAY if delay is None else delay)
 
     for region in REGIONS:
         for sid, label, fn in REGION_SOURCES:
             record(f"{sid}:{region}", f"{label} ({region})", lambda fn=fn, r=region: fn(r))
+    # YouTube is quota-metered rather than politeness-metered, so it needs no delay.
+    if YOUTUBE_KEY:
+        for region in REGIONS:
+            for cid, prior, label in YOUTUBE_CATEGORIES:
+                record(
+                    f"youtube:{region}:{cid or 'all'}",
+                    f"YouTube {label} ({region})",
+                    lambda r=region, c=cid, pr=prior: src_youtube(r, c, pr),
+                    delay=0,
+                )
+    else:
+        print("  YouTube                      -- skipped: no YOUTUBE_API_KEY secret set")
+
     for category in CATEGORY_SUBS:
         record(f"reddit:{category}", f"Reddit ({category})", lambda c=category: src_reddit_category(c))
 
