@@ -3250,6 +3250,55 @@
         outline: none;
         border-color: #000;
       }
+      .trend-region {
+        font: inherit;
+        font-size: 13px;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--ink);
+        max-width: 200px;
+      }
+      /* Subject chips. They wrap rather than scroll — on a phone a horizontal
+         scroller hides the tail, and the tail is where the niche subjects live. */
+      .trend-cats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+      }
+      .trend-cat {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: inherit;
+        font-size: 12px;
+        padding: 5px 11px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+        transition: border-color 0.12s, background 0.12s;
+      }
+      .trend-cat:hover {
+        border-color: #000;
+      }
+      .trend-cat.on {
+        background: var(--ink);
+        border-color: #000;
+        color: #fff;
+      }
+      /* Nothing in this subject right now — still clickable, just visibly empty. */
+      .trend-cat.empty {
+        opacity: 0.4;
+      }
+      .trend-cat-n {
+        font-size: 10.5px;
+        opacity: 0.6;
+        font-variant-numeric: tabular-nums;
+      }
       /* Sits directly above the status line; the border keeps the two grey blocks
          from reading as one paragraph. */
       .trend-disclaimer {
@@ -3957,9 +4006,9 @@
       <section id="trends" class="hidden">
         <h1>Trend searcher</h1>
         <p class="lead">
-          What culture is playing, watching and posting right now — music, film, TV, podcasts, forums and search —
-          reduced to a keyword you can build a post around, filtered for brand safety and scored for whether an ad
-          could actually be built on it. Pick one and it becomes the start of a brief.
+          What culture is playing, watching and posting right now — filtered by subject and region, reduced to a
+          keyword you can build a post around, checked for brand safety and scored for whether an ad could actually
+          be built on it. Pick one and it becomes the start of a brief.
         </p>
         <div class="trend-bar">
           <input
@@ -3970,9 +4019,13 @@
             aria-label="Filter trends by keyword"
             oninput="setTrendFilter(this.value)"
           />
+          <select id="trendRegion" class="trend-region" aria-label="Region" onchange="setTrendRegion(this.value)">
+            <option value="GLOBAL">Global — every region</option>
+          </select>
           <button class="btn ghost" onclick="refreshTrends(true)">Refresh</button>
           <span class="trend-note muted tiny" id="trendTier"></span>
         </div>
+        <div class="trend-cats" id="trendCats" role="group" aria-label="Filter by subject"></div>
         <p class="muted tiny trend-disclaimer">
           Hashtags and formats are suggestions derived from each trend — a starting point for the creative, not
           measured platform data. Chart positions and view counts are real.
@@ -7517,11 +7570,41 @@
       // after enrichment: + { angle, audience, why, fit }
       const TREND_CACHE_KEY = "projectad_trends";
       const TREND_TTL_MS = 6 * 60 * 60 * 1000; // 6h — keeps the free APIs unhammered
-      let _trends = []; // rendered records (index-addressed by the card handlers)
+      /* ---------- subjects & regions — keep in sync with fetch_trends.py ----------
+         `category` is a SUBJECT, not the name of the source. Apple's charts can only
+         emit songs and films, so a feed built on them alone reads as a list of people
+         and movie titles; the published feed adds subject-scoped forums, and the
+         open-ended sources are classified into this same taxonomy. */
+      const CATEGORIES = [
+        "Food & Drink", "Fashion", "Beauty", "Colour & Design", "Home", "Travel",
+        "Fitness", "Tech", "Gaming", "Music", "Film & TV", "Sport", "People", "Culture",
+      ];
+      const FALLBACK_CATEGORY = "Culture";
+      // `geo` = Google Trends, `store` = Apple storefront, `wiki` = Wikipedia language
+      // edition. GLOBAL is deliberately not in here: it is not a place, so it means
+      // "no region filter" rather than being faked with US data.
+      const REGIONS = {
+        US: { label: "United States", geo: "US", store: "us", wiki: "en" },
+        GB: { label: "United Kingdom", geo: "GB", store: "gb", wiki: "en" },
+        KR: { label: "South Korea", geo: "KR", store: "kr", wiki: "ko" },
+        JP: { label: "Japan", geo: "JP", store: "jp", wiki: "ja" },
+        FR: { label: "France", geo: "FR", store: "fr", wiki: "fr" },
+        DE: { label: "Germany", geo: "DE", store: "de", wiki: "de" },
+        BR: { label: "Brazil", geo: "BR", store: "br", wiki: "pt" },
+        IN: { label: "India", geo: "IN", store: "in", wiki: "en" },
+      };
+      const GLOBAL = "GLOBAL";
+
+      let _trendsAll = []; // everything loaded — region/category filter over THIS
+      let _trends = []; // current selection, enriched (index-addressed by the card handlers)
       let _trendTier = "";
       let _trendHidden = 0;
       let _trendNonce = 0;
       let _trendFilter = "";
+      let _trendRegion = GLOBAL; // GLOBAL = no region filter, not a place
+      let _trendCategory = ""; // "" = every subject
+      let _trendLiveRegion = ""; // which storefront the live tier actually read
+      let _trendFetchedAt = 0;
       let _trendLastStatus = ""; // survives a filter re-render, which passes no status
 
       // Stable string→int so offline angles vary per term yet stay reproducible
@@ -7573,31 +7656,66 @@
           "were be been being has have had will just new now how why what when who all out off up down over after before " +
           "about official video feat featuring remix version edition season episode").split(" ")
       );
+
       // Short-form video first — that is what this feeds — plus one non-video option
       // so a static poster brief is still served.
       const TREND_FORMATS = {
+        "Food & Drink": ["Reel", "TikTok", "Carousel"],
+        Fashion: ["Reel", "TikTok", "Lookbook"],
+        Beauty: ["Reel", "TikTok", "Tutorial"],
+        "Colour & Design": ["Carousel", "Poster", "Reel"],
+        Home: ["Reel", "Carousel", "Poster"],
+        Travel: ["Reel", "Story", "Carousel"],
+        Fitness: ["Reel", "Shorts", "Carousel"],
+        Tech: ["Shorts", "Carousel", "Poster"],
+        Gaming: ["Shorts", "TikTok", "Poster"],
         Music: ["Reel", "TikTok", "Shorts"],
         "Film & TV": ["Reel", "Shorts", "Poster"],
-        Podcast: ["Audiogram", "Shorts", "Carousel"],
-        Gaming: ["Shorts", "TikTok", "Poster"],
+        Sport: ["Reel", "Shorts", "Story"],
+        People: ["Reel", "TikTok", "Carousel"],
         Culture: ["Reel", "TikTok", "Carousel"],
-        Search: ["Reel", "Carousel", "Story"],
       };
       const DEFAULT_FORMATS = ["Reel", "Carousel", "Story"];
 
-      // Longest run of capitalised non-stopword words; earliest run wins ties. A
-      // title-initial "The" is kept — the real tag is #TheBear, not #Bear — while
-      // "the" anywhere else breaks the run, which stops "X and The Y" fusing.
+      // First match wins, so the specific patterns lead. English-only by design: a
+      // non-English region mostly lands in "Culture" here, and the Gemini pass
+      // re-classifies in any language when a key is set.
+      const CLASSIFIERS = [
+        ["Food & Drink", /\b(recipe|restaurant|chef|menu|coffee|caf[e\u00e9]|bakery|cook(ing|ed)?|dish|cuisine|snack|drink|cocktail|beer|wine|whisky|pizza|burger|ramen|kimchi|sushi|taco|dessert|chocolate|matcha|brunch|michelin)\b/i],
+        ["Beauty", /\b(skincare|skin care|makeup|lipstick|mascara|serum|sunscreen|fragrance|perfume|haircare|shampoo|beauty|cosmetic\w*|manicure|nail art)\b/i],
+        ["Fashion", /\b(fashion|outfit|sneaker\w*|streetwear|runway|lookbook|handbag|denim|couture|wardrobe|thrift\w*|capsule collection|met gala|fashion week)\b/i],
+        ["Colour & Design", /\b(colou?r of the year|pantone|palette|typeface|typograph\w+|graphic design|branding|logo redesign|poster design|interior design|architect\w+)\b/i],
+        ["Home", /\b(interior|furniture|home decor|apartment tour|kitchen remodel|renovation|ikea)\b/i],
+        ["Travel", /\b(travel|flight|airline|hotel|itinerary|destination|tourism|resort|airbnb|backpack\w*)\b/i],
+        ["Fitness", /\b(workout|marathon|gym|fitness|yoga|pilates|running|nutrition|protein|hyrox|crossfit)\b/i],
+        ["Sport", /\b(football|soccer|nba|nfl|mlb|olympic\w*|world cup|tennis|golf|formula 1|f1|league|premier league|champions league)\b/i],
+        ["Gaming", /\b(gaming|nintendo|playstation|xbox|steam deck|esports|speedrun|dlc|roguelike)\b/i],
+        ["Tech", /\b(iphone|android|chatgpt|openai|gadget|laptop|startup|software|robot\w*|semiconductor|electric vehicle|smartphone)\b/i],
+        ["Music", /\b(album|single|tour|concert|band|rapper|singer|song|billboard|k-?pop|setlist|grammy)\b/i],
+        ["Film & TV", /\b(film|movie|series|season \d|episode|trailer|box office|netflix|drama|actor|actress|oscars|streaming)\b/i],
+      ];
+      function classify(text, dflt) {
+        for (const [cat, rx] of CLASSIFIERS) if (rx.test(text || "")) return cat;
+        return dflt || FALLBACK_CATEGORY;
+      }
+
+      // Longest run of capitalised words; earliest run wins ties. A CAPITALISED
+      // stopword stays in the run — "New Balance" and "New York" are brands, not a
+      // stopword plus a word — while a lowercase word still breaks it, which is what
+      // stops "X and the Y" fusing.
       function bestProperRun(words) {
         let proper = [],
           best = [];
-        words.forEach((w, i) => {
-          const keepArticle = i === 0 && w.toLowerCase() === "the";
-          if (/^[A-Z][\w'&-]*$/.test(w) && (keepArticle || !KW_STOP.has(w.toLowerCase()))) {
+        words.forEach((w) => {
+          if (/^[A-Z][\w'&-]*$/.test(w)) {
             proper.push(w);
             if (proper.length > best.length) best = proper.slice();
           } else proper = [];
         });
+        // "Stranger Things Season" -> "Stranger Things"
+        while (best.length && KW_STOP.has(best[best.length - 1].toLowerCase())) best.pop();
+        // "The best kimchi…" must not become #The
+        if (!best.some((w) => !KW_STOP.has(w.toLowerCase()))) return [];
         return best;
       }
       function toKeyword(text, limit) {
@@ -7606,10 +7724,11 @@
         const head = s.split(":")[0];
         s = head.length > 8 ? head : s; // keep short titles whole ("Dune: Part Two")
         // Split on dash/pipe/comma separators FIRST: without it "Song — Artist" reads
-        // as one capitalised run and yields the nonsense "Song Artist".
+        // as one capitalised run and yields the nonsense "Song Artist". "/" splits
+        // only when spaced — "HUNTR/X" is a name, "Song / Artist" is two fields.
         let best = [];
-        s.split(/[—–|·,/]+/).forEach((seg) => {
-          if (!seg.trim()) return;
+        s.split(/[\u2014\u2013|\u00b7,]+|\s+\/\s+/).forEach((seg) => {
+          if (!seg || !seg.trim()) return;
           const words = seg.replace(/[^\w\s'&-]/g, " ").split(/\s+/).filter(Boolean);
           const run = bestProperRun(words);
           if (run.length > best.length) best = run;
@@ -7623,17 +7742,23 @@
       }
       const toHashtag = (kw) => {
         const parts = (kw || "").split(/[^\w]+/).filter(Boolean);
-        return parts.length ? "#" + parts.map((p) => p[0].toUpperCase() + p.slice(1)).join("").slice(0, 40) : "";
+        if (!parts.length) return "";
+        // Keep deliberate inner caps ("iPhone", "XCX", "ROSÉ"); title-case only words
+        // that are entirely lowercase, so #iPhoneLeak does not become #IPhoneLeak.
+        return "#" + parts.map((p) => (p !== p.toLowerCase() ? p : p[0].toUpperCase() + p.slice(1))).join("").slice(0, 40);
       };
       // One place, so records from every tier match — including tier 1, whose fields
       // CI already computed and which must not be recomputed differently here.
       function deriveTrendFields(r) {
-        r.category = r.category || "";
+        const cat = r.category || FALLBACK_CATEGORY;
+        r.category = CATEGORIES.includes(cat) ? cat : FALLBACK_CATEGORY;
+        r.region = r.region || GLOBAL;
         r.keyword = r.keyword || toKeyword(r.term || "");
         r.hashtag = r.hashtag || toHashtag(r.keyword);
         r.formats = r.formats && r.formats.length ? r.formats : TREND_FORMATS[r.category] || DEFAULT_FORMATS;
         return r;
       }
+
 
       /* ---------- tier 2: live sources (free, keyless, CORS-enabled) ---------- */
       // Each adapter is failure-isolated by Promise.allSettled — one dead API must
@@ -7653,15 +7778,18 @@
       // Wikipedia's feed is full of structural pages that are always top-viewed but
       // are not trends at all — drop them before anything else sees them.
       const WIKI_NOISE = /^(main page|special:|wikipedia:|portal:|category:|help:|talk:|list of |deaths in )/i;
-      async function fetchWikipediaTrends() {
+      async function fetchWikipediaTrends(region) {
+        // Most-read from the region's OWN language edition, which is what makes this
+        // a regional signal rather than an English one relabelled.
+        const lang = (REGIONS[region] || REGIONS.US).wiki;
         // Yesterday's feed: today's is often not published yet. Step back once more on 404.
         let lastErr = new Error("no feed");
         for (let back = 1; back <= 2; back++) {
           const d = new Date(Date.now() - back * 864e5);
           const ymd = `${d.getUTCFullYear()}/${pad2(d.getUTCMonth() + 1)}/${pad2(d.getUTCDate())}`;
           for (const host of [
-            `https://en.wikipedia.org/api/rest_v1/feed/featured/${ymd}`,
-            `https://api.wikimedia.org/feed/v1/wikipedia/en/featured/${ymd}`,
+            `https://${lang}.wikipedia.org/api/rest_v1/feed/featured/${ymd}`,
+            `https://api.wikimedia.org/feed/v1/wikipedia/${lang}/featured/${ymd}`,
           ]) {
             try {
               const r = await trendFetch(host);
@@ -7673,11 +7801,13 @@
               return arts
                 .map((a) => {
                   const term = (a.titles && a.titles.normalized) || (a.title || "").replace(/_/g, " ");
+                  const desc = a.description || firstLine(a.extract || "");
                   return {
                     term,
                     keyword: term, // article titles are already noun-shaped
-                    category: "Culture",
-                    blurb: a.description || firstLine(a.extract || ""),
+                    category: classify(`${term} ${desc}`),
+                    region,
+                    blurb: desc,
                     source: "Wikipedia",
                     url: (a.content_urls && a.content_urls.desktop && a.content_urls.desktop.page) || "",
                     volume: a.views || 0,
@@ -7697,9 +7827,10 @@
       // what-is-being-consumed-right-now signal. Chart position is real; the feed
       // carries no play counts, so `volume` stays 0 and `rank` carries the meaning —
       // fabricating a play count here would be inventing a statistic.
-      async function fetchAppleChart(kind, feed, mediaType, category, label) {
+      async function fetchAppleChart(region, kind, feed, mediaType, category, label) {
+        const store = (REGIONS[region] || REGIONS.US).store;
         const r = await trendFetch(
-          `https://rss.applemarketingtools.com/api/v2/us/${kind}/${feed}/25/${mediaType}.json`
+          `https://rss.applemarketingtools.com/api/v2/${store}/${kind}/${feed}/25/${mediaType}.json`
         );
         if (!r.ok) throw new Error("HTTP " + r.status);
         const j = await r.json();
@@ -7713,6 +7844,7 @@
               term: artist ? `${name} — ${artist}` : name,
               keyword: toKeyword(category === "Music" && artist ? artist : name),
               category,
+              region,
               blurb: (x.genres || [])
                 .map((g) => g.name)
                 .filter((n) => n && n !== "Music")
@@ -7726,15 +7858,20 @@
           })
           .filter((x) => x.term);
       }
-      const fetchAppleMusic = () => fetchAppleChart("music", "most-played", "songs", "Music", "Apple Music");
-      const fetchAppleMovies = () => fetchAppleChart("movies", "top-movies", "movies", "Film & TV", "Apple Movies");
-      const fetchApplePodcasts = () => fetchAppleChart("podcasts", "top", "podcasts", "Podcast", "Apple Podcasts");
+      const fetchAppleMusic = (rg) => fetchAppleChart(rg, "music", "most-played", "songs", "Music", "Apple Music");
+      const fetchAppleMovies = (rg) => fetchAppleChart(rg, "movies", "top-movies", "movies", "Film & TV", "Apple Movies");
       // Media/culture only — Hacker News and Google News were dropped on purpose:
-      // front-page news is the wrong raw material for a social brief.
+      // front-page news is the wrong raw material for a social brief. Apple
+      // Podcasts went too — a show title is more of the people-and-titles material
+      // this page is trying to get away from, and "Podcast" is a format, not a subject.
+      //
+      // These are the only sources a BROWSER can reach, and they cover just Music,
+      // Film & TV and whatever Wikipedia classifies into. The subject breadth (food,
+      // fashion, beauty, design…) comes from the published feed, which can read the
+      // forums CORS blocks here. The UI says so rather than showing empty categories.
       const TREND_SOURCES = [
         { id: "apple_music", label: "Apple Music", fetch: fetchAppleMusic },
         { id: "apple_movies", label: "Apple Movies", fetch: fetchAppleMovies },
-        { id: "apple_podcasts", label: "Apple Podcasts", fetch: fetchApplePodcasts },
         { id: "wikipedia", label: "Wikipedia", fetch: fetchWikipediaTrends },
       ];
 
@@ -7845,11 +7982,14 @@
         "never just restate the topic; " +
         "`hashtag` — the single tag people actually use for this, in #CamelCase, no spaces; " +
         "`format` — the one best format for it, chosen from the topic's `formats` list; " +
+        "`category` — the SUBJECT it belongs to, copied exactly from this list: " +
+        CATEGORIES.join(", ") + " (the input `category` may be wrong or a catch-all, " +
+        "especially for non-English topics — correct it); " +
         "`audience` — who that post would speak to; `why` — one short line on why it is timely; " +
         "`fit` — 1-5 for how usable it is commercially (5 = easy, broad, positive). " +
         "Set `safe` false for anything built on death, violence, disaster, crime, illness, politics or " +
         "personal misfortune — brands must not advertise on those. Keep every field under 140 characters. " +
-        'Return ONLY JSON {"ideas":[{"term":..,"angle":..,"hashtag":..,"format":..,"audience":..,"why":..,"fit":1-5,"safe":true}]} ' +
+        'Return ONLY JSON {"ideas":[{"term":..,"angle":..,"hashtag":..,"format":..,"category":..,"audience":..,"why":..,"fit":1-5,"safe":true}]} ' +
         "with one entry per input topic, `term` copied exactly.";
       async function enrichTrends(recs) {
         const key = getTextKey();
@@ -7865,6 +8005,7 @@
               keyword: r.keyword,
               category: r.category,
               formats: r.formats,
+              region: r.region,
               blurb: r.blurb,
               source: r.source,
             })),
@@ -7892,6 +8033,16 @@
             // channel ("Billboard", "TV spot") reach the card.
             const fmt = String((hit && hit.format) || "").trim();
             r.pickedFormat = fmt && r.formats.some((f) => f.toLowerCase() === fmt.toLowerCase()) ? fmt : fb.pickedFormat;
+            // The deterministic classifier is English-only, so this is how a Korean or
+            // Japanese trend escapes the "Culture" catch-all. Only accept a category
+            // from the known list — never let the model invent a new one, or the chips
+            // and the format map would disagree about what exists.
+            const cat = String((hit && hit.category) || "").trim();
+            if (CATEGORIES.includes(cat) && cat !== r.category) {
+              r.category = cat;
+              r.formats = TREND_FORMATS[cat] || DEFAULT_FORMATS;
+              if (!r.formats.includes(r.pickedFormat)) r.pickedFormat = r.formats[0];
+            }
             r.unsafe = !!(hit && hit.safe === false);
           });
           return "Ideas written by Gemini from live trends.";
@@ -7918,26 +8069,45 @@
       /* ---------- orchestrator ---------- */
       let _trendBusy = false;
       let _trendLastNet = 0;
-      async function refreshTrends(force) {
+      async function refreshTrends(force, ignoreFloor) {
         if (_trendBusy) return; // ignore re-entry while a fetch is in flight
-        if (force && Date.now() - _trendLastNet < 30000) return; // button-mash floor
+        // Button-mash floor. A region change legitimately needs a new storefront, so
+        // it passes ignoreFloor rather than silently doing nothing.
+        if (force && !ignoreFloor && Date.now() - _trendLastNet < 30000) return;
         const cached = loadTrendCache();
         if (!force && cached && Date.now() - cached.fetchedAt < TREND_TTL_MS) {
-          _trends = cached.items;
+          _trendsAll = cached.items;
           _trendTier = cached.tier;
           _trendHidden = cached.hidden || 0;
-          renderTrends("Cached — updated " + timeAgo(cached.fetchedAt) + ".");
+          _trendLiveRegion = cached.liveRegion || "";
+          _trendFetchedAt = cached.fetchedAt;
+          await applyTrendSelection(["Cached — updated " + timeAgo(cached.fetchedAt) + "."]);
           return;
         }
         if (force) _trendNonce++;
         _trendBusy = true;
         _trendLastNet = Date.now();
+        _trendFetchedAt = Date.now();
         renderTrends("Looking for what’s trending…", true);
         try {
           await runTrendRefresh();
         } finally {
           _trendBusy = false;
         }
+      }
+      /* Region change: the published feed already holds every region, so it is just a
+         filter. The live tier read ONE storefront, so it has to go back out. */
+      async function setTrendRegion(code) {
+        if (code === _trendRegion) return;
+        _trendRegion = code;
+        renderRegionControls();
+        if (_trendTier === "live") await refreshTrends(true, true);
+        else await applyTrendSelection();
+      }
+      async function setTrendCategory(cat) {
+        _trendCategory = _trendCategory === cat ? "" : cat; // click the active chip to clear
+        renderRegionControls();
+        await applyTrendSelection();
       }
       async function runTrendRefresh() {
         let raw = [],
@@ -7957,14 +8127,20 @@
           }
         } catch (e) {}
 
-        // tier 2 — live public APIs, failure-isolated
+        // tier 2 — live public APIs, failure-isolated. A browser can only reach one
+        // storefront/language at a time, so the live tier covers the SELECTED region
+        // (GLOBAL falls back to US/EN, and the status line says which).
         if (!raw.length) {
-          const settled = await Promise.allSettled(TREND_SOURCES.map((s) => s.fetch()));
+          const rg = _trendRegion === GLOBAL ? "US" : _trendRegion;
+          const settled = await Promise.allSettled(TREND_SOURCES.map((s) => s.fetch(rg)));
           settled.forEach((s, i) => {
             if (s.status === "fulfilled") raw = raw.concat(s.value);
             else notes.push(TREND_SOURCES[i].label + " unavailable");
           });
-          if (raw.length) tier = "live";
+          if (raw.length) {
+            tier = "live";
+            _trendLiveRegion = rg;
+          }
         }
 
         // tier 3 — deterministic seasonal angles
@@ -7976,25 +8152,45 @@
         // hard safety rule + derive keywords + dedupe, before the model sees anything
         const before = raw.length;
         const seen = new Set();
-        let recs = raw
+        _trendsAll = raw
           .filter((r) => r && r.term && isAdSafe(r))
           .map(deriveTrendFields)
-          // Dedupe on the KEYWORD, not the headline: three posts about the same
-          // artist are one trend, and keeping all three crowds out everything else.
+          // Dedupe on (region, keyword): the same artist charting in two countries is
+          // two regional trends, but three posts about them in one region are one.
           .filter((r) => {
-            const k = (r.keyword || r.term).toLowerCase();
+            const k = r.region + "\u0000" + (r.keyword || r.term).toLowerCase();
             if (seen.has(k)) return false;
             seen.add(k);
             return true;
           });
-        _trendHidden = before - recs.length;
+        _trendHidden = before - _trendsAll.length;
+        _trendTier = tier;
+        await applyTrendSelection(notes);
+      }
+
+      /* ---------- selection ----------
+         Region and category filter the WHOLE loaded set, then the top slice is
+         enriched and rendered. Enrichment is cached on the record, so re-selecting
+         never re-asks the model about a trend it has already judged. The free-text
+         filter deliberately runs after this, over the enriched slice, so typing
+         stays instant instead of firing a request per keystroke. */
+      const TREND_SHOWN = 12;
+      function trendPool() {
+        return _trendsAll.filter(
+          (r) =>
+            (_trendRegion === GLOBAL || r.region === _trendRegion) &&
+            (!_trendCategory || r.category === _trendCategory)
+        );
+      }
+      async function applyTrendSelection(notes) {
+        const pool = trendPool();
         // Wikipedia views (~10^5) and chart ranks are NOT the same scale, so a single
         // global sort would bury one source entirely. Rank WITHIN each source, then
         // round-robin interleave; `fit` (a real judgement) is the only cross-source
         // ranking applied later. Chart sources carry `rank` (1 = top) and no volume,
         // so they sort ascending by rank rather than descending by a constant 0.
         const bySource = new Map();
-        recs.forEach((r) => {
+        pool.forEach((r) => {
           if (!bySource.has(r.source)) bySource.set(r.source, []);
           bySource.get(r.source).push(r);
         });
@@ -8002,34 +8198,54 @@
           l.sort((a, b) => (a.rank && b.rank ? a.rank - b.rank : (b.volume || 0) - (a.volume || 0)))
         );
         const merged = [];
-        for (let i = 0; merged.length < 12 && lists.some((l) => i < l.length); i++)
+        for (let i = 0; merged.length < TREND_SHOWN && lists.some((l) => i < l.length); i++)
           lists.forEach((l) => {
-            if (i < l.length && merged.length < 12) merged.push(l[i]);
+            if (i < l.length && merged.length < TREND_SHOWN) merged.push(l[i]);
           });
-        recs = merged;
 
-        const note = await enrichTrends(recs);
+        // Only ask the model about records it has not already judged.
+        const fresh = merged.filter((r) => !r.angle);
+        let note = "";
+        if (fresh.length) {
+          renderTrends("Writing angles…", false);
+          note = await enrichTrends(fresh);
+        }
         // Defence in depth: the model can veto (`unsafe`), and the deterministic rule
         // also re-runs over the GENERATED text in case an angle reintroduces something.
-        const kept = recs.filter((r) => !r.unsafe && isAdSafe({ term: r.term, blurb: `${r.angle} ${r.why}` }));
-        _trendHidden += recs.length - kept.length;
+        const kept = merged.filter((r) => !r.unsafe && isAdSafe({ term: r.term, blurb: `${r.angle} ${r.why}` }));
         kept.sort((a, b) => (b.fit || 0) - (a.fit || 0));
 
         _trends = kept;
-        _trendTier = tier;
-        storeTrendCache({ fetchedAt: Date.now(), tier, items: kept, hidden: _trendHidden });
-        renderTrends([note].concat(notes).filter(Boolean).join(" "));
+        storeTrendCache({
+          fetchedAt: _trendFetchedAt || Date.now(),
+          tier: _trendTier,
+          items: _trendsAll,
+          hidden: _trendHidden,
+          liveRegion: _trendLiveRegion,
+        });
+        // Chip counts read _trendsAll, which is still empty when showTrends() paints
+        // the controls; repaint now that the data is in, or every chip reads 0.
+        renderRegionControls();
+        renderTrends([note].concat(notes || []).filter(Boolean).join(" "));
       }
 
       /* ---------- rendering ----------
          Handlers are INDEX-based on purpose: esc() does not escape apostrophes and
          real trend terms contain them ("Valentine's Day"), so interpolating the
          term into an inline handler would break the markup. */
-      const TIER_NOTE = {
-        file: "Published trend feed — music, film, TV, podcasts, forums and search.",
-        live: "Live from Apple’s music, movie and podcast charts plus Wikipedia’s most-read.",
-        seasonal: "Seasonal angles — live sources unavailable, so these come from the calendar, not the charts.",
-      };
+      function tierNote() {
+        if (_trendTier === "file")
+          return "Published feed — charts, search and subject forums (food, fashion, beauty, design…) across every region.";
+        if (_trendTier === "live") {
+          const rg = (REGIONS[_trendLiveRegion] || {}).label || _trendLiveRegion || "US";
+          // Say which storefront was actually read, and be explicit that the browser
+          // cannot reach the forums — otherwise empty subject chips look like a bug.
+          return `Live from Apple’s charts and Wikipedia for ${esc(rg)}. A browser can’t reach the subject forums (CORS), so food/fashion/beauty come from the published feed.`;
+        }
+        if (_trendTier === "seasonal")
+          return "Seasonal angles — live sources unavailable, so these come from the calendar, not the charts.";
+        return "";
+      }
       // `volume` means something different per source, so it can't share one label.
       // A source with no meaningful magnitude maps to "" and prints NO number: the
       // Apple charts carry a real position but no play count, so they show `rank`
@@ -8049,7 +8265,8 @@
         const vol = unit && r.volume ? Number(r.volume).toLocaleString() + " " + unit : "";
         // Chart position is real data; show it where a play count would otherwise go.
         const rank = r.rank ? "#" + r.rank : "";
-        const meta = [r.source, rank, vol, r.timing || ""].filter(Boolean).join(" · ");
+        const place = r.region && r.region !== GLOBAL ? (REGIONS[r.region] || {}).label || r.region : "";
+        const meta = [r.category, r.source, place, rank, vol, r.timing || ""].filter(Boolean).join(" · ");
         const tag = r.hashtag || toHashtag(r.keyword || r.term);
         // The hashtag is the headline — it is the postable handle. The full title
         // stays underneath so the card is still traceable to its source.
@@ -8093,6 +8310,35 @@
         _trendFilter = (v || "").trim().toLowerCase();
         renderTrends();
       }
+      /* Region select + subject chips. Chip counts come from the pool with the
+         category filter LIFTED, so a chip shows how many it would give you — a chip
+         that reads 0 is honestly empty rather than mysteriously dead. */
+      function renderRegionControls() {
+        const sel = $("#trendRegion");
+        if (sel) {
+          const opts = [`<option value="${GLOBAL}">Global — every region</option>`].concat(
+            Object.keys(REGIONS).map(
+              (c) => `<option value="${c}">${esc(REGIONS[c].label)}</option>`
+            )
+          );
+          sel.innerHTML = opts.join("");
+          sel.value = _trendRegion;
+        }
+        const box = $("#trendCats");
+        if (!box) return;
+        const inRegion = _trendsAll.filter((r) => _trendRegion === GLOBAL || r.region === _trendRegion);
+        const counts = {};
+        inRegion.forEach((r) => (counts[r.category] = (counts[r.category] || 0) + 1));
+        const chip = (label, val, n) =>
+          `<button type="button" class="trend-cat${_trendCategory === val ? " on" : ""}${n === 0 ? " empty" : ""}" ` +
+          `onclick="setTrendCategory('${val.replace(/'/g, "\\'")}')">${esc(label)}` +
+          (val ? `<span class="trend-cat-n">${n || 0}</span>` : "") +
+          `</button>`;
+        box.innerHTML =
+          `<button type="button" class="trend-cat${_trendCategory ? "" : " on"}" onclick="setTrendCategory('')">All` +
+          `<span class="trend-cat-n">${inRegion.length}</span></button>` +
+          CATEGORIES.map((c) => chip(c, c, counts[c])).join("");
+      }
       function renderTrends(status, busy) {
         const grid = $("#trendGrid");
         if (!grid) return;
@@ -8106,7 +8352,7 @@
             `<p class="muted">${_trends.length ? "Nothing matches “" + esc(_trendFilter) + "”." : "No usable trends right now — try Refresh."}</p>`;
         if (status !== undefined) _trendLastStatus = status || "";
         const filterNote = _trendFilter && _trends.length ? `${shown.length} of ${_trends.length} shown.` : "";
-        const bits = [TIER_NOTE[_trendTier] || "", _trendLastStatus, filterNote, _trendHidden ? _trendHidden + " hidden as not brand-safe." : ""].filter(Boolean);
+        const bits = [tierNote(), _trendLastStatus, filterNote, _trendHidden ? _trendHidden + " hidden as not brand-safe." : ""].filter(Boolean);
         setRev("#trendStatus", bits.join(" "));
         const c = loadTrendCache();
         setRev("#trendTier", c ? "Updated " + timeAgo(c.fetchedAt) : "");
@@ -8157,8 +8403,11 @@
         if (!_trends.length) {
           const c = loadTrendCache();
           if (c) {
-            _trends = c.items;
+            // The cache holds every loaded record; the picker shows the current
+            // region/category selection, same as the page.
+            _trendsAll = c.items;
             _trendTier = c.tier;
+            _trends = trendPool().slice(0, TREND_SHOWN);
           }
         }
         el.innerHTML = _trends.length
@@ -8195,10 +8444,13 @@
         if (location.hash !== "#trends") location.hash = "#trends";
         const c = loadTrendCache();
         if (c) {
-          _trends = c.items;
+          _trendsAll = c.items;
           _trendTier = c.tier;
           _trendHidden = c.hidden || 0;
+          _trendLiveRegion = c.liveRegion || "";
+          _trendFetchedAt = c.fetchedAt || 0;
         }
+        renderRegionControls();
         refreshTrends(false);
       }
 
