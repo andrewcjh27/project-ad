@@ -1,10 +1,11 @@
 name: Refresh trends.json
 
 # Builds trends.json server-side, where there is no CORS — so it can read the
-# sources the static page cannot (Google Trends, Google News, Reddit) on top of
-# Wikipedia and Hacker News. ad-studio.html prefers ./trends.json (tier 1) and
-# falls back to its own browser fetches when the file is missing or stale, so
-# this workflow is purely additive — nothing breaks if a run fails.
+# sources the static page cannot (Google Trends, Reddit, and YouTube when the
+# optional YOUTUBE_API_KEY secret is set) on top of Apple's charts and Wikipedia.
+# ad-studio.html prefers ./trends.json (tier 1) and falls back to its own browser
+# fetches when the file is missing or stale, so this workflow is purely additive —
+# nothing breaks if a run fails.
 #
 # Free: GitHub-hosted runner minutes are unlimited on public repositories.
 
@@ -52,11 +53,16 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- trends.json; then
+          # STAGE FIRST, then compare the index against HEAD. `git diff` alone only
+          # looks at TRACKED files, so while trends.json was untracked it reported
+          # "no change" on every run — 32 green runs fetched the feed and silently
+          # discarded it. `git diff --cached` sees a new file as an addition.
+          git add trends.json
+          if git diff --cached --quiet -- trends.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "trends.json unchanged — nothing to commit."
           else
-            git add trends.json
+            echo "staged $(wc -c < trends.json) bytes"
             git commit -m "chore: refresh trends.json [skip ci]"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
