@@ -37,8 +37,14 @@ jobs:
       - name: Check browser/CI copies are in sync
         run: python3 scripts/check_safety_sync.py
 
-      # stdlib only — no pip install step needed
+      # stdlib only — no pip install step needed.
+      # YOUTUBE_API_KEY is optional: without it the YouTube source is skipped and the
+      # run still succeeds on the other feeds. It is a secret rather than a value in
+      # the page because the published site is public — a key shipped in ad-studio.html
+      # could be lifted and its quota burned by anyone.
       - name: Fetch trends
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: python3 scripts/fetch_trends.py trends.json
 
       - name: Commit if changed

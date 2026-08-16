@@ -77,13 +77,25 @@ def from_py(name: str) -> set:
 
 
 # ── keyword stopwords ─────────────────────────────────────────────────────────
+def _strip_js_comments(t: str) -> str:
+    """Drop `//` lines. Both lists carry explanatory comments that quote example
+    phrases ("Top Gun", "Best Buy"); harvesting those as stopwords would report
+    drift that does not exist."""
+    return "\n".join(re.sub(r"//.*$", "", line) for line in t.split("\n"))
+
+
+def _strip_py_comments(t: str) -> str:
+    return "\n".join(line for line in t.split("\n") if not line.lstrip().startswith("#"))
+
+
 def kwstop_js() -> set:
     """`new Set(("a b " + "c d").split(" "))` — join the literals, then split."""
     src = HTML.read_text(encoding="utf-8")
     m = re.search(r"const KW_STOP\s*=\s*new Set\(\s*(.*?)\.split\(", src, re.S)
     if not m:
         raise SystemExit("KW_STOP not found in " + HTML.name)
-    return {w for w in "".join(re.findall(r'"([^"]*)"', m.group(1))).split() if w}
+    body = _strip_js_comments(m.group(1))
+    return {w for w in "".join(re.findall(r'"([^"]*)"', body)).split() if w}
 
 
 def kwstop_py() -> set:
@@ -91,7 +103,8 @@ def kwstop_py() -> set:
     m = re.search(r"^KW_STOP = \{(.*?)\n\}", src, re.S | re.M)
     if not m:
         raise SystemExit("KW_STOP not found in " + PY.name)
-    return {w for w in re.findall(r'"([^"]*)"', m.group(1)) if w}
+    body = _strip_py_comments(m.group(1))
+    return {w for w in re.findall(r'"([^"]*)"', body) if w}
 
 
 # ── format maps ───────────────────────────────────────────────────────────────

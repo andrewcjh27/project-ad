@@ -7654,7 +7654,11 @@
       const KW_STOP = new Set(
         ("the a an and or but for with from that this these those into onto your you our their his her its it is are was " +
           "were be been being has have had will just new now how why what when who all out off up down over after before " +
-          "about official video feat featuring remix version edition season episode").split(" ")
+          "about official video feat featuring remix version edition season episode " +
+          // Sentence-openers: video titles are sentences, not names, so without these
+          // "My 5-minute skincare routine" tags as #My. A CAPITALISED stopword still
+          // survives inside a longer run, so "Top Gun" and "Best Buy" are unharmed.
+          "i me my we us he she they them every best top tried try make made get got ever really").split(" ")
       );
 
       // Short-form video first — that is what this feeds — plus one non-video option
@@ -7681,9 +7685,9 @@
       // non-English region mostly lands in "Culture" here, and the Gemini pass
       // re-classifies in any language when a key is set.
       const CLASSIFIERS = [
-        ["Food & Drink", /\b(recipe|restaurant|chef|menu|coffee|caf[e\u00e9]|bakery|cook(ing|ed)?|dish|cuisine|snack|drink|cocktail|beer|wine|whisky|pizza|burger|ramen|kimchi|sushi|taco|dessert|chocolate|matcha|brunch|michelin)\b/i],
+        ["Food & Drink", /\b(recipe|restaurant|chef|menu|coffee|caf[e\u00e9]|bak(e|ed|ing|ery)|cook(ing|ed)?|dish|cuisine|snack|drink|cocktail|beer|wine|whisky|pizza|burger|ramen|noodle|pasta|curry|bbq|barbecue|grill|kimchi|sushi|taco|sourdough|bread|pastry|cake|cookie|smoothie|tofu|salad|dessert|chocolate|matcha|brunch|michelin)\b/i],
         ["Beauty", /\b(skincare|skin care|makeup|lipstick|mascara|serum|sunscreen|fragrance|perfume|haircare|shampoo|beauty|cosmetic\w*|manicure|nail art)\b/i],
-        ["Fashion", /\b(fashion|outfit|sneaker\w*|streetwear|runway|lookbook|handbag|denim|couture|wardrobe|thrift\w*|capsule collection|met gala|fashion week)\b/i],
+        ["Fashion", /\b(fashion|outfit|ootd|sneaker\w*|streetwear|runway|lookbook|handbag|denim|couture|wardrobe|thrift\w*|haul|vintage|capsule collection|met gala|fashion week)\b/i],
         ["Colour & Design", /\b(colou?r of the year|pantone|palette|typeface|typograph\w+|graphic design|branding|logo redesign|poster design|interior design|architect\w+)\b/i],
         ["Home", /\b(interior|furniture|home decor|apartment tour|kitchen remodel|renovation|ikea)\b/i],
         ["Travel", /\b(travel|flight|airline|hotel|itinerary|destination|tourism|resort|airbnb|backpack\w*)\b/i],
@@ -7699,23 +7703,30 @@
         return dflt || FALLBACK_CATEGORY;
       }
 
-      // Longest run of capitalised words; earliest run wins ties. A CAPITALISED
-      // stopword stays in the run — "New Balance" and "New York" are brands, not a
-      // stopword plus a word — while a lowercase word still breaks it, which is what
-      // stops "X and the Y" fusing.
+      // Longest capitalised run that actually says something. A CAPITALISED stopword
+      // stays inside a run ("New Balance", "Top Gun", "Best Buy"), but a run made only
+      // of stopwords is discarded rather than winning on position — otherwise
+      // "I love Tokyo" tags as #I instead of #Tokyo. Trailing stopwords are trimmed,
+      // so "Stranger Things Season" becomes "Stranger Things".
       function bestProperRun(words) {
-        let proper = [],
-          best = [];
+        const runs = [];
+        let cur = [];
         words.forEach((w) => {
-          if (/^[A-Z][\w'&-]*$/.test(w)) {
-            proper.push(w);
-            if (proper.length > best.length) best = proper.slice();
-          } else proper = [];
+          if (/^[A-Z][\w'&-]*$/.test(w)) cur.push(w);
+          else if (cur.length) {
+            runs.push(cur);
+            cur = [];
+          }
         });
-        // "Stranger Things Season" -> "Stranger Things"
-        while (best.length && KW_STOP.has(best[best.length - 1].toLowerCase())) best.pop();
-        // "The best kimchi…" must not become #The
-        if (!best.some((w) => !KW_STOP.has(w.toLowerCase()))) return [];
+        if (cur.length) runs.push(cur);
+
+        let best = [];
+        runs.forEach((run) => {
+          const r = run.slice();
+          while (r.length && KW_STOP.has(r[r.length - 1].toLowerCase())) r.pop();
+          if (!r.some((w) => !KW_STOP.has(w.toLowerCase()))) return; // only stopwords
+          if (r.length > best.length) best = r;
+        });
         return best;
       }
       function toKeyword(text, limit) {
@@ -7737,7 +7748,8 @@
         const words = s
           .replace(/[^\w\s'&-]/g, " ")
           .split(/\s+/)
-          .filter((w) => w && !KW_STOP.has(w.toLowerCase()) && w.length > 2);
+          // Leading numerals ("5-minute", "2002R") are not the subject of anything.
+          .filter((w) => w && !KW_STOP.has(w.toLowerCase()) && w.length > 2 && !/^\d/.test(w));
         return words.slice(0, limit).join(" ").trim() || (text || "").slice(0, 40);
       }
       const toHashtag = (kw) => {
@@ -8235,7 +8247,7 @@
          term into an inline handler would break the markup. */
       function tierNote() {
         if (_trendTier === "file")
-          return "Published feed — charts, search and subject forums (food, fashion, beauty, design…) across every region.";
+          return "Published feed — YouTube trending, charts, search and subject forums (food, fashion, beauty, design…) across every region.";
         if (_trendTier === "live") {
           const rg = (REGIONS[_trendLiveRegion] || {}).label || _trendLiveRegion || "US";
           // Say which storefront was actually read, and be explicit that the browser
@@ -8255,9 +8267,9 @@
         Wikipedia: "views",
         Reddit: "upvotes",
         "Google Trends": "searches",
+        YouTube: "views",
         "Apple Music": "",
         "Apple Movies": "",
-        "Apple Podcasts": "",
         Seasonal: "",
       };
       function trendCardHtml(r, i, compact) {
