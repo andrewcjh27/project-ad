@@ -46,6 +46,12 @@ jobs:
       - name: Fetch trends
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          # Reddit returns "403 Blocked" for anonymous JSON from CI IPs, which took
+          # out all 12 subject feeds on the first real run. A free read-only script
+          # app is accepted from the same IPs. Optional: without these the Reddit
+          # sources simply report the 403 and the rest of the run is unaffected.
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
         run: python3 scripts/fetch_trends.py trends.json
 
       - name: Commit if changed

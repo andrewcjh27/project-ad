@@ -318,7 +318,11 @@ def src_google_trends(region):
         out.append({
             "term": title,
             "keyword": title,           # the query itself is the keyword
-            "category": classify(f"{title} {blurb}"),
+            # Classify the QUERY only. The blurb is a news headline *about* the
+            # query, so including it filed "xfinity mobile arena" as Travel (its
+            # story mentioned a hotel) and "tudum netflix" as Food (Chocolate
+            # Factory). The subject of a search trend is the search itself.
+            "category": classify(title),
             "region": region,
             "blurb": blurb,
             "source": "Google Trends",
@@ -367,21 +371,28 @@ def src_apple_music(region):
     return _apple(region, "music", "most-played", "songs", "Music", "Apple Music")
 
 
-def src_apple_movies(region):
-    return _apple(region, "movies", "top-movies", "movies", "Film & TV", "Apple Movies")
-
-
 def src_wikipedia(region):
     """Most-read from the region's own language edition."""
     lang = REGIONS[region]["wiki"]
     last = None
     for back in (1, 2):
         d = datetime.now(timezone.utc) - timedelta(days=back)
-        url = f"https://{lang}.wikipedia.org/api/rest_v1/feed/featured/{d.year}/{d.month:02d}/{d.day:02d}"
-        try:
-            arts = get_json(url).get("mostread", {}).get("articles", [])
-        except Exception as e:  # noqa: BLE001
-            last = e
+        ymd = f"{d.year}/{d.month:02d}/{d.day:02d}"
+        # The en endpoint failed for all three English regions on the first real
+        # run while ko/ja/fr/de/pt all succeeded, so try the newer Wikimedia host
+        # too rather than giving up on English entirely.
+        arts = []
+        for url in (
+            f"https://{lang}.wikipedia.org/api/rest_v1/feed/featured/{ymd}",
+            f"https://api.wikimedia.org/feed/v1/wikipedia/{lang}/featured/{ymd}",
+        ):
+            try:
+                arts = get_json(url).get("mostread", {}).get("articles", [])
+                if arts:
+                    break
+            except Exception as e:  # noqa: BLE001
+                last = e
+        if not arts:
             continue
         out = []
         for a in arts:
@@ -408,7 +419,6 @@ def src_wikipedia(region):
 REGION_SOURCES = [
     ("google_trends", "Google Trends", src_google_trends),
     ("apple_music", "Apple Music", src_apple_music),
-    ("apple_movies", "Apple Movies", src_apple_movies),
     ("wikipedia", "Wikipedia", src_wikipedia),
 ]
 
@@ -436,8 +446,10 @@ YOUTUBE_CATEGORIES = [
     ("10", "Music", "Music"),
     ("20", "Gaming", "Gaming"),
     ("17", "Sport", "Sport"),
-    ("19", "Travel", "Travel & Events"),
 ]
+# Removed: Apple's movies feed and YouTube category 19 (Travel & Events) both
+# returned 404 for every region on the first real run — neither exists on the
+# mostPopular chart. Film & TV still comes from Wikipedia and YouTube.
 
 
 def src_youtube(region, cat_id, prior):
@@ -492,11 +504,48 @@ CATEGORY_SUBS = {
 }
 
 
+# Reddit blocks anonymous JSON from datacenter IPs — every call from a GitHub
+# runner returns "403 Blocked", which is exactly what happened on the first real
+# run. OAuth app credentials are accepted from the same IPs, so the subject feeds
+# need a (free) script app: REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET as secrets.
+# Without them the anonymous URL is still attempted, so a local run on a home IP
+# keeps working and CI degrades to a clear 403 in the source report.
+REDDIT_ID = os.environ.get("REDDIT_CLIENT_ID", "").strip()
+REDDIT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET", "").strip()
+_reddit_token = None
+
+
+def reddit_token():
+    """client_credentials grant — no user account, read-only, free."""
+    global _reddit_token
+    if _reddit_token or not (REDDIT_ID and REDDIT_SECRET):
+        return _reddit_token
+    import base64
+    import urllib.parse
+    basic = base64.b64encode(f"{REDDIT_ID}:{REDDIT_SECRET}".encode()).decode()
+    req = urllib.request.Request(
+        "https://www.reddit.com/api/v1/access_token",
+        data=urllib.parse.urlencode({"grant_type": "client_credentials"}).encode(),
+        headers={"Authorization": "Basic " + basic, "User-Agent": UA},
+    )
+    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+        _reddit_token = json.loads(r.read()).get("access_token")
+    return _reddit_token
+
+
 def src_reddit_category(category):
-    """Anonymous browser CORS is blocked here, but a server with a real
-    User-Agent is fine. One call per subject, so the category is known, not guessed."""
+    """One call per subject, so the category is known rather than guessed."""
     subs = CATEGORY_SUBS[category]
-    j = get_json(f"https://www.reddit.com/r/{subs}/top.json?t=day&limit=25")
+    token = reddit_token()
+    if token:
+        req = urllib.request.Request(
+            f"https://oauth.reddit.com/r/{subs}/top?t=day&limit=25",
+            headers={"Authorization": "Bearer " + token, "User-Agent": UA},
+        )
+        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+            j = json.loads(r.read())
+    else:
+        j = get_json(f"https://www.reddit.com/r/{subs}/top.json?t=day&limit=25")
     out = []
     for c in j.get("data", {}).get("children", []):
         d = c.get("data", {})
