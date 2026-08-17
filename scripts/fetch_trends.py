@@ -210,6 +210,9 @@ KW_STOP = {
     # still survives inside a longer run, so "Top Gun" and "Best Buy" are unharmed.
     "i", "me", "my", "we", "us", "he", "she", "they", "them", "every", "best", "top",
     "tried", "try", "make", "made", "get", "got", "ever", "really",
+    # Music/video boilerplate. "SONG (Official MV)" was yielding #OfficialMV, which
+    # six regions then agreed on — a meaningless tag masquerading as a global trend.
+    "mv", "audio", "lyrics", "lyric", "teaser", "visualizer", "trailer",
 }
 
 

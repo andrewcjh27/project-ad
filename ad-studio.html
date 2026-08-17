@@ -7658,7 +7658,10 @@
           // Sentence-openers: video titles are sentences, not names, so without these
           // "My 5-minute skincare routine" tags as #My. A CAPITALISED stopword still
           // survives inside a longer run, so "Top Gun" and "Best Buy" are unharmed.
-          "i me my we us he she they them every best top tried try make made get got ever really").split(" ")
+          "i me my we us he she they them every best top tried try make made get got ever really " +
+          // Music/video boilerplate: "SONG (Official MV)" was yielding #OfficialMV,
+          // which six regions then agreed on — meaningless, dressed as a global trend.
+          "mv audio lyrics lyric teaser visualizer trailer").split(" ")
       );
 
       // Short-form video first — that is what this feeds — plus one non-video option
@@ -8187,12 +8190,39 @@
          filter deliberately runs after this, over the enriched slice, so typing
          stays instant instead of firing a request per keystroke. */
       const TREND_SHOWN = 12;
-      function trendPool() {
-        return _trendsAll.filter(
-          (r) =>
-            (_trendRegion === GLOBAL || r.region === _trendRegion) &&
-            (!_trendCategory || r.category === _trendCategory)
+      function trendPool(region, category) {
+        region = region === undefined ? _trendRegion : region;
+        category = category === undefined ? _trendCategory : category;
+        const base = _trendsAll.filter(
+          (r) => (region === GLOBAL || r.region === region) && (!category || r.category === category)
         );
+        if (region !== GLOBAL) return base;
+        // The feed dedupes per (region, keyword), which is right for one country
+        // but means a trend charting in eight of them renders eight identical
+        // cards under Global. Collapse to one, and count the spread — "trending in
+        // 5 regions" is a stronger signal than any single country's copy.
+        //
+        // Keeps the EXISTING record as the representative rather than building a
+        // merged copy: the model's angle is cached on the object, and a fresh
+        // object every render would re-ask the model for a trend already judged.
+        const spread = new Map(),
+          best = new Map();
+        base.forEach((r) => {
+          const k = (r.keyword || r.term).toLowerCase();
+          if (!spread.has(k)) spread.set(k, new Set());
+          spread.get(k).add(r.region);
+          const cur = best.get(k);
+          // Prefer the instance with the strongest real number behind it; chart
+          // records carry rank instead of volume, so a lower rank wins there.
+          const better =
+            !cur ||
+            (r.rank && cur.rank ? r.rank < cur.rank : (r.volume || 0) > (cur.volume || 0));
+          if (better) best.set(k, r);
+        });
+        return [...best.entries()].map(([k, r]) => {
+          r.spread = spread.get(k).size;
+          return r;
+        });
       }
       async function applyTrendSelection(notes) {
         const pool = trendPool();
@@ -8277,7 +8307,10 @@
         const vol = unit && r.volume ? Number(r.volume).toLocaleString() + " " + unit : "";
         // Chart position is real data; show it where a play count would otherwise go.
         const rank = r.rank ? "#" + r.rank : "";
-        const place = r.region && r.region !== GLOBAL ? (REGIONS[r.region] || {}).label || r.region : "";
+        // Under Global a card stands for every region it charted in, so naming just
+        // the one it happened to be picked from would be misleading.
+        const regionLabel = r.region && r.region !== GLOBAL ? (REGIONS[r.region] || {}).label || r.region : "";
+        const place = _trendRegion === GLOBAL && r.spread > 1 ? `${r.spread} regions` : regionLabel;
         const meta = [r.category, r.source, place, rank, vol, r.timing || ""].filter(Boolean).join(" · ");
         const tag = r.hashtag || toHashtag(r.keyword || r.term);
         // The hashtag is the headline — it is the postable handle. The full title
@@ -8338,7 +8371,11 @@
         }
         const box = $("#trendCats");
         if (!box) return;
-        const inRegion = _trendsAll.filter((r) => _trendRegion === GLOBAL || r.region === _trendRegion);
+        // Count the COLLAPSED pool, not the raw feed: under Global one trend can
+        // occupy eight rows, so counting the feed promised 720 cards when only
+        // ~641 distinct ones exist. Category left blank so each chip is counted
+        // against everything available in this region.
+        const inRegion = trendPool(_trendRegion, "");
         const counts = {};
         inRegion.forEach((r) => (counts[r.category] = (counts[r.category] || 0) + 1));
         const chip = (label, val, n) =>
