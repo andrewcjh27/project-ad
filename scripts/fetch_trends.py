@@ -177,7 +177,11 @@ def classify(text, default=FALLBACK_CATEGORY):
 
 
 def get(url, accept=None):
-    req = urllib.request.Request(url, headers={"User-Agent": UA, **({"Accept": accept} if accept else {})})
+    # Api-User-Agent is what Wikimedia actually reads for its UA policy; sending it
+    # is harmless elsewhere. (Safe here but NOT in the browser copy, where a custom
+    # header would force a CORS preflight these hosts may not answer.)
+    headers = {"User-Agent": UA, "Api-User-Agent": UA, **({"Accept": accept} if accept else {})}
+    req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         return r.read()
 
@@ -372,26 +376,38 @@ def src_apple_music(region):
 
 
 def src_wikipedia(region):
-    """Most-read from the region's own language edition."""
+    """Most-read from the region's own language edition.
+
+    Every attempt is recorded and reported on failure. After the api.wikimedia.org
+    fallback was added, ALL languages started failing where previously only `en`
+    did — and the generic "no feed" error hid whether that was an HTTP status, a
+    changed response shape, or genuinely empty data. Since the failure cannot be
+    reproduced without network access, the next best thing is to make the run
+    report exactly what each host returned instead of guessing at a fix.
+    """
     lang = REGIONS[region]["wiki"]
-    last = None
+    tried = []
     for back in (1, 2):
         d = datetime.now(timezone.utc) - timedelta(days=back)
         ymd = f"{d.year}/{d.month:02d}/{d.day:02d}"
-        # The en endpoint failed for all three English regions on the first real
-        # run while ko/ja/fr/de/pt all succeeded, so try the newer Wikimedia host
-        # too rather than giving up on English entirely.
         arts = []
         for url in (
             f"https://{lang}.wikipedia.org/api/rest_v1/feed/featured/{ymd}",
             f"https://api.wikimedia.org/feed/v1/wikipedia/{lang}/featured/{ymd}",
         ):
+            host = "rest_v1" if "wikipedia.org" in url else "wikimedia"
             try:
-                arts = get_json(url).get("mostread", {}).get("articles", [])
+                # Wikimedia's user-agent policy wants a contact address; a request
+                # it considers anonymous can be throttled or served a stub.
+                raw = get(url, "application/json")
+                j = json.loads(raw)
+                arts = (j.get("mostread") or {}).get("articles") or []
                 if arts:
                     break
+                # 200 but nothing usable — say WHAT came back, not just "empty".
+                tried.append(f"{host}/{ymd}: 200 but no mostread (keys={sorted(j)[:6]}, {len(raw)}B)")
             except Exception as e:  # noqa: BLE001
-                last = e
+                tried.append(f"{host}/{ymd}: {type(e).__name__} {str(e)[:60]}")
         if not arts:
             continue
         out = []
@@ -413,7 +429,7 @@ def src_wikipedia(region):
             })
         if out:
             return out[:MAX_ITEMS]
-    raise last or RuntimeError(f"no {lang} Wikipedia feed for the last 2 days")
+    raise RuntimeError(f"no {lang} feed — " + " | ".join(tried[:4]))
 
 
 REGION_SOURCES = [
@@ -440,7 +456,12 @@ YOUTUBE_KEY = os.environ.get("YOUTUBE_API_KEY", "").strip()
 # for non-English titles, where the English classifier finds nothing — better to say
 # "unknown" than to assert a subject the source never claimed.
 YOUTUBE_CATEGORIES = [
-    ("", "", "Trending"),
+    # The uncategorised overall chart is deliberately NOT here. On the first real
+    # run it was the single biggest contributor to the Culture catch-all: what
+    # trends on YouTube overall is reaction videos, livestreams and viral clips
+    # ("He Got Betrayed SO HARD"), which no brand can build a post around. The
+    # categorised charts carry either a real subject prior or text specific enough
+    # to classify, so dropping the general one raises signal and costs nothing.
     ("26", "", "Howto & Style"),
     ("24", "", "Entertainment"),
     ("10", "Music", "Music"),
