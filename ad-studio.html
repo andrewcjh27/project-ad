@@ -8342,14 +8342,31 @@
         const counts = {};
         inRegion.forEach((r) => (counts[r.category] = (counts[r.category] || 0) + 1));
         const chip = (label, val, n) =>
-          `<button type="button" class="trend-cat${_trendCategory === val ? " on" : ""}${n === 0 ? " empty" : ""}" ` +
+          // `!n` not `n === 0`: an absent category has an undefined count, which
+          // never equals 0, so the greyed state silently never applied.
+          `<button type="button" class="trend-cat${_trendCategory === val ? " on" : ""}${!n ? " empty" : ""}" ` +
           `onclick="setTrendCategory('${val.replace(/'/g, "\\'")}')">${esc(label)}` +
           (val ? `<span class="trend-cat-n">${n || 0}</span>` : "") +
           `</button>`;
+        // Only offer subjects that actually have something. Which subjects are
+        // populated changes with the region, so this is computed per render rather
+        // than fixed. The ACTIVE chip is kept even at 0 — dropping it would leave a
+        // filter applied with no visible way to switch it off.
+        const shown = CATEGORIES.filter((c) => counts[c] || _trendCategory === c);
         box.innerHTML =
           `<button type="button" class="trend-cat${_trendCategory ? "" : " on"}" onclick="setTrendCategory('')">All` +
           `<span class="trend-cat-n">${inRegion.length}</span></button>` +
-          CATEGORIES.map((c) => chip(c, c, counts[c])).join("");
+          shown.map((c) => chip(c, c, counts[c])).join("");
+      }
+      /* Name the filter that emptied the grid. "No usable trends — try Refresh" is
+         wrong and unhelpful when the real cause is a subject with nothing in this
+         region; Refresh would not change it. */
+      function emptyTrendNote() {
+        const place = _trendRegion === GLOBAL ? "" : ` in ${(REGIONS[_trendRegion] || {}).label || _trendRegion}`;
+        if (_trendFilter && _trends.length) return `Nothing matches “${esc(_trendFilter)}”.`;
+        if (_trendCategory) return `No ${esc(_trendCategory)} trends${place} right now — try another subject or region.`;
+        if (place) return `Nothing for${place} right now — try Global.`;
+        return "No usable trends right now — try Refresh.";
       }
       function renderTrends(status, busy) {
         const grid = $("#trendGrid");
@@ -8359,9 +8376,7 @@
         const shown = _trends.map((r, i) => [r, i]).filter(([r]) => trendMatches(r, _trendFilter));
         if (busy && !_trends.length) grid.innerHTML = `<p class="muted">Fetching…</p>`;
         else
-          grid.innerHTML =
-            shown.map(([r, i]) => trendCardHtml(r, i, false)).join("") ||
-            `<p class="muted">${_trends.length ? "Nothing matches “" + esc(_trendFilter) + "”." : "No usable trends right now — try Refresh."}</p>`;
+          grid.innerHTML = shown.map(([r, i]) => trendCardHtml(r, i, false)).join("") || `<p class="muted">${emptyTrendNote()}</p>`;
         if (status !== undefined) _trendLastStatus = status || "";
         const filterNote = _trendFilter && _trends.length ? `${shown.length} of ${_trends.length} shown.` : "";
         const bits = [tierNote(), _trendLastStatus, filterNote, _trendHidden ? _trendHidden + " hidden as not brand-safe." : ""].filter(Boolean);
