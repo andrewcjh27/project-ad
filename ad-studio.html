@@ -4158,9 +4158,10 @@
               <label>Reference / past ad images<input type="file" id="f_refs" accept="image/*" multiple /></label>
               <div id="refThumbs" class="refthumbs"></div>
               <label
-                >Product cutout <span class="muted">(transparent PNG, optional)</span
-                ><input type="file" id="f_product" accept="image/*"
+                >Product cutouts <span class="muted">(transparent PNG, optional — add more than one)</span
+                ><input type="file" id="f_product" accept="image/*" multiple
               /></label>
+              <div id="productThumbs" class="refthumbs"></div>
               <button type="button" class="linklike" id="noProductToggle" onclick="toggleImageryGen()">
                 No product image? Generate imagery instead
               </button>
@@ -4648,6 +4649,17 @@
           j = t.lastIndexOf("}");
         if (i >= 0 && j > i) t = t.slice(i, j + 1);
         return JSON.parse(t);
+      }
+      // Every image the model should see, in priority order. One place so the
+      // Art Director, the full-ad render and the layered background cannot drift
+      // apart — they did: the layered path was silently dropping the product.
+      const AI_IMAGE_CAP = 8;
+      function aiImages(p) {
+        const cutouts = (p.cutouts && p.cutouts.length ? p.cutouts : [p.product]).filter(Boolean);
+        return cutouts
+          .concat([p.logo], p.refs || [])
+          .filter(Boolean)
+          .slice(0, AI_IMAGE_CAP);
       }
       function dataUrlPart(d) {
         const m = /^data:(.*?);base64,(.*)$/.exec(d || "");
@@ -5519,6 +5531,62 @@
         };
         fr.readAsDataURL(f);
       }
+      // Several cutouts are allowed now. `cutouts` is the full list the AI sees;
+      // NOT `products` — that key is already the FIELDS mapping for the product-names
+      // textarea, so collect() would overwrite the array with a string on every call.
+      // `product` stays the FIRST one because the deterministic compositor and the
+      // Figma export both place a single hero image and address it by that name.
+      function readProducts(input) {
+        const files = [...input.files];
+        if (!files.length) return;
+        current.cutouts = current.cutouts || [];
+        let pending = files.length;
+        files.forEach((f) => {
+          const fr = new FileReader();
+          fr.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+              const sc = Math.min(1, 700 / Math.max(img.width, img.height));
+              const c = document.createElement("canvas");
+              c.width = img.width * sc;
+              c.height = img.height * sc;
+              c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+              current.cutouts.push(c.toDataURL("image/png"));
+              if (--pending === 0) syncProducts();
+            };
+            img.src = fr.result;
+          };
+          fr.readAsDataURL(f);
+        });
+        input.value = "";
+      }
+      function syncProducts() {
+        current.product = (current.cutouts || [])[0] || null;
+        renderProductThumbs();
+        if (typeof onGenImageryToggle === "function") onGenImageryToggle();
+      }
+      // Projects saved before multiple cutouts existed have `product` but no
+      // `products`. Backfill so old work still shows a thumbnail and still reaches
+      // the model, instead of silently looking empty.
+      function normaliseProducts() {
+        if (!current.cutouts || !current.cutouts.length) current.cutouts = [current.product].filter(Boolean);
+        current.product = current.cutouts[0] || null;
+        renderProductThumbs();
+      }
+      function renderProductThumbs() {
+        const el = $("#productThumbs");
+        if (!el) return;
+        el.innerHTML = (current.cutouts || [])
+          .map(
+            (d, i) =>
+              `<div class="refthumb"><img src="${d}" alt=""><button type="button" title="remove" onclick="removeProduct(${i})">&times;</button></div>`,
+          )
+          .join("");
+      }
+      function removeProduct(i) {
+        (current.cutouts || []).splice(i, 1);
+        syncProducts();
+      }
       function readRefs(input) {
         const files = [...input.files];
         if (!files.length) return;
@@ -5800,8 +5868,11 @@
         "advertising poster. Cover: the concept/idea, composition & focal point, how the product is treated, the " +
         "palette (stay strictly within the brand colours given — never invent other hues), lighting, mood, texture, " +
         "and typography feel. Follow the brief's mode_instruction exactly (full poster vs. background-only). Keep it " +
-        "minimal, premium and restrained. If a product image is attached, feature THAT exact product as the hero and " +
-        "describe it faithfully from the image; if a logo is attached, place it small and tasteful; match the mood and " +
+        "minimal, premium and restrained. If product images are attached, feature THOSE exact products as the hero and " +
+        "describe them faithfully from the images — when several are attached they are ONE hero group, so arrange them " +
+        "together as a considered still life rather than picking one. In background-only mode the product and logo are " +
+        "attached for CONTEXT: never render them, but choose a palette that flatters them and leave real space for them. " +
+        "If a logo is attached, place it small and tasteful; match the mood and " +
         "palette of any reference ads without copying them. If the brief sets generate_imagery, there is no product photo — " +
         "design original, on-brand imagery/illustration/graphic elements (following imagery_note if present) as the focal " +
         "visual, integrated with the text; never leave the poster as text on an empty background. Any headline/subhead must be typeset EXACTLY as given with " +
@@ -5817,11 +5888,19 @@
         b.mode = p.mode || "full_ai";
         b.mode_instruction =
           b.mode === "layered"
-            ? "Design ONLY the background artwork — NO text, NO logo, NO product, NO people. Leave calm negative space (upper-centre and a light lower third) where the headline, subhead and product will be composited later."
+            ? "Design ONLY the background artwork — NO text, NO logo, NO product, NO people. The product and logo images are attached FOR CONTEXT so you can see what will sit on top: match a palette that flatters them and leave genuinely clear, uncluttered space (upper-centre and a light lower third) where the headline, subhead and product will be composited later. Never render the product itself."
             : "Compose the ENTIRE finished poster: background plus the headline and subhead typeset exactly as given, plus the product and logo if attached.";
+        const prods = (p.cutouts && p.cutouts.length ? p.cutouts : [p.product]).filter(Boolean);
         b.attached_images = [
-          p.product && "product photo — the hero product; render this exact item",
-          p.logo && "brand logo — place small and tasteful",
+          prods.length &&
+            (b.mode === "layered"
+              ? `${prods.length} product cutout${prods.length > 1 ? "s" : ""} — CONTEXT ONLY. Do NOT draw ${
+                  prods.length > 1 ? "them" : "it"
+                }; they are composited on top afterwards. Use them to pick a palette that flatters the product and to leave genuinely clear space where it will sit.`
+              : prods.length > 1
+                ? `${prods.length} product cutouts — feature ALL of these exact items together as the hero group, arranged as a considered still life; do not invent extra products or omit any`
+                : "product photo — the hero product; render this exact item"),
+          p.logo && (b.mode === "layered" ? "brand logo — CONTEXT ONLY, composited later; leave it room" : "brand logo — place small and tasteful"),
           (p.refs || []).length && "style reference ads — match mood/palette, never copy",
         ].filter(Boolean);
         if (wantsImagery(p)) {
@@ -5851,7 +5930,7 @@
         }
         setRev("#revPromptStatus", "Art Director is writing the prompt…");
         try {
-          const imgs = [current.product, current.logo].concat(current.refs || []).filter(Boolean).slice(0, 6);
+          const imgs = aiImages(current);
           let out = (await geminiText(PROMPT_SYS, JSON.stringify(artDirectorBrief(current)), key, imgs)).trim();
           out = out.replace(/^```[a-z]*\n?/i, "").replace(/```$/, "").trim();
           if (!out) throw new Error("empty response");
@@ -5869,7 +5948,7 @@
         const head = firstLine(p.headline) || audienceOf(p) || p.name || "";
         const sub = firstLine(p.subhead) || "";
         const inputs = [
-          p.product && "the product photo",
+          (p.cutouts && p.cutouts.length > 1 ? `the ${p.cutouts.length} product photos as one hero group` : p.product && "the product photo"),
           p.logo && "the brand logo",
           (p.refs || []).length && "style reference ads",
         ].filter(Boolean);
@@ -5973,10 +6052,7 @@
           try {
             // Pass the product cutout, logo and any style references as image inputs
             // so the model composes them into the finished ad.
-            const imgs = [current.product, current.logo]
-              .concat(current.refs || [])
-              .filter(Boolean)
-              .slice(0, 6);
+            const imgs = aiImages(current);
             current._adImage = await geminiImage(current._adPrompt, key, imgs);
             $("#revImg").src = current._adImage;
             const used = [
@@ -6136,8 +6212,11 @@
         current._bgImage = null;
         if (key) {
           try {
-            const refs = (current.refs || []).slice(0, 4);
-            current._bgImage = await geminiImage(current._adPrompt, key, refs);
+            // The background must not DRAW the product, but it should still be
+            // composed for it — matching its palette and leaving it real room.
+            // Previously only style refs were sent, so the model designed around a
+            // product it had never seen.
+            current._bgImage = await geminiImage(current._adPrompt, key, aiImages(current));
             setRev("#revBgStatus", "AI background ready — click Render to add your text, product and logo.");
           } catch (e) {
             setRev("#revBgStatus", "Image API unavailable (" + e.message + ") — using a preset background. Click Render to add your text, product and logo.");
@@ -6719,6 +6798,7 @@
         fill(current);
         resetFiles();
         renderRefThumbs();
+        normaliseProducts();
         $("#poster").style.cursor = "";
         $("#editorTitle").textContent = "Add project";
         showEditor();
@@ -6738,6 +6818,7 @@
         fill(current);
         resetFiles();
         renderRefThumbs();
+        normaliseProducts();
         $("#poster").style.cursor = "";
         $("#editorTitle").textContent = current.name || "Project";
         showEditor();
@@ -7105,6 +7186,7 @@
         fill(current);
         resetFiles();
         renderRefThumbs();
+        normaliseProducts();
         $("#editorTitle").textContent = (current.name || "Project") + " — new size";
         showEditor();
         showStep(3);
@@ -7451,7 +7533,7 @@
 
       /* ---------- init ---------- */
       $("#f_logo").addEventListener("change", (e) => readImage(e.target, "logo", 700));
-      $("#f_product").addEventListener("change", (e) => readImage(e.target, "product", 700));
+      $("#f_product").addEventListener("change", (e) => readProducts(e.target));
       $("#f_refs").addEventListener("change", (e) => readRefs(e.target));
       $("#f_font").addEventListener("change", (e) => readFont(e.target));
       /* drag & drop onto the customer-data box */
