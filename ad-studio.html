@@ -7732,11 +7732,25 @@
         });
         return best;
       }
+      // A tag is a handle, not a summary. Two words covers every real name a trend
+      // needs ("Ariana Grande", "New Balance", "Stranger Things") while cutting the
+      // sentence fragments. The character caps exist for scripts WITHOUT spaces —
+      // Japanese titles tokenise as one enormous word, which sailed past any word limit.
+      const KW_MAX_WORDS = 2;
+      const KW_MAX_CHARS = 18; // drop to one word past this
+      const KW_HARD_CHARS = 14; // then hard-truncate a single runaway token
+      function shortenKeyword(kw) {
+        const words = kw.split(/\s+/);
+        if (kw.length > KW_MAX_CHARS && words.length > 1) kw = words[0];
+        return kw.length > KW_HARD_CHARS && !/\s/.test(kw) ? kw.slice(0, KW_HARD_CHARS).trim() : kw;
+      }
       function toKeyword(text, limit) {
-        limit = limit || 3;
+        limit = limit || KW_MAX_WORDS;
         let s = (text || "").replace(/\([^)]*\)|\[[^\]]*\]/g, " ").replace(/\s+-\s+[^-]{2,40}$/, "");
+        // Prefer what comes before a colon: it is the name, the rest is a subtitle.
+        // "Dune: Part Two" -> Dune, "Wicked: For Good" -> Wicked.
         const head = s.split(":")[0];
-        s = head.length > 8 ? head : s; // keep short titles whole ("Dune: Part Two")
+        s = head.trim() ? head : s;
         // Split on dash/pipe/comma separators FIRST: without it "Song — Artist" reads
         // as one capitalised run and yields the nonsense "Song Artist". "/" splits
         // only when spaced — "HUNTR/X" is a name, "Song / Artist" is two fields.
@@ -7747,13 +7761,18 @@
           const run = bestProperRun(words);
           if (run.length > best.length) best = run;
         });
-        if (best.length) return best.slice(0, limit).join(" ").trim();
+        if (best.length) {
+          // "The Bear" keeps its article; "The Joe Rogan Experience" drops it rather
+          // than spending one of two slots on it and yielding #TheJoe.
+          if (best.length > 2 && best[0].toLowerCase() === "the") best = best.slice(1);
+          return shortenKeyword(best.slice(0, limit).join(" ").trim());
+        }
         const words = s
           .replace(/[^\w\s'&-]/g, " ")
           .split(/\s+/)
           // Leading numerals ("5-minute", "2002R") are not the subject of anything.
           .filter((w) => w && !KW_STOP.has(w.toLowerCase()) && w.length > 2 && !/^\d/.test(w));
-        return words.slice(0, limit).join(" ").trim() || (text || "").slice(0, 40);
+        return shortenKeyword(words.slice(0, limit).join(" ").trim()) || (text || "").slice(0, KW_HARD_CHARS);
       }
       const toHashtag = (kw) => {
         const parts = (kw || "").split(/[^\w]+/).filter(Boolean);
