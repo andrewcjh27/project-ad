@@ -246,7 +246,23 @@ def _best_proper_run(words):
     return best
 
 
-def to_keyword(text, limit=3):
+# A tag is a handle, not a summary. Two words covers every real name a trend
+# needs ("Ariana Grande", "New Balance", "Stranger Things") while cutting the
+# sentence fragments. The character caps exist for scripts WITHOUT spaces —
+# Japanese titles tokenise as one enormous word, which sailed past any word limit.
+KW_MAX_WORDS = 2
+KW_MAX_CHARS = 18       # drop to one word past this
+KW_HARD_CHARS = 14      # then hard-truncate a single runaway token
+
+
+def _shorten(kw):
+    words = kw.split()
+    if len(kw) > KW_MAX_CHARS and len(words) > 1:
+        kw = words[0]
+    return kw[:KW_HARD_CHARS].strip() if len(kw) > KW_HARD_CHARS and " " not in kw else kw
+
+
+def to_keyword(text, limit=KW_MAX_WORDS):
     """Reduce a title to the 1-3 words someone would actually search or tag.
 
     Prefers a run of capitalised words (a proper noun — the artist, the show,
@@ -255,8 +271,10 @@ def to_keyword(text, limit=3):
     """
     s = re.sub(r"\([^)]*\)|\[[^\]]*\]", " ", text or "")      # drop "(feat. …)", "[Official]"
     s = re.sub(r"\s+-\s+[^-]{2,40}$", "", s)                   # drop " - Publisher"
+    # Prefer what comes before a colon: it is the name, the rest is a subtitle.
+    # "Dune: Part Two" -> Dune, "Wicked: For Good" -> Wicked.
     head = s.split(":")[0]
-    s = head if len(head) > 8 else s                           # keep short titles whole ("Dune: Part Two")
+    s = head if head.strip() else s
 
     # Split on dash/pipe/comma separators FIRST. Without this, "Song — Artist"
     # reads as one capitalised run and yields the nonsense "Song Artist".
@@ -268,7 +286,11 @@ def to_keyword(text, limit=3):
         if len(run) > len(best):
             best = run
     if best:
-        return " ".join(best[:limit]).strip()
+        # "The Bear" keeps its article; "The Joe Rogan Experience" drops it rather
+        # than spending one of two slots on it and yielding #TheJoe.
+        if len(best) > 2 and best[0].lower() == "the":
+            best = best[1:]
+        return _shorten(" ".join(best[:limit]).strip())
 
     flat = re.sub(r"[^\w\s'&-]", " ", s)
     # Leading numerals ("5-minute", "2002R") are not the subject of anything.
@@ -276,7 +298,7 @@ def to_keyword(text, limit=3):
         w for w in re.split(r"\s+", flat)
         if w and w.lower() not in KW_STOP and len(w) > 2 and not w[0].isdigit()
     ]
-    return " ".join(words[:limit]).strip() or clean(text, 40)
+    return _shorten(" ".join(words[:limit]).strip()) or clean(text, KW_HARD_CHARS)
 
 
 def to_hashtag(keyword):
