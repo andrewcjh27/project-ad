@@ -7717,7 +7717,7 @@
          by a bare substring. Runs BEFORE the model so unusable topics never reach
          the user and never burn quota. */
       const TREND_BLOCK =
-        /\b(died?|death|deaths|dead|obituary|killed|kills|killing|murder|shooting|shooter|stabb\w*|assault|rape|terror\w*|bomb\w*|war|invasion|troops|massacre|genocide|hostage|crash|earthquake|hurricane|wildfire|flood|famine|outbreak|pandemic|virus|cancer|overdose|suicide|arrest\w*|indict\w*|lawsuit|convicted|fraud|scandal|abuse|election|senate|parliament|president|prime minister|congress|republican|democrat|verdict|trial|shooting)\b/i;
+        /\b(die[sd]?|dying|death|deaths|dead|obituary|killed|kills|killing|murder|shooting|shooter|stabb\w*|assault|rape|terror\w*|bomb\w*|war|invasion|troops|massacre|genocide|hostage|crash|earthquake|hurricane|wildfire|flood|famine|outbreak|pandemic|virus|cancer|overdose|suicide|arrest\w*|indict\w*|lawsuit|convicted|fraud|scandal|abuse|election|senate|parliament|president|prime minister|congress|republican|democrat|verdict|trial|shooting)\b/i;
       // Titles that trip the blocklist but are ordinary entertainment. Over-blocking is
       // the right failure direction for a hard rule, so this list stays short.
       const TREND_ALLOW =
