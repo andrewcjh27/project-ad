@@ -75,7 +75,7 @@ POLITE_DELAY = 0.7      # seconds between calls — many small feeds, be a good 
 
 # ── brand safety — keep in sync with ad-studio.html ───────────────────────────
 BLOCK = re.compile(
-    r"\b(died?|death|deaths|dead|obituary|killed|kills|killing|murder|shooting|shooter|stabb\w*|"
+    r"\b(die[sd]?|dying|death|deaths|dead|obituary|killed|kills|killing|murder|shooting|shooter|stabb\w*|"
     r"assault|rape|terror\w*|bomb\w*|war|invasion|troops|massacre|genocide|hostage|crash|earthquake|"
     r"hurricane|wildfire|flood|famine|outbreak|pandemic|virus|cancer|overdose|suicide|arrest\w*|"
     r"indict\w*|lawsuit|convicted|fraud|scandal|abuse|election|senate|parliament|president|"
@@ -613,6 +613,85 @@ def src_reddit_category(category):
     return out[:MAX_ITEMS]
 
 
+# ── subject editorial feeds (keyless RSS, no auth, global) ────────────────────
+# Reddit is the intended source for these subjects but returns 403 from CI IPs
+# without OAuth credentials, so food/fashion/beauty/design/home/travel were simply
+# EMPTY. These are the trade press for each subject: what its editors are covering
+# this week. Not a popularity signal — feed position is editorial order, not
+# measurement — so no volume and no rank is attached rather than dressing the
+# ordering up as a statistic. They fill the subjects; Reddit still beats them for
+# "what people are actually posting about" and takes over when its keys are set.
+SUBJECT_FEEDS = {
+    "Food & Drink": [
+        ("Serious Eats", "https://www.seriouseats.com/rss"),
+        ("Food52", "https://food52.com/blog.rss"),
+    ],
+    "Fashion": [
+        ("Hypebeast", "https://hypebeast.com/fashion/feed"),
+        ("Fashionista", "https://fashionista.com/.rss/full"),
+    ],
+    "Beauty": [
+        ("Byrdie", "https://www.byrdie.com/rss"),
+        ("Into The Gloss", "https://intothegloss.com/feed/"),
+    ],
+    "Colour & Design": [
+        ("Dezeen", "https://www.dezeen.com/feed/"),
+        ("It's Nice That", "https://www.itsnicethat.com/feed"),
+    ],
+    "Home": [
+        ("Apartment Therapy", "https://www.apartmenttherapy.com/main.rss"),
+        ("Dwell", "https://www.dwell.com/@rss"),
+    ],
+    "Travel": [("Lonely Planet", "https://www.lonelyplanet.com/news/feed/atom/")],
+    "Fitness": [("Runner's World", "https://www.runnersworld.com/rss/all.xml/")],
+    "Tech": [("The Verge", "https://www.theverge.com/rss/index.xml")],
+}
+
+
+def _feed_titles(xml_bytes):
+    """Handle RSS 2.0 (<item><title>) and Atom (<entry><title>) in one pass."""
+    root = ET.fromstring(xml_bytes)
+    out = []
+    for tag in ("item", "entry"):
+        for node in root.iter():
+            if not node.tag.endswith(tag):
+                continue
+            title = link = ""
+            for child in node:
+                name = child.tag.split("}")[-1]
+                if name == "title" and not title:
+                    title = clean("".join(child.itertext()), 140)
+                elif name == "link" and not link:
+                    link = (child.get("href") or child.text or "").strip()
+            if title:
+                out.append((title, link))
+        if out:
+            break
+    return out
+
+
+def src_subject_feed(category, label, url):
+    titles = _feed_titles(get(url))
+    if not titles:
+        # Silently returning [] would report the source as ok with 0 items, which
+        # looks identical to a quiet news day. A feed that parsed to nothing has
+        # moved or changed shape and should say so in the run report.
+        raise RuntimeError("feed parsed to 0 items — moved or no longer RSS/Atom?")
+    out = []
+    for title, link in titles[:12]:
+        out.append({
+            "term": title,
+            "category": category,
+            "region": GLOBAL,
+            "blurb": label,
+            "source": label,
+            "url": link,
+            "volume": 0,        # editorial order is not a measurement — see above
+            "when": now_ms(),
+        })
+    return out
+
+
 def main(out_path="trends.json"):
     items, meta = [], []
 
@@ -646,6 +725,12 @@ def main(out_path="trends.json"):
 
     for category in CATEGORY_SUBS:
         record(f"reddit:{category}", f"Reddit ({category})", lambda c=category: src_reddit_category(c))
+
+    # Editorial feeds for the same subjects, so they are populated even while Reddit
+    # is 403. Deduping runs afterwards, so an overlap with Reddit collapses.
+    for category, feeds in SUBJECT_FEEDS.items():
+        for label, url in feeds:
+            record(f"feed:{label}", f"{label} ({category})", lambda c=category, l=label, u=url: src_subject_feed(c, l, u))
 
     before = len(items)
     items = [enrich(r) for r in items if r.get("term") and is_ad_safe(r)]
